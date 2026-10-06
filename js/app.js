@@ -1168,8 +1168,9 @@
   // ─── "Did you know?" facts ───────────────────────────────
   // 10s into a track a fact slides up over the video. Every 20s it rotates to
   // the next one: the song's own facts first, then its album's in random
-  // order. When there are none left for that song / album it closes. A new
-  // track starts the cycle again.
+  // order (or general artist facts if it has neither). When there are none
+  // left it closes. A new track starts the cycle again.
+  const ARTIST_FACTS = typeof artistFacts !== "undefined" && Array.isArray(artistFacts) ? artistFacts.map(String) : [];
   const FACT_FIRST_MS = 10000;
   const FACT_ROTATE_MS = 20000;
   const factState = { timer: 0, queue: [], pos: 0, forTrack: null };
@@ -1181,7 +1182,16 @@
       const j = randomInt(i + 1);
       [album[i], album[j]] = [album[j], album[i]];
     }
-    factState.queue = own.concat(album);
+    let queue = own.concat(album);
+    // Nothing specific for this song or album: use the general artist facts.
+    if (!queue.length) {
+      queue = ARTIST_FACTS.slice();
+      for (let i = queue.length - 1; i > 0; i--) {
+        const j = randomInt(i + 1);
+        [queue[i], queue[j]] = [queue[j], queue[i]];
+      }
+    }
+    factState.queue = queue;
     factState.pos = 0;
     factState.forTrack = m.index;
   }
