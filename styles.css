@@ -561,6 +561,7 @@ body::before {
 
 .fact[hidden] { display: none; }
 .fact.is-leaving { animation: fact-out 0.3s ease forwards; }
+.fact.is-swapping .fact-text { animation: fact-swap 0.35s ease; }
 
 .fact-label {
   margin: 0 0 1cqw;
@@ -611,6 +612,7 @@ body::before {
 @keyframes fact-in { from { opacity: 0; transform: translateY(70%); } }
 @keyframes fact-out { to { opacity: 0; transform: translateY(40%); } }
 @keyframes fact-star { 50% { opacity: 0.3; } }
+@keyframes fact-swap { from { opacity: 0; transform: translateY(1.5cqw); } }
 
 .viz {
   flex: none;

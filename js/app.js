@@ -1166,43 +1166,48 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMarquee);
 
   // ─── "Did you know?" facts ───────────────────────────────
-  // 5s into a track a fact slides up over the video and stays until closed:
-  // the song's own fact first if it has one, otherwise one about its folder /
-  // album. Long tracks swap in a new one every so often, never repeating the
-  // last few.
+  // 5s into a track a fact slides up over the video. Every 20s it rotates to
+  // the next one: the song's own facts first, then its album's in random
+  // order. When there are none left for that song / album it closes. A new
+  // track starts the cycle again.
   const FACT_FIRST_MS = 5000;
-  const FACT_EVERY_MS = 75000;
-  const factState = { timer: 0, hideTimer: 0, shownFor: null, recent: [] };
+  const FACT_ROTATE_MS = 20000;
+  const factState = { timer: 0, queue: [], pos: 0, forTrack: null };
 
-  function pickFact(m) {
-    const own = m.facts || [];
-    const album = FOLDERS[m.folder].facts || [];
-    const fresh = (list) => list.filter((f) => !factState.recent.includes(f));
-    let pool = factState.shownFor !== m.index ? fresh(own) : [];
-    if (!pool.length) pool = fresh(own.concat(album));
-    if (!pool.length) pool = own.concat(album).filter((f) => f !== factState.recent[factState.recent.length - 1]);
-    return pool.length ? pool[randomInt(pool.length)] : "";
+  function buildFactQueue(m) {
+    const own = (m.facts || []).slice();
+    const album = (FOLDERS[m.folder].facts || []).filter((f) => !own.includes(f));
+    for (let i = album.length - 1; i > 0; i--) { // shuffle the album facts
+      const j = randomInt(i + 1);
+      [album[i], album[j]] = [album[j], album[i]];
+    }
+    factState.queue = own.concat(album);
+    factState.pos = 0;
+    factState.forTrack = m.index;
   }
 
   function showFact() {
     factState.timer = 0;
-    const m = current();
-    if (state.phase !== "playing" || document.documentElement.classList.contains("intro-active")) return;
-    const fact = pickFact(m);
-    if (fact) {
-      factState.shownFor = m.index;
-      factState.recent = factState.recent.concat(fact).slice(-4);
-      el.factText.textContent = fact;
-      el.fact.hidden = false;
-      el.fact.classList.remove("is-leaving");
-      // It stays up until closed (or the track changes).
+    if (state.phase !== "playing") return;
+    if (document.documentElement.classList.contains("intro-active")) {
+      factState.timer = setTimeout(showFact, FACT_FIRST_MS);
+      return;
     }
-    factState.timer = setTimeout(showFact, FACT_EVERY_MS);
+    if (factState.forTrack !== current().index) buildFactQueue(current());
+    if (factState.pos >= factState.queue.length) { hideFact(); return; } // all shown
+    const fact = factState.queue[factState.pos++];
+    if (!el.fact.hidden && !reduceMotion.matches) {
+      el.fact.classList.remove("is-swapping");
+      void el.fact.offsetWidth;
+      el.fact.classList.add("is-swapping");
+    }
+    el.factText.textContent = fact;
+    el.fact.hidden = false;
+    el.fact.classList.remove("is-leaving");
+    factState.timer = setTimeout(showFact, FACT_ROTATE_MS);
   }
 
   function hideFact() {
-    clearTimeout(factState.hideTimer);
-    factState.hideTimer = 0;
     if (el.fact.hidden) return;
     if (reduceMotion.matches) { el.fact.hidden = true; return; }
     el.fact.classList.add("is-leaving");
@@ -1211,17 +1216,24 @@
 
   function scheduleFact() {
     if (factState.timer) return;
-    factState.timer = setTimeout(showFact, FACT_FIRST_MS);
+    if (factState.forTrack !== current().index) buildFactQueue(current());
+    // First fact 5s in; after a pause, carry on rotating from where it was.
+    factState.timer = setTimeout(showFact, factState.pos === 0 ? FACT_FIRST_MS : FACT_ROTATE_MS);
   }
 
-  // Pausing stops the countdown; changing track also clears what's on screen.
+  // Pausing stops the rotation (the fact stays up); changing track clears it.
   function cancelFact(clearScreen) {
     clearTimeout(factState.timer);
     factState.timer = 0;
-    if (clearScreen) hideFact();
+    if (clearScreen) {
+      hideFact();
+      factState.forTrack = null;
+    }
   }
 
+  // ✕ just closes the fact on screen; the next one still arrives on time.
   el.factClose.addEventListener("click", hideFact);
+
 
   // ─── Battery ──────────────────────────────────────────────
   // Shows the device's real battery where the browser shares it; otherwise a
