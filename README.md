@@ -12,11 +12,28 @@ js/app.js        player logic
 favicon.svg
 ```
 
-## Editing the mixtapes
+## Editing the library
 
-Open `js/mixtapes.js` and change the `title` values. You can also add, remove or reorder entries. `youtubeId` is the part after `watch?v=` in a YouTube URL. The menu shows mixtapes in the order they're listed.
+All the tracks are in `js/mixtapes.js`, grouped into **folders**. Each folder became an iPod menu folder:
 
-The song name on the screen is taken from YouTube automatically, with tags like "(Official Audio)" removed. To set it yourself, add `track: "Song name"` to an entry.
+| Folder | Source playlist |
+| --- | --- |
+| Since I Left You (Deluxe) | `PL3iF2GMTLe0X3CUqN8_XLwz-U5ifL2fSw` |
+| We Will Always Love You | `PL3iF2GMTLe0U3rr0MFjK_tK7jB1-DWtMl` |
+| Subways & Remixes | `PL3iF2GMTLe0UdeVobWkNdWCHwiXgxhyMp` |
+| DJ Sets | `PL853131A0F00E7EFF` |
+| Extras | the original mixtapes not in any playlist |
+
+You can change any `title`, and reorder, add or remove tracks and folders. `youtubeId` is the part after `watch?v=` in a YouTube URL.
+
+### Refreshing from YouTube
+
+The site includes a small serverless helper, `api/playlist.js`:
+
+- `/api/playlist?list=PLAYLIST_ID` lists a public playlist's videos as `{ youtubeId, title }`.
+- `/api/playlist?videos=ID1,ID2` looks up titles for individual videos.
+
+Open either on the deployed site and copy the results into `js/mixtapes.js`. The player itself only reads `js/mixtapes.js`, so the site keeps working even if YouTube changes its pages.
 
 ## Running locally
 
@@ -33,12 +50,12 @@ Opening `index.html` straight from disk (`file://`) works, but YouTube embeds be
 
 | Control | Action |
 | --- | --- |
-| MENU (top of wheel) / `M` | Open or close the mixtape list |
-| ⏮ / ⏭ or `←` / `→` | Previous / next mixtape |
+| MENU (top of wheel) / `M` | Open the folder list. Inside a folder, MENU goes back up a level |
+| ⏮ / ⏭ or `←` / `→` | Previous / next track in the current folder |
 | ▶❚❚ (bottom of wheel) / `Space` | Play / pause |
-| Centre button / `Enter` | In the menu: choose the highlighted mixtape. Otherwise: play/pause |
+| Centre button / `Enter` | In the menu: open the highlighted folder or play the highlighted track. Otherwise: play/pause |
 | Spin the wheel / `↑` `↓` | Move through the menu; in now playing, scrub ±15s |
-| SHUFFLE / `S` | Jump to a random mixtape (never the current one) and play it |
+| SHUFFLE / `S` | Jump to a random track from any folder (never the current one) and play it |
 
 ## Behaviour
 
@@ -49,7 +66,7 @@ Opening `index.html` straight from disk (`file://`) works, but YouTube embeds be
 - The YouTube player only loads once a mixtape is chosen or Play is pressed. It uses the `youtube-nocookie.com` embed host.
 - If a video can't be embedded, the screen shows a "Watch on YouTube" link instead.
 - The last selected mixtape is saved in `localStorage` and restored on the next visit.
-- When a mixtape finishes, the next one starts automatically.
+- When a track finishes, the next one in the same folder starts automatically.
 
 ## Deploying
 

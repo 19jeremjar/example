@@ -533,6 +533,9 @@ body::before {
 .menu-item .mi-mark { font-size: 4.6cqw; opacity: 0; }
 .menu-item[aria-current="true"] .mi-mark { opacity: 1; }
 .menu-item .mi-chev { opacity: 0.6; }
+.menu-item .mi-count { font-size: 4.6cqw; opacity: 0.55; }
+.menu-item .mi-count:empty { display: none; }
+.menu-item.is-hl .mi-count { opacity: 0.85; }
 
 .menu-item.is-hl {
   color: #fff;
