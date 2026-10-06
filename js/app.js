@@ -1215,8 +1215,8 @@
     },
     {
       target: "menu",
-      title: "Browse with MENU",
-      html: "Press <b>MENU</b> to pick a folder, then a track.",
+      title: "Use the wheel",
+      html: "Press <b>MENU</b> to see the folders. Spin the wheel to scroll, then press the centre to choose.",
       button: "Next",
     },
     {

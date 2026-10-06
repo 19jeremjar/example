@@ -233,6 +233,21 @@ body::before {
 
 /* The control being explained glows */
 .intro-active[data-intro-target="menu"] .wheel-menu { color: var(--blue); animation: menu-glow 1.2s ease-in-out infinite; }
+/* A highlight circles the wheel to show it spins */
+.intro-active[data-intro-target="menu"] .wheel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0 70%, rgba(35, 80, 255, 0.4) 94%, transparent 100%);
+  -webkit-mask: radial-gradient(closest-side, transparent 0 44%, #000 45% 95%, transparent 96%);
+          mask: radial-gradient(closest-side, transparent 0 44%, #000 45% 95%, transparent 96%);
+  animation: wheel-hint 1.8s linear infinite;
+}
+
+@keyframes wheel-hint { to { transform: rotate(360deg); } }
+
 .intro-active[data-intro-target="shuffle"] .shuffle { animation: shuffle-glow 1.2s ease-in-out infinite; }
 
 .intro.is-leaving { animation: intro-out 0.25s ease forwards; }
