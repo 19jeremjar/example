@@ -13,13 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Silkscreen&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script>
-    // Decide before first paint whether to show the intro (first visit, or ?intro in the URL).
-    (function () {
-      var seen = false;
-      try { seen = localStorage.getItem("avalanches-on-air:intro") === "done"; } catch (e) {}
-      if (/[?&]intro\b/.test(location.search)) seen = false;
-      document.documentElement.classList.add(seen ? "intro-done" : "intro-active");
-    })();
+    // The welcome tips show on every visit.
+    document.documentElement.classList.add("intro-active");
   </script>
 </head>
 <body>

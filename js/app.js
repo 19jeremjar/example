@@ -1291,14 +1291,12 @@
 
   // ─── Intro tip (first visit) ─────────────────────────────
   // Three cards over the iPod: a welcome, then one pointing at MENU, then Shuffle.
-  // "Got it", or using any control, puts it away for good (?intro shows it again).
-  const INTRO_KEY = "avalanches-on-air:intro";
+  // Shows on every visit; "Got it", ✕ or using any control puts it away.
   const introEl = $("intro");
 
   function finishIntro() {
     const html = document.documentElement;
     if (!html.classList.contains("intro-active")) return;
-    try { localStorage.setItem(INTRO_KEY, "done"); } catch (_) { /* ignore */ }
     const done = () => {
       html.classList.remove("intro-active");
       html.classList.add("intro-done");
