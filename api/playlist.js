@@ -46,6 +46,20 @@ function walk(node, out) {
 }
 
 module.exports = async (req, res) => {
+  // ?videos=id1,id2 → titles for individual videos (via YouTube oEmbed).
+  const ids = String((req.query && req.query.videos) || "").split(",").filter((v) => /^[A-Za-z0-9_-]{11}$/.test(v)).slice(0, 50);
+  if (ids.length) {
+    const videos = await Promise.all(ids.map(async (id) => {
+      try {
+        const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`);
+        const j = r.ok ? await r.json() : null;
+        return { youtubeId: id, title: j ? j.title : "", playable: !!j };
+      } catch (_) { return { youtubeId: id, title: "", playable: false }; }
+    }));
+    res.setHeader("Cache-Control", "s-maxage=21600, stale-while-revalidate=86400");
+    res.status(200).json({ count: videos.length, videos });
+    return;
+  }
   const list = String((req.query && req.query.list) || "");
   if (!/^[A-Za-z0-9_-]{10,64}$/.test(list)) {
     res.status(400).json({ error: "Pass ?list=PLAYLIST_ID" });
