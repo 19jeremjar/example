@@ -49,6 +49,9 @@
     statusIcon: $("status-icon"),
     statusLabel: $("status-label"),
     lcdTrack: $("lcd-track"),
+    batt: $("batt"),
+    battPct: $("batt-pct"),
+    battFill: $("batt-fill"),
     idle: $("idle"),
     idleArt: $("idle-art"),
     noise: $("noise"),
@@ -288,20 +291,53 @@
       return;
     }
     const name = displayName(m);
+    if (scrambleTimer) return; // the scramble lands on the new name itself
     el.lcdTrack.textContent = name;
     el.lcdTrack.title = name;
     el.nowTitleText.textContent = name;
     el.nowTitle.title = name;
     if (state.view === "now") el.statusLabel.textContent = positionLabel(m);
     el.menuList.querySelectorAll(".menu-item").forEach((b) => {
-      const on = b.dataset.track ? Number(b.dataset.track) === state.index : Number(b.dataset.folder) === m.folder;
+      const on = b.dataset.track ? Number(b.dataset.track) === state.index
+        : b.dataset.folder ? Number(b.dataset.folder) === m.folder : false;
       b.setAttribute("aria-current", on ? "true" : "false");
     });
     fitMarquee();
   }
 
+  // Shuffle: the names roll like a slot machine before landing on the new track.
+  const SCRAMBLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#*+?";
+  let scrambleTimer = 0;
+  function scrambleTitle() {
+    if (reduceMotion.matches) return;
+    clearInterval(scrambleTimer);
+    const start = performance.now();
+    const DURATION = 520;
+    const roll = (text, t) => {
+      const settled = Math.floor(text.length * t);
+      let out = text.slice(0, settled);
+      for (let i = settled; i < text.length; i++) {
+        out += text[i] === " " ? " " : SCRAMBLE_CHARS[(Math.random() * SCRAMBLE_CHARS.length) | 0];
+      }
+      return out;
+    };
+    el.nowTitleText.classList.remove("is-marquee");
+    scrambleTimer = setInterval(() => {
+      const t = Math.min(1, (performance.now() - start) / DURATION);
+      const name = displayName(current());
+      el.nowTitleText.textContent = roll(name, t * t);
+      el.lcdTrack.textContent = roll(name, t);
+      if (t >= 1) {
+        clearInterval(scrambleTimer);
+        scrambleTimer = 0;
+        renderTitle();
+      }
+    }, 45);
+  }
+
   // Long track names scroll back and forth, like an old iPod.
   function fitMarquee() {
+    if (scrambleTimer) return;
     const span = el.nowTitleText;
     span.classList.remove("is-marquee");
     span.style.removeProperty("--marquee");
@@ -471,7 +507,7 @@
   // simulation: a tempo per mixtape, kick on the low bars, hats up top.
   const VIZ_BARS = 24;
   const VIZ_SEGS = 9;
-  const VIZ_COLORS = ["#2350ff", "#2350ff", "#1fb8ff", "#3ef06a", "#3ef06a", "#ffd23e", "#ff7a1a", "#ff6fae", "#ff6fae"];
+  const VIZ_COLOR = "#2350ff";
   const vizCtx = el.viz.getContext("2d");
   const viz = {
     levels: new Float32Array(VIZ_BARS),
@@ -495,7 +531,7 @@
       const peak = Math.min(VIZ_SEGS - 1, Math.round(viz.peaks[i] * VIZ_SEGS));
       for (let s = 0; s < VIZ_SEGS; s++) {
         const y = H - (s + 1) * (segH + gap) + gap;
-        if (s < lit) vizCtx.fillStyle = VIZ_COLORS[s];
+        if (s < lit) vizCtx.fillStyle = VIZ_COLOR;
         else if (s === peak && peak > 0) vizCtx.fillStyle = "#141414";
         else vizCtx.fillStyle = "rgba(20, 20, 20, 0.08)";
         vizCtx.fillRect(x, y, bw, segH);
@@ -787,7 +823,7 @@
 
   function step(delta) {
     select(neighbour(delta), { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
-    if (state.view === "menu" && state.menuFolder === current().folder) setHighlight(current().pos);
+    if (state.view === "menu" && state.menuFolder === current().folder) setHighlight(current().pos + 1);
   }
 
   function shuffle() {
@@ -802,6 +838,7 @@
     el.btnShuffle.classList.add("is-spun");
     if (state.view === "menu") closeMenu(false);
     const m = LIBRARY[next];
+    scrambleTitle();
     select(next, { play: true, announceAs: `Shuffled to ${displayName(m)} from ${FOLDERS[m.folder].title}, playing` });
   }
 
@@ -814,17 +851,18 @@
           count: f.tracks.length,
           data: { folder: fi },
           current: current().folder === fi,
-          act: () => enterFolder(fi, 0),
+          act: () => enterFolder(fi, current().folder === fi ? current().pos + 1 : 1),
         }))
-      : FOLDERS[state.menuFolder].tracks.map((t) => ({
-          label: displayName(t),
-          data: { track: t.index },
-          current: t.index === state.index,
-          act: () => {
-            select(t.index, { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
-            closeMenu(true);
-          },
-        }));
+      : [{ label: "‹ Back", back: true, data: { back: 1 }, act: menuBack }].concat(
+          FOLDERS[state.menuFolder].tracks.map((t) => ({
+            label: displayName(t),
+            data: { track: t.index },
+            current: t.index === state.index,
+            act: () => {
+              select(t.index, { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
+              closeMenu(true);
+            },
+          })));
 
     state.menuActions = entries.map((e) => e.act);
     const frag = document.createDocumentFragment();
@@ -832,7 +870,7 @@
       const li = document.createElement("li");
       const b = document.createElement("button");
       b.type = "button";
-      b.className = "menu-item";
+      b.className = e.back ? "menu-item is-back" : "menu-item";
       b.id = `menu-item-${i}`;
       b.dataset.pos = String(i);
       Object.entries(e.data).forEach(([k, v]) => { b.dataset[k] = String(v); });
@@ -840,6 +878,10 @@
       b.setAttribute("aria-current", e.current ? "true" : "false");
       b.innerHTML = '<span class="mi-title"></span><span class="mi-mark" aria-hidden="true">♪</span><span class="mi-count" aria-hidden="true"></span><span class="mi-chev" aria-hidden="true">›</span>';
       b.querySelector(".mi-title").textContent = e.label;
+      if (e.back) {
+        b.querySelector(".mi-chev").textContent = "";
+        b.setAttribute("aria-label", "Back to folders");
+      }
       if (e.count) {
         b.querySelector(".mi-count").textContent = String(e.count);
         b.setAttribute("aria-label", `${e.label}, folder, ${e.count} tracks`);
@@ -1094,6 +1136,50 @@
 
   if (window.ResizeObserver) new ResizeObserver(() => fitMarquee()).observe(el.nowTitle);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMarquee);
+
+  // ─── Battery ──────────────────────────────────────────────
+  // Shows the device's real battery where the browser shares it; otherwise a
+  // pretend one that drains slowly while music plays and is "charged" overnight.
+  const BATTERY_KEY = "avalanches-on-air:battery";
+  const battery = { level: 1, charging: false, real: false };
+
+  function renderBattery() {
+    const pct = Math.max(0, Math.min(100, Math.round(battery.level * 100)));
+    el.battPct.textContent = `${pct}%`;
+    el.battFill.style.width = `${Math.max(4, pct)}%`;
+    el.batt.dataset.level = pct <= 10 ? "critical" : pct <= 20 ? "low" : "ok";
+    el.batt.dataset.charging = battery.charging ? "true" : "false";
+    el.batt.setAttribute("aria-label", `Battery ${pct}%${battery.charging ? ", charging" : ""}`);
+  }
+
+  (function setupBattery() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(BATTERY_KEY));
+      if (saved && Date.now() - saved.t < 3 * 3600 * 1000) battery.level = saved.level;
+    } catch (_) { /* fresh battery */ }
+    renderBattery();
+
+    if (navigator.getBattery) {
+      navigator.getBattery().then((b) => {
+        const update = () => {
+          battery.real = true;
+          battery.level = b.level;
+          battery.charging = b.charging;
+          renderBattery();
+        };
+        update();
+        b.addEventListener("levelchange", update);
+        b.addEventListener("chargingchange", update);
+      }).catch(() => { /* not shared — keep the pretend one */ });
+    }
+
+    setInterval(() => {
+      if (battery.real || state.phase !== "playing") return;
+      battery.level = Math.max(0.05, battery.level - 0.01);
+      renderBattery();
+      try { localStorage.setItem(BATTERY_KEY, JSON.stringify({ level: battery.level, t: Date.now() })); } catch (_) { /* ignore */ }
+    }, 75000);
+  })();
 
   // ─── Boot ─────────────────────────────────────────────────
   if (!LIBRARY.length) {

@@ -31,7 +31,7 @@
               <span class="lcd-station" id="lcd-track">The Avalanches</span>
               <span class="lcd-mix" id="status-label">Mixtape 01</span>
             </div>
-            <span class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="batt" id="batt" role="img" aria-label="Battery 100%"><span class="batt-pct" id="batt-pct">100%</span><span class="batt-icon" aria-hidden="true"><span class="batt-fill" id="batt-fill"></span></span></span>
           </div>
 
           <div class="now" id="now-view">
@@ -76,8 +76,10 @@
         </div>
 
         <button type="button" class="shuffle" id="btn-shuffle" aria-label="Shuffle: play a random mixtape">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 4.8C14.3 16 15.5 17 17.5 17H21M17.5 14 21 17l-3.5 3M3 17h3.5c1.2 0 2.1-.4 2.9-1.1M21 7h-3.5c-1.2 0-2.1.4-2.9 1.1M17.5 4 21 7l-3.5 3"/></svg>
-          <span>Shuffle</span>
+          <span class="shuffle-face">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 4.8C14.3 16 15.5 17 17.5 17H21M17.5 14 21 17l-3.5 3M3 17h3.5c1.2 0 2.1-.4 2.9-1.1M21 7h-3.5c-1.2 0-2.1.4-2.9 1.1M17.5 4 21 7l-3.5 3"/></svg>
+            <span class="shuffle-label">Shuffle</span>
+          </span>
         </button>
       </div>
     </section>
