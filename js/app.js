@@ -21,6 +21,8 @@
   const API_TIMEOUT_MS = 15000;
   const MUTED_RETRY_MS = 1600;   // if sound is blocked, start muted after this long
   const PLAY_STALL_MS = 4500;    // …and give up (ask for a tap) after this long
+  const REVEAL_DELAY_MS = 1100;  // keep the static up while YouTube flashes its play icon
+  const LOADING_STATIC_SOUND = true; // quiet radio hiss while tuning in
 
   const YT_STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 };
 
@@ -30,6 +32,7 @@
     screen: $("screen"),
     statusIcon: $("status-icon"),
     statusLabel: $("status-label"),
+    lcdTrack: $("lcd-track"),
     idle: $("idle"),
     idleArt: $("idle-art"),
     noise: $("noise"),
@@ -60,6 +63,7 @@
     highlight: 0,
     phase: "idle",        // idle | ready | loading | playing | paused | ended | blocked | error
     started: false,       // has the current video actually started rendering?
+    revealed: false,      // has the static cleared to show the video?
     wantPlay: false,      // has playback been requested for the current video?
     mutedFallback: false, // playing muted because the browser blocked sound
     player: null,
@@ -70,6 +74,8 @@
 
   let apiPromise = null;
   let progressTimer = 0;
+  let revealTimer = 0;
+  let audioCtx = null;
   const stallTimers = [];
 
   // ─── Helpers ──────────────────────────────────────────────
@@ -223,8 +229,26 @@
     el.btnPlay.setAttribute("aria-label", isPlayingish() ? "Pause" : "Play");
 
     if (phase === "playing") startProgress(); else stopProgress();
+    if (phase === "playing") scheduleReveal(); else if (phase !== "loading") hideVideo();
+    if (phase === "loading" && state.wantPlay && !state.started) startStaticSound(); else stopStaticSound();
     updateIdle();
     startViz();
+  }
+
+  // The video only shows once it has been playing for a moment, so YouTube's own
+  // play/pause flash happens behind the static.
+  function scheduleReveal() {
+    if (state.revealed || revealTimer) return;
+    revealTimer = setTimeout(() => {
+      revealTimer = 0;
+      if (state.phase === "playing") { state.revealed = true; updateIdle(); }
+    }, REVEAL_DELAY_MS);
+  }
+
+  function hideVideo() {
+    clearTimeout(revealTimer);
+    revealTimer = 0;
+    state.revealed = false;
   }
 
   function renderTitle() {
@@ -234,6 +258,8 @@
       return;
     }
     const name = trackName(m);
+    el.lcdTrack.textContent = name || "The Avalanches";
+    el.lcdTrack.title = name;
     el.nowTitleText.textContent = name || m.title;
     el.nowTitle.title = name || m.title;
     if (state.view === "now") el.statusLabel.textContent = m.title;
@@ -259,9 +285,10 @@
   function updateIdle() {
     // Our own screen covers the video until it's really playing, and while paused —
     // so YouTube's title / play-button overlays never show.
-    const showIdle = state.phase !== "error"
-      && (!state.started || state.phase === "paused" || state.phase === "ended" || state.phase === "blocked");
+    const showIdle = state.phase !== "error" && !state.revealed;
+    const tuning = state.phase === "loading" || state.phase === "playing";
     el.idle.dataset.hidden = showIdle ? "false" : "true";
+    el.idle.dataset.mode = tuning ? "static" : "art";
     if (showIdle) startIdleAnimation(); else stopIdleAnimation();
   }
 
@@ -338,6 +365,50 @@
       d[i] = v * 0.85; d[i + 1] = v; d[i + 2] = v * 0.92; d[i + 3] = 255;
     }
     noiseCtx.putImageData(noiseImage, 0, 0);
+    // A bright band rolling up the screen, like a detuned TV.
+    const h = el.noise.height;
+    const y = h - ((performance.now() / 18) % (h + 12));
+    noiseCtx.fillStyle = "rgba(255, 255, 255, 0.28)";
+    noiseCtx.fillRect(0, y, el.noise.width, 5);
+  }
+
+  let staticSound = null;
+  function startStaticSound() {
+    if (!LOADING_STATIC_SOUND || staticSound) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const buf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      const band = audioCtx.createBiquadFilter();
+      band.type = "bandpass";
+      band.frequency.value = 2200;
+      band.Q.value = 0.6;
+      const g = audioCtx.createGain();
+      const t = audioCtx.currentTime;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.045, t + 0.15);
+      src.connect(band).connect(g).connect(audioCtx.destination);
+      src.start();
+      staticSound = { src, g };
+    } catch (_) { staticSound = null; }
+  }
+
+  function stopStaticSound() {
+    if (!staticSound) return;
+    const { src, g } = staticSound;
+    staticSound = null;
+    try {
+      const t = audioCtx.currentTime;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.linearRampToValueAtTime(0, t + 0.25);
+      src.stop(t + 0.3);
+    } catch (_) { /* ignore */ }
   }
 
   function drawArt() {
@@ -623,6 +694,7 @@
     if (!LIBRARY.length) return;
     state.index = ((i % LIBRARY.length) + LIBRARY.length) % LIBRARY.length;
     state.started = false;
+    hideVideo();
     clearStallTimers();
     hideFallback();
     resetProgress();
@@ -770,7 +842,6 @@
   }
 
   // ─── Click wheel rotation ─────────────────────────────────
-  let audioCtx = null;
   function tick() {
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();

@@ -118,36 +118,6 @@ body::before {
   line-height: 0.92;
 }
 
-.title-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55em;
-  margin-top: 0.7em;
-  padding: 0.45em 0.95em 0.4em;
-  font-family: var(--pixel);
-  font-size: clamp(0.66rem, 2.3vw, 0.8rem);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  background: #fff;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  box-shadow: 0 3px 0 var(--ink);
-}
-
-.onair-dot {
-  width: 0.75em;
-  height: 0.75em;
-  border-radius: 50%;
-  background: var(--pink);
-  border: 1.5px solid var(--ink);
-  animation: onair 1.6s steps(2, jump-none) infinite;
-}
-
-@keyframes onair {
-  0%   { background: var(--pink); }
-  100% { background: #fff; }
-}
-
 .keys {
   margin: 0;
   font-family: var(--pixel);
@@ -166,7 +136,6 @@ body::before {
 /* ───────── iPod ───────── */
 
 .ipod {
-  --pal: 1;
   position: relative;
   container-type: inline-size;
   width: clamp(290px, min(86vw, 400px, calc((100svh - 250px) / 1.88)), 400px);
@@ -175,7 +144,6 @@ body::before {
 
 @media (max-width: 520px) {
   .ipod {
-    --pal: 0.7;
     width: clamp(270px, min(88vw, calc((100svh - 160px) / 1.86)), 410px);
   }
 }
@@ -384,7 +352,10 @@ body::before {
   transition: opacity 0.3s ease;
 }
 
-.screen[data-phase="loading"] .noise { opacity: 0.6; }
+/* Tuning in: full-screen TV static (also covers YouTube's play/pause flash). */
+.idle[data-mode="static"] .noise { opacity: 0.95; }
+.idle[data-mode="static"] .idle-art { opacity: 0; }
+.idle-art { transition: opacity 0.2s ease; }
 
 .idle-art {
   position: relative;
@@ -729,49 +700,6 @@ body::before {
 }
 
 .wheel-center:focus-visible { box-shadow: 0 0 0 5px var(--pink); }
-
-/* ───────── Pals ───────── */
-
-.pal {
-  position: absolute;
-  z-index: 2;
-  pointer-events: none;
-  overflow: visible;
-  animation: bob 3.2s ease-in-out infinite;
-}
-
-.pal-pink {
-  width: calc(30cqw * var(--pal));
-  left: 12cqw;
-  top: calc(-17cqw * var(--pal));
-  animation-delay: -0.4s;
-}
-
-.pal-blue {
-  width: calc(28cqw * var(--pal));
-  left: calc(-21cqw * var(--pal));
-  top: 66cqw;
-  animation-delay: -1.3s;
-}
-
-.pal-orange {
-  width: calc(22cqw * var(--pal));
-  left: calc(100cqw - 5cqw * var(--pal));
-  top: 114cqw;
-  animation-delay: -2.1s;
-}
-
-.pal-green {
-  width: calc(34cqw * var(--pal));
-  left: calc(100cqw - 13cqw * var(--pal));
-  top: calc(100% - 15cqw * var(--pal));
-  animation-delay: -0.9s;
-}
-
-@keyframes bob {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(-1.2cqw) rotate(-1.5deg); }
-}
 
 /* ───────── Motion ───────── */
 
