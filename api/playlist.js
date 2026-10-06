@@ -20,6 +20,17 @@ function walk(node, out) {
     const r = node.playlistVideoRenderer;
     out.videos.push({ youtubeId: r.videoId, title: textOf(r.title), playable: r.isPlayable !== false });
   }
+  // Newer page layout: "lockup" view models.
+  if (node.lockupViewModel && node.lockupViewModel.contentId) {
+    const l = node.lockupViewModel;
+    const t = l.metadata && l.metadata.lockupMetadataViewModel && l.metadata.lockupMetadataViewModel.title;
+    if (/^[A-Za-z0-9_-]{11}$/.test(l.contentId)) out.videos.push({ youtubeId: l.contentId, title: textOf(t), playable: true });
+  }
+  // Generic fallback: any renderer carrying a videoId and a title.
+  if (out.generic && typeof node.videoId === "string" && /^[A-Za-z0-9_-]{11}$/.test(node.videoId) && node.title) {
+    out.videos.push({ youtubeId: node.videoId, title: textOf(node.title), playable: true });
+  }
+  if (out.keys) for (const k in node) if (/Renderer$|ViewModel$/.test(k)) out.keys[k] = (out.keys[k] || 0) + 1;
   if (node.continuationItemRenderer) {
     const c = node.continuationItemRenderer;
     const tok = (c.continuationEndpoint && c.continuationEndpoint.continuationCommand && c.continuationEndpoint.continuationCommand.token)
@@ -27,7 +38,7 @@ function walk(node, out) {
         && JSON.stringify(c.continuationEndpoint.commandExecutorCommand).match(/"token":"([^"]+)"/)?.[1]);
     if (tok) out.continuation = tok;
   }
-  for (const k in node) if (k !== "playlistVideoRenderer") walk(node[k], out);
+  for (const k in node) if (k !== "playlistVideoRenderer" && k !== "lockupViewModel") walk(node[k], out);
 }
 
 module.exports = async (req, res) => {
@@ -44,8 +55,10 @@ module.exports = async (req, res) => {
     const m = html.match(/var ytInitialData = (\{.*?\});<\/script>/s) || html.match(/ytInitialData"\]\s*=\s*(\{.*?\});/s);
     if (!m) throw new Error(`no ytInitialData (status ${page.status})`);
     const data = JSON.parse(m[1]);
-    const out = { videos: [], continuation: null };
+    const debug = req.query && req.query.debug;
+    const out = { videos: [], continuation: null, keys: debug ? {} : null };
     walk(data, out);
+    if (!out.videos.length) { out.generic = true; walk(data, out); }
 
     const title = textOf(data?.metadata?.playlistMetadataRenderer?.title ? { simpleText: data.metadata.playlistMetadataRenderer.title } : data?.header?.playlistHeaderRenderer?.title);
     const key = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/)?.[1];
@@ -64,7 +77,10 @@ module.exports = async (req, res) => {
     }
 
     res.setHeader("Cache-Control", "s-maxage=21600, stale-while-revalidate=86400");
-    res.status(200).json({ id: list, title, count: out.videos.length, videos: out.videos });
+    // De-duplicate while keeping order.
+    const seen = new Set();
+    const videos = out.videos.filter((v) => !seen.has(v.youtubeId) && seen.add(v.youtubeId));
+    res.status(200).json({ id: list, title, count: videos.length, videos, ...(debug ? { keys: out.keys, len: html.length } : {}) });
   } catch (err) {
     res.status(502).json({ error: String(err && err.message || err) });
   }
