@@ -1187,7 +1187,7 @@
   })();
 
   // ─── Intro tip (first visit) ─────────────────────────────
-  // Two cards over the iPod: one pointing at MENU, then one at Shuffle.
+  // Three cards over the iPod: a welcome, then one pointing at MENU, then Shuffle.
   // "Got it", or using any control, puts it away for good (?intro shows it again).
   const INTRO_KEY = "avalanches-on-air:intro";
   const introEl = $("intro");
@@ -1208,11 +1208,19 @@
 
   const INTRO_STEPS = [
     {
-      title: "Tune in",
-      html: "Press <b>MENU</b> to pick a folder, then a track.",
+      target: "none",
+      title: "Welcome",
+      html: "Albums, remixes and DJ sets from The Avalanches, all on one little iPod.",
       button: "Next",
     },
     {
+      target: "menu",
+      title: "Use the wheel",
+      html: "Press <b>MENU</b> to see the folders. Spin the wheel to scroll, then press the centre to choose.",
+      button: "Next",
+    },
+    {
+      target: "shuffle",
       title: "Discover something new",
       html: "Press <b>Shuffle</b> to play a random track.",
       button: "Got it",
@@ -1223,9 +1231,10 @@
   function showIntroStep(i) {
     introStep = i;
     const step = INTRO_STEPS[i];
-    introEl.dataset.step = String(i + 1);
-    document.documentElement.dataset.introStep = String(i + 1);
+    introEl.dataset.target = step.target;
+    document.documentElement.dataset.introTarget = step.target;
     $("intro-count").textContent = String(i + 1);
+    $("intro-total").textContent = String(INTRO_STEPS.length);
     $("intro-title").textContent = step.title;
     $("intro-text").innerHTML = step.html;
     $("intro-next").textContent = step.button;
