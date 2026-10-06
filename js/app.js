@@ -1166,11 +1166,11 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMarquee);
 
   // ─── "Did you know?" facts ───────────────────────────────
-  // 5s into a track a fact slides up over the video. Every 20s it rotates to
+  // 10s into a track a fact slides up over the video. Every 20s it rotates to
   // the next one: the song's own facts first, then its album's in random
   // order. When there are none left for that song / album it closes. A new
   // track starts the cycle again.
-  const FACT_FIRST_MS = 5000;
+  const FACT_FIRST_MS = 10000;
   const FACT_ROTATE_MS = 20000;
   const factState = { timer: 0, queue: [], pos: 0, forTrack: null };
 
