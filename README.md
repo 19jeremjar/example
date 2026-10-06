@@ -16,6 +16,8 @@ favicon.svg
 
 Open `js/mixtapes.js` and change the `title` values. You can also add, remove or reorder entries. `youtubeId` is the part after `watch?v=` in a YouTube URL. The menu shows mixtapes in the order they're listed.
 
+The song name on the screen is taken from YouTube automatically, with tags like "(Official Audio)" removed. To set it yourself, add `track: "Song name"` to an entry.
+
 ## Running locally
 
 Serve the folder with any static server, for example:
@@ -41,7 +43,9 @@ Opening `index.html` straight from disk (`file://`) works, but YouTube embeds be
 ## Behaviour
 
 - Choosing a mixtape from the menu, or skipping, only loads it; press Play to start. If something is already playing, the music carries on. To change this, set `KEEP_PLAYING_ON_CHANGE` in `js/app.js`.
-- Shuffle picks a new mixtape at random each time, using `crypto.getRandomValues`. It never re-picks the current one, and it starts playing straight away.
+- Shuffle picks a new mixtape at random each time, using `crypto.getRandomValues`. It never re-picks the current one, and it starts playing straight away. If the browser blocks sound, it plays muted and the screen says "tap ▶ for sound".
+- YouTube's own title bar, logo and pause screen are kept out of view. The iframe is cropped, and the iPod shows its own screen while a mixtape is paused.
+- The visualiser is simulated, because YouTube doesn't let the page read its audio. Each mixtape gets its own tempo.
 - The YouTube player only loads once a mixtape is chosen or Play is pressed. It uses the `youtube-nocookie.com` embed host.
 - If a video can't be embedded, the screen shows a "Watch on YouTube" link instead.
 - The last selected mixtape is saved in `localStorage` and restored on the next visit.

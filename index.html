@@ -16,7 +16,7 @@
 <body>
   <main class="stage">
     <header class="masthead">
-      <p class="kicker">Mixtapes, broadcasting from the pocket</p>
+      <p class="kicker">Explore Mixtapes &amp; Tracks from</p>
       <h1 class="title">
         <span class="title-main">The Avalanches</span><span class="visually-hidden">:</span>
         <span class="title-tag"><span class="onair-dot" aria-hidden="true"></span>On Air</span>
@@ -64,10 +64,13 @@
 
       <div class="ipod-body">
         <div class="screen" id="screen" data-phase="idle" data-view="now">
-          <div class="statusbar">
-            <span class="status-icon" id="status-icon" aria-hidden="true"></span>
-            <span class="status-label" id="status-label">On Air</span>
-            <span class="battery" aria-hidden="true"><span></span></span>
+          <div class="lcd-head">
+            <span class="rec-dot" aria-hidden="true"></span>
+            <div class="lcd-head-text">
+              <span class="lcd-station">The Avalanches: On Air</span>
+              <span class="lcd-mix" id="status-label">Mixtape 01</span>
+            </div>
+            <span class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
           </div>
 
           <div class="now" id="now-view">
@@ -84,10 +87,11 @@
                 <p class="fallback-hint">…or hit Shuffle for another.</p>
               </div>
             </div>
+            <div class="viz" aria-hidden="true"><canvas id="viz" width="119" height="26"></canvas></div>
             <div class="now-info">
-              <p class="now-title" id="now-title">—</p>
+              <p class="now-title" id="now-title"><span id="now-title-text">—</span></p>
               <div class="progress" aria-hidden="true"><span class="progress-bar" id="progress-bar"></span></div>
-              <p class="now-status"><span id="now-status">Press play</span><span class="now-time" id="now-time"></span></p>
+              <p class="now-status"><span><span class="status-icon" id="status-icon" aria-hidden="true"></span> <span id="now-status">Press play</span></span><span class="now-time" id="now-time"></span></p>
             </div>
           </div>
 

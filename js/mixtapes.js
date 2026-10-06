@@ -2,8 +2,11 @@
 //  THE AVALANCHES: ON AIR — mixtape library
 //
 //  Edit this list to rename, reorder, add or remove mixtapes.
-//  • title     – the only text shown on the iPod screen
+//  • title     – the mixtape's name (menu + top of the screen)
 //  • youtubeId – the part after "watch?v=" in a YouTube link
+//  • track     – optional. The song name shown on the screen is taken from
+//                YouTube automatically; set this to override it, e.g.
+//                { title: "Mixtape 01", youtubeId: "…", track: "Since I Left You" }
 //
 //  The menu shows them in this order.
 // ─────────────────────────────────────────────────────────────

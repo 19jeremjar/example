@@ -5,16 +5,22 @@
   // ─── Config ───────────────────────────────────────────────
   const LIBRARY = (typeof mixtapes !== "undefined" && Array.isArray(mixtapes) ? mixtapes : [])
     .filter((m) => m && typeof m.youtubeId === "string" && m.youtubeId.trim())
-    .map((m, i) => ({ title: String(m.title || `Mixtape ${i + 1}`), youtubeId: m.youtubeId.trim() }));
+    .map((m, i) => ({
+      title: String(m.title || `Mixtape ${String(i + 1).padStart(2, "0")}`),
+      youtubeId: m.youtubeId.trim(),
+      track: m.track ? String(m.track) : "",
+    }));
 
   const STORAGE_KEY = "avalanches-on-air:last";
+  const NAMES_KEY = "avalanches-on-air:names";
   // Choosing from the menu or skipping only loads a mixtape (press Play to start)…
   // …unless something is already playing, in which case the music carries on.
   const KEEP_PLAYING_ON_CHANGE = true;
   const WHEEL_STEP_DEG = 26;     // rotation per menu step on the click wheel
   const SEEK_STEP_SECONDS = 15;  // wheel scrub in the now-playing view
   const API_TIMEOUT_MS = 15000;
-  const PLAY_STALL_MS = 5000;
+  const MUTED_RETRY_MS = 1600;   // if sound is blocked, start muted after this long
+  const PLAY_STALL_MS = 4500;    // …and give up (ask for a tap) after this long
 
   const YT_STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 };
 
@@ -27,9 +33,11 @@
     idle: $("idle"),
     idleArt: $("idle-art"),
     noise: $("noise"),
+    viz: $("viz"),
     fallback: $("fallback"),
     fallbackLink: $("fallback-link"),
     nowTitle: $("now-title"),
+    nowTitleText: $("now-title-text"),
     nowStatus: $("now-status"),
     nowTime: $("now-time"),
     progressBar: $("progress-bar"),
@@ -52,6 +60,8 @@
     highlight: 0,
     phase: "idle",        // idle | ready | loading | playing | paused | ended | blocked | error
     started: false,       // has the current video actually started rendering?
+    wantPlay: false,      // has playback been requested for the current video?
+    mutedFallback: false, // playing muted because the browser blocked sound
     player: null,
     playerReady: false,
     loadedId: null,       // video id currently loaded/cued in the player
@@ -60,7 +70,7 @@
 
   let apiPromise = null;
   let progressTimer = 0;
-  let stallTimer = 0;
+  const stallTimers = [];
 
   // ─── Helpers ──────────────────────────────────────────────
   const current = () => LIBRARY[state.index];
@@ -95,6 +105,12 @@
     return (h ? h + ":" : "") + mm + ":" + String(s).padStart(2, "0");
   }
 
+  function hash(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+    return h >>> 0;
+  }
+
   function announce(msg) {
     el.live.textContent = "";
     // Next frame so repeated messages are re-read by screen readers.
@@ -120,8 +136,50 @@
   }
 
   function isPlayingish() {
-    return state.phase === "playing" || (state.phase === "loading" && state.pending && state.pending.autoplay)
-      || (state.phase === "loading" && state.started);
+    return state.phase === "playing" || (state.phase === "loading" && state.wantPlay);
+  }
+
+  // ─── Track names (from YouTube) ───────────────────────────
+  const trackNames = (() => {
+    try { return JSON.parse(localStorage.getItem(NAMES_KEY)) || {}; } catch (_) { return {}; }
+  })();
+
+  function cleanTitle(t) {
+    return String(t)
+      .replace(/\s*[([](?:official|lyric|lyrics|audio|video|visuali[sz]er|hd|hq|4k|remaster(?:ed)?)[^)\]]*[)\]]/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  }
+
+  function trackName(m) {
+    return m.track || trackNames[m.youtubeId] || "";
+  }
+
+  function learnName(id, raw) {
+    if (!id || !raw) return;
+    const name = cleanTitle(raw) || String(raw);
+    if (trackNames[id] === name) return;
+    trackNames[id] = name;
+    try { localStorage.setItem(NAMES_KEY, JSON.stringify(trackNames)); } catch (_) { /* ignore */ }
+    if (current() && current().youtubeId === id) renderTitle();
+  }
+
+  // Best effort: look the name up before the video loads. The player fills it in otherwise.
+  function fetchName(m) {
+    if (!m || m.track || trackNames[m.youtubeId] || !window.fetch) return;
+    const url = "https://www.youtube.com/oembed?format=json&url="
+      + encodeURIComponent(`https://www.youtube.com/watch?v=${m.youtubeId}`);
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j && j.title) learnName(m.youtubeId, j.title); })
+      .catch(() => { /* offline or blocked — the player will tell us */ });
+  }
+
+  function learnFromPlayer() {
+    const p = state.player;
+    if (!p || !p.getVideoData) return;
+    const d = p.getVideoData();
+    if (d && d.video_id && d.title) learnName(d.video_id, d.title);
   }
 
   // ─── Rendering ────────────────────────────────────────────
@@ -140,10 +198,15 @@
     error: "No signal",
   };
 
+  function renderStatus() {
+    const muted = state.phase === "playing" && state.mutedFallback;
+    el.nowStatus.textContent = muted ? "Muted · tap ▶ for sound" : (STATUS_TEXT[state.phase] || "");
+  }
+
   function setPhase(phase) {
     state.phase = phase;
     el.screen.dataset.phase = phase;
-    el.nowStatus.textContent = STATUS_TEXT[phase] || "";
+    renderStatus();
 
     clearInterval(spinnerTimer);
     if (phase === "loading") {
@@ -157,25 +220,47 @@
         phase === "error" ? "!" : "■";
     }
 
-    const playing = phase === "playing" || phase === "loading";
-    el.btnPlay.setAttribute("aria-label", playing ? "Pause" : "Play");
+    el.btnPlay.setAttribute("aria-label", isPlayingish() ? "Pause" : "Play");
 
     if (phase === "playing") startProgress(); else stopProgress();
     updateIdle();
+    startViz();
   }
 
   function renderTitle() {
     const m = current();
-    el.nowTitle.textContent = m ? m.title : "No mixtapes";
-    el.nowTitle.title = m ? m.title : "";
+    if (!m) {
+      el.nowTitleText.textContent = "No mixtapes";
+      return;
+    }
+    const name = trackName(m);
+    el.nowTitleText.textContent = name || m.title;
+    el.nowTitle.title = name || m.title;
+    if (state.view === "now") el.statusLabel.textContent = m.title;
     el.menuList.querySelectorAll(".menu-item").forEach((b, i) => {
       b.setAttribute("aria-current", i === state.index ? "true" : "false");
     });
-    if (state.view === "now") el.statusLabel.textContent = "On Air";
+    fitMarquee();
+  }
+
+  // Long track names scroll back and forth, like an old iPod.
+  function fitMarquee() {
+    const span = el.nowTitleText;
+    span.classList.remove("is-marquee");
+    span.style.removeProperty("--marquee");
+    const over = span.scrollWidth - el.nowTitle.clientWidth;
+    if (over > 2 && !reduceMotion.matches) {
+      span.style.setProperty("--marquee", `${-over}px`);
+      span.style.setProperty("--marquee-dur", `${Math.max(5, over / 22)}s`);
+      span.classList.add("is-marquee");
+    }
   }
 
   function updateIdle() {
-    const showIdle = !state.started && state.phase !== "error";
+    // Our own screen covers the video until it's really playing, and while paused —
+    // so YouTube's title / play-button overlays never show.
+    const showIdle = state.phase !== "error"
+      && (!state.started || state.phase === "paused" || state.phase === "ended" || state.phase === "blocked");
     el.idle.dataset.hidden = showIdle ? "false" : "true";
     if (showIdle) startIdleAnimation(); else stopIdleAnimation();
   }
@@ -184,8 +269,9 @@
     const m = current();
     el.fallbackLink.href = `https://www.youtube.com/watch?v=${encodeURIComponent(m.youtubeId)}`;
     el.fallback.hidden = false;
+    state.wantPlay = false;
     setPhase("error");
-    announce(`${m.title} can’t be played here. You can watch it on YouTube or shuffle for another.`);
+    announce(`${trackName(m) || m.title} can’t be played here. You can watch it on YouTube or shuffle for another.`);
   }
 
   function hideFallback() {
@@ -218,38 +304,22 @@
     el.nowTime.textContent = "";
   }
 
-  // ─── Idle visual: dancing critter + screen noise ──────────
+  // ─── Idle / paused visual: critter + screen noise ─────────
   const IDLE_FRAMES = [
-    [
-      "    ,/\\,,/\\,     ",
-      "   ( =o  o= )  ♪ ",
-      "  \\(   ~~   )/   ",
-      "    \\_/  \\_/     ",
-    ],
-    [
-      "    ,/\\,,/\\,     ",
-      "   ( =o  o= )   ♫",
-      "  /(   ~~   )\\   ",
-      "    \\_/  \\_/     ",
-    ],
-    [
-      "    ,/\\,,/\\,     ",
-      "   ( =-  -= )  ♪ ",
-      "  \\(   ~~   )/   ",
-      "     \\_/\\_/      ",
-    ],
-    [
-      "    ,/\\,,/\\,     ",
-      "   ( =o  o= ) ♫  ",
-      "  /(   ~~   )\\   ",
-      "    \\_/  \\_/     ",
-    ],
+    ["    ,/\\,,/\\,     ", "   ( =o  o= )  ♪ ", "  \\(   ~~   )/   ", "    \\_/  \\_/     "],
+    ["    ,/\\,,/\\,     ", "   ( =o  o= )   ♫", "  /(   ~~   )\\   ", "    \\_/  \\_/     "],
+    ["    ,/\\,,/\\,     ", "   ( =-  -= )  ♪ ", "  \\(   ~~   )/   ", "     \\_/\\_/      "],
+    ["    ,/\\,,/\\,     ", "   ( =o  o= ) ♫  ", "  /(   ~~   )\\   ", "    \\_/  \\_/     "],
   ];
   const LOADING_FRAMES = [
     ["   .  ·  .  ·    ", "  ( =o  o= )     ", "  tuning in       ", "   ·  .  ·  .    "],
     ["   ·  .  ·  .    ", "  ( =o  o= )     ", "  tuning in.      ", "   .  ·  .  ·    "],
     ["   .  ·  .  ·    ", "  ( =O  O= )     ", "  tuning in..     ", "   ·  .  ·  .    "],
     ["   ·  .  ·  .    ", "  ( =o  o= )     ", "  tuning in...    ", "   .  ·  .  ·    "],
+  ];
+  const PAUSED_FRAMES = [
+    ["    ,/\\,,/\\,     ", "   ( =-  -= )  z ", "  (    ~~    )   ", "    \\_/  \\_/     "],
+    ["    ,/\\,,/\\,     ", "   ( =-  -= )   Z", "  (    ~~    )  z", "    \\_/  \\_/     "],
   ];
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -271,7 +341,9 @@
   }
 
   function drawArt() {
-    const frames = state.phase === "loading" ? LOADING_FRAMES : IDLE_FRAMES;
+    const frames =
+      state.phase === "loading" ? LOADING_FRAMES :
+      state.phase === "paused" || state.phase === "blocked" ? PAUSED_FRAMES : IDLE_FRAMES;
     el.idleArt.textContent = frames[idleFrame % frames.length].join("\n");
   }
 
@@ -290,6 +362,82 @@
   function stopIdleAnimation() {
     if (idleRaf) cancelAnimationFrame(idleRaf);
     idleRaf = 0;
+  }
+
+  // ─── Visualiser ───────────────────────────────────────────
+  // YouTube doesn't expose its audio to the page, so this is a beat-driven
+  // simulation: a tempo per mixtape, kick on the low bars, hats up top.
+  const VIZ_BARS = 24;
+  const VIZ_SEGS = 9;
+  const VIZ_COLORS = ["#2350ff", "#2350ff", "#1fb8ff", "#3ef06a", "#3ef06a", "#ffd23e", "#ff7a1a", "#ff6fae", "#ff6fae"];
+  const vizCtx = el.viz.getContext("2d");
+  const viz = {
+    levels: new Float32Array(VIZ_BARS),
+    peaks: new Float32Array(VIZ_BARS),
+    wobble: new Float32Array(VIZ_BARS).map(() => Math.random()),
+    raf: 0,
+    bpm: 112,
+  };
+
+  function vizDraw() {
+    if (!vizCtx) return;
+    const W = el.viz.width;
+    const H = el.viz.height;
+    const bw = 4;
+    const segH = 2;
+    const gap = 1;
+    vizCtx.clearRect(0, 0, W, H);
+    for (let i = 0; i < VIZ_BARS; i++) {
+      const x = i * (bw + 1);
+      const lit = Math.round(viz.levels[i] * VIZ_SEGS);
+      const peak = Math.min(VIZ_SEGS - 1, Math.round(viz.peaks[i] * VIZ_SEGS));
+      for (let s = 0; s < VIZ_SEGS; s++) {
+        const y = H - (s + 1) * (segH + gap) + gap;
+        if (s < lit) vizCtx.fillStyle = VIZ_COLORS[s];
+        else if (s === peak && peak > 0) vizCtx.fillStyle = "#141414";
+        else vizCtx.fillStyle = "rgba(20, 20, 20, 0.08)";
+        vizCtx.fillRect(x, y, bw, segH);
+      }
+    }
+  }
+
+  function vizLoop(ts) {
+    const active = state.phase === "playing";
+    const beatMs = 60000 / viz.bpm;
+    const kick = Math.pow(1 - (ts % beatMs) / beatMs, 3);
+    const half = beatMs / 2;
+    const hat = Math.pow(1 - (ts % half) / half, 6);
+    const bar = Math.floor(ts / (beatMs * 4));
+    const swell = 0.8 + 0.2 * Math.sin(bar * 1.7);
+    let moving = false;
+
+    for (let i = 0; i < VIZ_BARS; i++) {
+      const f = i / (VIZ_BARS - 1);
+      viz.wobble[i] = Math.min(1, Math.max(0, viz.wobble[i] + (Math.random() - 0.5) * 0.22 + (0.5 - viz.wobble[i]) * 0.05));
+      const target = active
+        ? Math.min(1, swell * (0.2 + 0.8 * kick * Math.pow(1 - f, 1.2) + 0.45 * hat * Math.pow(f, 1.1) + 0.6 * viz.wobble[i] * (1 - 0.3 * f)))
+        : 0;
+      const k = target > viz.levels[i] ? 0.55 : 0.14;
+      viz.levels[i] += (target - viz.levels[i]) * k;
+      viz.peaks[i] = Math.max(viz.levels[i], viz.peaks[i] - 0.015);
+      if (viz.levels[i] > 0.01 || viz.peaks[i] > 0.01) moving = true;
+    }
+    vizDraw();
+    viz.raf = active || moving ? requestAnimationFrame(vizLoop) : 0;
+  }
+
+  function startViz() {
+    if (reduceMotion.matches) {
+      viz.levels.forEach((_, i) => { viz.levels[i] = state.phase === "playing" ? 0.25 + 0.4 * viz.wobble[i] : 0; });
+      vizDraw();
+      return;
+    }
+    if (!viz.raf && !document.hidden) viz.raf = requestAnimationFrame(vizLoop);
+  }
+
+  function stopViz() {
+    if (viz.raf) cancelAnimationFrame(viz.raf);
+    viz.raf = 0;
   }
 
   // ─── YouTube ──────────────────────────────────────────────
@@ -345,7 +493,7 @@
     const iframe = state.player.getIframe && state.player.getIframe();
     if (iframe) {
       iframe.setAttribute("title", "Mixtape video");
-      iframe.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
+      iframe.setAttribute("tabindex", "-1");
     }
     const p = state.pending;
     state.pending = null;
@@ -367,11 +515,15 @@
 
     switch (e.data) {
       case YT_STATE.PLAYING:
-        clearTimeout(stallTimer);
+        clearStallTimers();
         state.started = true;
+        state.wantPlay = true;
+        if (state.mutedFallback && !state.player.isMuted()) state.mutedFallback = false;
+        learnFromPlayer();
         setPhase("playing");
         break;
       case YT_STATE.PAUSED:
+        state.wantPlay = false;
         setPhase("paused");
         updateProgress();
         break;
@@ -379,7 +531,8 @@
         setPhase("loading");
         break;
       case YT_STATE.CUED:
-        if (state.phase !== "error") setPhase("ready");
+        learnFromPlayer();
+        if (state.phase !== "error" && !state.wantPlay) setPhase("ready");
         break;
       case YT_STATE.ENDED:
         setPhase("ended");
@@ -392,21 +545,47 @@
   }
 
   function onPlayerError() {
-    clearTimeout(stallTimer);
+    clearStallTimers();
     showFallback();
   }
 
-  // Mobile browsers sometimes refuse to start playback without a direct tap.
+  function clearStallTimers() {
+    while (stallTimers.length) clearTimeout(stallTimers.pop());
+  }
+
+  // Browsers sometimes refuse to start sound without a direct tap on the video.
+  // First nudge it, then fall back to muted playback, then ask for a tap.
   function watchForStall() {
-    clearTimeout(stallTimer);
-    stallTimer = setTimeout(() => {
-      if (state.phase === "loading" && !state.started) setPhase("blocked");
-    }, PLAY_STALL_MS);
+    clearStallTimers();
+    const id = state.loadedId;
+    const stillWaiting = () => state.wantPlay && !state.started && state.loadedId === id && state.phase !== "error";
+    stallTimers.push(setTimeout(() => {
+      const p = state.player;
+      if (!stillWaiting() || !p || !state.playerReady) return;
+      if (p.getPlayerState() === YT_STATE.BUFFERING) return; // just slow, not blocked
+      state.mutedFallback = true;
+      p.mute();
+      p.playVideo();
+    }, MUTED_RETRY_MS));
+    stallTimers.push(setTimeout(() => {
+      if (stillWaiting()) { state.wantPlay = false; setPhase("blocked"); }
+    }, PLAY_STALL_MS));
+  }
+
+  // Called from taps: a direct user gesture is allowed to turn the sound back on.
+  function restoreSound() {
+    const p = state.player;
+    if (state.mutedFallback && p && state.playerReady) {
+      p.unMute();
+      state.mutedFallback = false;
+      renderStatus();
+    }
   }
 
   function applyToPlayer(id, autoplay) {
     state.loadedId = id;
     if (autoplay) {
+      restoreSound();
       state.player.loadVideoById(id);
       watchForStall();
     } else {
@@ -417,6 +596,7 @@
   // Load the current mixtape into the (lazily created) player.
   function loadCurrent(autoplay) {
     const id = current().youtubeId;
+    state.wantPlay = autoplay;
     setPhase("loading");
 
     if (state.player && state.playerReady) {
@@ -443,13 +623,16 @@
     if (!LIBRARY.length) return;
     state.index = ((i % LIBRARY.length) + LIBRARY.length) % LIBRARY.length;
     state.started = false;
-    clearTimeout(stallTimer);
+    clearStallTimers();
     hideFallback();
     resetProgress();
+    viz.bpm = 92 + (hash(current().youtubeId) % 44);
     renderTitle();
     save();
+    fetchName(current());
     loadCurrent(play);
-    announce(announceAs || `${current().title}${play ? ", playing" : " selected. Press play to listen."}`);
+    const name = trackName(current()) || current().title;
+    announce(announceAs || `${name}${play ? ", playing" : " selected. Press play to listen."}`);
   }
 
   function togglePlay() {
@@ -463,20 +646,32 @@
       return;
     }
     if (!p || !state.playerReady || state.loadedId !== m.youtubeId) {
-      if (state.pending) { state.pending.autoplay = !state.pending.autoplay; setPhase(state.pending.autoplay ? "loading" : "ready"); return; }
+      if (state.pending) {
+        state.pending.autoplay = !state.pending.autoplay;
+        state.wantPlay = state.pending.autoplay;
+        setPhase(state.wantPlay ? "loading" : "ready");
+        return;
+      }
       loadCurrent(true);
-      announce(`${m.title}, playing`);
+      announce(`${trackName(m) || m.title}, playing`);
       return;
     }
 
     const ps = p.getPlayerState();
-    if (ps === YT_STATE.PLAYING || ps === YT_STATE.BUFFERING) {
+    if ((ps === YT_STATE.PLAYING || ps === YT_STATE.BUFFERING) && state.mutedFallback) {
+      // Playing silently: this tap turns the sound on instead of pausing.
+      restoreSound();
+      announce("Sound on");
+    } else if (ps === YT_STATE.PLAYING || ps === YT_STATE.BUFFERING) {
+      state.wantPlay = false;
       p.pauseVideo();
       announce("Paused");
     } else {
+      restoreSound();
+      state.wantPlay = true;
       p.playVideo();
       if (!state.started) { setPhase("loading"); watchForStall(); }
-      announce(`${m.title}, playing`);
+      announce(`${trackName(m) || m.title}, playing`);
     }
   }
 
@@ -492,7 +687,8 @@
     void el.btnShuffle.offsetWidth; // restart the icon animation
     el.btnShuffle.classList.add("is-spun");
     if (state.view === "menu") closeMenu(false);
-    select(next, { play: true, announceAs: `Shuffled to ${LIBRARY[next].title}, playing` });
+    const m = LIBRARY[next];
+    select(next, { play: true, announceAs: `Shuffled to ${trackName(m) || m.title}, playing` });
   }
 
   // ─── Menu ─────────────────────────────────────────────────
@@ -540,7 +736,7 @@
     state.view = "menu";
     el.screen.dataset.view = "menu";
     el.menu.hidden = false;
-    el.statusLabel.textContent = "Mixtapes";
+    el.statusLabel.textContent = "Choose a mixtape";
     el.btnMenu.setAttribute("aria-expanded", "true");
     el.btnMenu.setAttribute("aria-label", "Menu: back to now playing");
     el.btnSelect.setAttribute("aria-label", "Select highlighted mixtape");
@@ -553,7 +749,7 @@
     state.view = "now";
     el.screen.dataset.view = "now";
     el.menu.hidden = true;
-    el.statusLabel.textContent = "On Air";
+    el.statusLabel.textContent = current().title;
     el.btnMenu.setAttribute("aria-expanded", "false");
     el.btnMenu.setAttribute("aria-label", "Menu: show mixtape list");
     el.btnSelect.setAttribute("aria-label", "Select: play or pause");
@@ -566,8 +762,7 @@
 
   function pressCenter() {
     if (state.view === "menu") {
-      const i = state.highlight;
-      select(i, { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
+      select(state.highlight, { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
       closeMenu(false);
     } else {
       togglePlay();
@@ -734,22 +929,27 @@
     if (b) setHighlight(Number(b.dataset.index));
   });
 
-  // Pause the idle animation when the tab is hidden.
+  // Pause the animations when the tab is hidden.
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stopIdleAnimation(); else updateIdle();
+    if (document.hidden) { stopIdleAnimation(); stopViz(); } else { updateIdle(); startViz(); }
   });
+
+  if (window.ResizeObserver) new ResizeObserver(() => fitMarquee()).observe(el.nowTitle);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMarquee);
 
   // ─── Boot ─────────────────────────────────────────────────
   buildMenu();
   if (!LIBRARY.length) {
-    el.nowTitle.textContent = "No mixtapes";
+    el.nowTitleText.textContent = "No mixtapes";
     [el.btnMenu, el.btnPrev, el.btnNext, el.btnPlay, el.btnSelect, el.btnShuffle].forEach((b) => { b.disabled = true; });
     setPhase("idle");
     return;
   }
   state.index = restore();
   state.highlight = state.index;
+  viz.bpm = 92 + (hash(current().youtubeId) % 44);
   renderTitle();
+  fetchName(current());
   el.btnSelect.setAttribute("aria-label", "Select: play or pause");
   setPhase("idle"); // no iframe until a mixtape is chosen or play is pressed
 })();

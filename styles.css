@@ -4,7 +4,6 @@
 
 :root {
   --paper: #f3ede1;
-  --paper-dot: rgba(70, 52, 30, 0.13);
   --ink: #141414;
   --ink-soft: #3b3a36;
 
@@ -46,10 +45,7 @@ body {
 
 body {
   background-color: var(--paper);
-  background-image:
-    radial-gradient(var(--paper-dot) 1px, transparent 1.6px),
-    radial-gradient(120% 80% at 50% 0%, #fbf7ef 0%, rgba(251, 247, 239, 0) 60%);
-  background-size: 14px 14px, 100% 100%;
+  background-image: radial-gradient(120% 80% at 50% 0%, #fbf7ef 0%, rgba(251, 247, 239, 0) 60%);
   color: var(--ink);
   font-family: var(--serif);
   -webkit-font-smoothing: antialiased;
@@ -173,14 +169,14 @@ body::before {
   --pal: 1;
   position: relative;
   container-type: inline-size;
-  width: clamp(290px, min(86vw, 400px, calc((100svh - 250px) / 1.82)), 400px);
+  width: clamp(290px, min(86vw, 400px, calc((100svh - 250px) / 1.88)), 400px);
   margin-top: 4cqw;
 }
 
 @media (max-width: 520px) {
   .ipod {
     --pal: 0.7;
-    width: clamp(270px, min(88vw, calc((100svh - 160px) / 1.8)), 410px);
+    width: clamp(270px, min(88vw, calc((100svh - 160px) / 1.86)), 410px);
   }
 }
 
@@ -208,7 +204,8 @@ body::before {
 .screen {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 0.86;
+  aspect-ratio: 1 / 1;
+  --head: 13.5cqw;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -231,63 +228,93 @@ body::before {
     radial-gradient(120% 100% at 50% 40%, transparent 60%, rgba(0,0,0,0.14) 100%);
 }
 
-.statusbar {
+.lcd-head {
   flex: none;
   position: relative;
   z-index: 3;
-  display: grid;
-  grid-template-columns: 9cqw 1fr 9cqw;
+  display: flex;
   align-items: center;
-  height: 8.5cqw;
-  padding: 0 2.2cqw;
+  gap: 2.4cqw;
+  height: var(--head);
+  padding: 0 3cqw;
   font-family: var(--pixel);
-  font-size: 3.3cqw;
-  letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: linear-gradient(#f4f6f4, #c5ccc8);
+  background: linear-gradient(#f4f6f4, #cfd6d2);
   border-bottom: 1.5px solid var(--ink);
 }
 
-.status-icon {
-  font-family: var(--lcd-font);
-  font-size: 5cqw;
+.rec-dot {
+  flex: none;
+  width: 3.6cqw;
+  height: 3.6cqw;
+  border-radius: 50%;
+  background: #e8463c;
+  border: 1.5px solid var(--ink);
+  opacity: 0.45;
+}
+
+.screen[data-phase="playing"] .rec-dot {
+  opacity: 1;
+  animation: rec 1.2s steps(2, jump-none) infinite;
+}
+
+@keyframes rec { 50% { opacity: 0.35; } }
+
+.lcd-head-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1cqw;
   line-height: 1;
 }
 
-.status-label {
-  text-align: center;
+.lcd-station,
+.lcd-mix {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.battery {
-  justify-self: end;
-  position: relative;
-  width: 6.2cqw;
-  height: 3.2cqw;
-  border: 1.5px solid var(--ink);
-  border-radius: 0.6cqw;
-  padding: 0.4cqw;
+.lcd-station { font-size: 3.2cqw; letter-spacing: 0.05em; }
+.lcd-mix { font-size: 2.9cqw; letter-spacing: 0.08em; opacity: 0.8; }
+
+.signal {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.7cqw;
+  height: 4.6cqw;
 }
 
-.battery::after {
-  content: "";
-  position: absolute;
-  right: -1.3cqw;
-  top: 0.8cqw;
-  width: 0.8cqw;
-  height: 1.2cqw;
-  background: var(--ink);
-  border-radius: 0 0.3cqw 0.3cqw 0;
-}
-
-.battery span {
+.signal i {
   display: block;
-  height: 100%;
-  width: 78%;
-  background: var(--green);
-  border-radius: 0.2cqw;
+  width: 1cqw;
+  background: var(--ink);
+  opacity: 0.3;
+}
+
+.signal i:nth-child(1) { height: 25%; }
+.signal i:nth-child(2) { height: 45%; }
+.signal i:nth-child(3) { height: 62%; }
+.signal i:nth-child(4) { height: 80%; }
+.signal i:nth-child(5) { height: 100%; }
+
+.screen[data-phase="playing"] .signal i { opacity: 1; animation: signal 1.6s ease-in-out infinite; }
+.screen[data-phase="playing"] .signal i:nth-child(2) { animation-delay: -0.3s; }
+.screen[data-phase="playing"] .signal i:nth-child(3) { animation-delay: -0.6s; }
+.screen[data-phase="playing"] .signal i:nth-child(4) { animation-delay: -0.9s; }
+.screen[data-phase="playing"] .signal i:nth-child(5) { animation-delay: -1.2s; }
+
+@keyframes signal { 50% { opacity: 0.35; } }
+
+.status-icon {
+  display: inline-block;
+  min-width: 1.2em;
+  font-family: var(--lcd-font);
+  font-size: 1.35em;
+  line-height: 0;
+  vertical-align: -0.12em;
 }
 
 /* now playing */
@@ -309,13 +336,23 @@ body::before {
   border-bottom: 1.5px solid var(--ink);
 }
 
-.yt-mount,
-.yt-mount iframe {
+.yt-mount {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The iframe is taller than the window onto it: the video still fills the
+   width, while YouTube's title bar and logo sit in the hidden margins. */
+.yt-mount iframe {
+  position: absolute;
+  left: 0;
+  top: -72px;
   width: 100%;
-  height: 100%;
+  height: calc(100% + 144px);
   border: 0;
+  pointer-events: none;
 }
 
 .idle,
@@ -393,6 +430,19 @@ body::before {
 
 .fallback-hint { opacity: 0.75; }
 
+.viz {
+  flex: none;
+  height: 9cqw;
+  padding: 1cqw 3cqw 0;
+}
+
+.viz canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
 .now-info {
   flex: 1;
   min-height: 0;
@@ -406,11 +456,21 @@ body::before {
 .now-title {
   margin: 0;
   font-family: var(--lcd-font);
-  font-size: 7cqw;
-  line-height: 0.9;
+  font-size: 6.6cqw;
+  line-height: 0.95;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.now-title span { display: inline-block; }
+
+.now-title .is-marquee {
+  animation: marquee var(--marquee-dur, 8s) ease-in-out infinite alternate;
+}
+
+@keyframes marquee {
+  0%, 12%   { transform: translateX(0); }
+  88%, 100% { transform: translateX(var(--marquee, 0)); }
 }
 
 .progress {
@@ -450,7 +510,7 @@ body::before {
   z-index: 4;
   left: 0;
   right: 0;
-  top: 8.5cqw;
+  top: var(--head);
   bottom: 0;
   background: linear-gradient(170deg, #eef2ef 0%, var(--lcd) 100%);
   animation: menu-in 0.18s ease-out;
@@ -521,9 +581,9 @@ body::before {
 .wheel {
   position: relative;
   flex: none;
-  width: 68cqw;
+  width: 64cqw;
   aspect-ratio: 1;
-  margin-top: 7cqw;
+  margin-top: 6.5cqw;
   border-radius: 50%;
   border: var(--line) solid var(--ink);
   background: radial-gradient(circle at 50% 35%, var(--wheel-hi) 0%, var(--wheel-lo) 100%);
@@ -697,7 +757,7 @@ body::before {
 .pal-orange {
   width: calc(22cqw * var(--pal));
   left: calc(100cqw - 5cqw * var(--pal));
-  top: 104cqw;
+  top: 114cqw;
   animation-delay: -2.1s;
 }
 
