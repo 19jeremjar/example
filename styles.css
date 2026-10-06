@@ -260,6 +260,53 @@ body::before {
 
 
 
+/* ───────── Tickets ───────── */
+
+.tickets {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 26px;
+  font-family: var(--pixel);
+  font-size: 0.86rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--paper);
+  background: var(--ink);
+  border: var(--line) solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 5px 0 var(--pink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+}
+
+.tickets svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.15s ease;
+}
+
+.tickets:hover { background: #2a2a2a; transform: translateY(-1px); box-shadow: 0 6px 0 var(--pink); }
+.tickets:hover svg { transform: translate(2px, -2px); }
+.tickets:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--pink); }
+.tickets:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+
+/* Wide screens: tuck it into the top-right corner so the iPod keeps its size. */
+@media (min-width: 900px) {
+  .tickets {
+    position: fixed;
+    top: 22px;
+    right: 26px;
+    z-index: 20;
+  }
+}
+
 /* ───────── iPod ───────── */
 
 .ipod {
@@ -270,7 +317,7 @@ body::before {
 
 @media (max-width: 520px) {
   .ipod {
-    width: clamp(270px, min(88vw, calc((100svh - 160px) / 1.86)), 410px);
+    width: clamp(270px, min(88vw, calc((100svh - 215px) / 1.86)), 410px);
   }
 }
 
