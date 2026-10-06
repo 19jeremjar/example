@@ -31,6 +31,10 @@ function walk(node, out) {
     out.videos.push({ youtubeId: node.videoId, title: textOf(node.title), playable: true });
   }
   if (out.keys) for (const k in node) if (/Renderer$|ViewModel$/.test(k)) out.keys[k] = (out.keys[k] || 0) + 1;
+  if (node.continuationItemViewModel && !out.continuation) {
+    const tok = JSON.stringify(node.continuationItemViewModel).match(/"token":"([^"]+)"/);
+    if (tok) out.continuation = tok[1];
+  }
   if (node.continuationItemRenderer) {
     const c = node.continuationItemRenderer;
     const tok = (c.continuationEndpoint && c.continuationEndpoint.continuationCommand && c.continuationEndpoint.continuationCommand.token)
@@ -73,14 +77,16 @@ module.exports = async (req, res) => {
         headers: { "Content-Type": "application/json", "User-Agent": UA },
         body: JSON.stringify({ context: { client: { clientName: "WEB", clientVersion: ver, hl: "en", gl: "US" } }, continuation: token }),
       });
-      walk(await r.json(), out);
+      const json = await r.json();
+      if (debug) out.pages = (out.pages || 0) + 1;
+      walk(json, out);
     }
 
     res.setHeader("Cache-Control", "s-maxage=21600, stale-while-revalidate=86400");
     // De-duplicate while keeping order.
     const seen = new Set();
     const videos = out.videos.filter((v) => !seen.has(v.youtubeId) && seen.add(v.youtubeId));
-    res.status(200).json({ id: list, title, count: videos.length, videos, ...(debug ? { keys: out.keys, len: html.length } : {}) });
+    res.status(200).json({ id: list, title, count: videos.length, videos, ...(debug ? { keys: out.keys, len: html.length, pages: out.pages || 0, hasKey: !!key } : {}) });
   } catch (err) {
     res.status(502).json({ error: String(err && err.message || err) });
   }
