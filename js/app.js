@@ -3,13 +3,29 @@
   "use strict";
 
   // ─── Config ───────────────────────────────────────────────
-  const LIBRARY = (typeof mixtapes !== "undefined" && Array.isArray(mixtapes) ? mixtapes : [])
-    .filter((m) => m && typeof m.youtubeId === "string" && m.youtubeId.trim())
-    .map((m, i) => ({
-      title: String(m.title || `Mixtape ${String(i + 1).padStart(2, "0")}`),
-      youtubeId: m.youtubeId.trim(),
-      track: m.track ? String(m.track) : "",
-    }));
+  // Folders of tracks from js/mixtapes.js (an older flat `mixtapes` list still works).
+  const FOLDERS = (() => {
+    const src =
+      typeof folders !== "undefined" && Array.isArray(folders) ? folders :
+      typeof mixtapes !== "undefined" && Array.isArray(mixtapes) ? [{ title: "Mixtapes", tracks: mixtapes }] : [];
+    return src
+      .map((f, fi) => ({
+        title: String((f && f.title) || `Folder ${fi + 1}`),
+        tracks: (f && Array.isArray(f.tracks) ? f.tracks : [])
+          .filter((t) => t && typeof t.youtubeId === "string" && t.youtubeId.trim())
+          .map((t) => ({ title: String(t.title || ""), youtubeId: t.youtubeId.trim(), track: t.track ? String(t.track) : "" })),
+      }))
+      .filter((f) => f.tracks.length);
+  })();
+
+  // Every track in one list; each knows its folder and position.
+  const LIBRARY = [];
+  FOLDERS.forEach((f, fi) => f.tracks.forEach((t, pos) => {
+    t.folder = fi;
+    t.pos = pos;
+    t.index = LIBRARY.length;
+    LIBRARY.push(t);
+  }));
 
   const STORAGE_KEY = "avalanches-on-air:last";
   const NAMES_KEY = "avalanches-on-air:names";
@@ -21,6 +37,8 @@
   const API_TIMEOUT_MS = 15000;
   const MUTED_RETRY_MS = 1600;   // if sound is blocked, start muted after this long
   const PLAY_STALL_MS = 4500;    // …and give up (ask for a tap) after this long
+  const REVEAL_DELAY_MS = 1100;  // keep the static up while YouTube flashes its play icon
+  const LOADING_STATIC_SOUND = true; // quiet radio hiss while tuning in
 
   const YT_STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 };
 
@@ -30,6 +48,7 @@
     screen: $("screen"),
     statusIcon: $("status-icon"),
     statusLabel: $("status-label"),
+    lcdTrack: $("lcd-track"),
     idle: $("idle"),
     idleArt: $("idle-art"),
     noise: $("noise"),
@@ -57,9 +76,12 @@
   const state = {
     index: 0,
     view: "now",          // "now" | "menu"
+    menuFolder: null,     // null = folder list, otherwise the folder being browsed
+    menuActions: [],
     highlight: 0,
     phase: "idle",        // idle | ready | loading | playing | paused | ended | blocked | error
     started: false,       // has the current video actually started rendering?
+    revealed: false,      // has the static cleared to show the video?
     wantPlay: false,      // has playback been requested for the current video?
     mutedFallback: false, // playing muted because the browser blocked sound
     player: null,
@@ -70,6 +92,8 @@
 
   let apiPromise = null;
   let progressTimer = 0;
+  let revealTimer = 0;
+  let audioCtx = null;
   const stallTimers = [];
 
   // ─── Helpers ──────────────────────────────────────────────
@@ -119,7 +143,7 @@
 
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ youtubeId: current().youtubeId, index: state.index }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ youtubeId: current().youtubeId, folder: current().folder, index: state.index }));
     } catch (_) { /* storage unavailable — fine */ }
   }
 
@@ -128,7 +152,10 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return 0;
       const saved = JSON.parse(raw);
-      const byId = LIBRARY.findIndex((m) => m.youtubeId === saved.youtubeId);
+      const byId = Math.max(
+        LIBRARY.findIndex((m) => m.youtubeId === saved.youtubeId && m.folder === saved.folder),
+        LIBRARY.findIndex((m) => m.youtubeId === saved.youtubeId),
+      );
       if (byId >= 0) return byId;
       if (Number.isInteger(saved.index) && saved.index >= 0 && saved.index < LIBRARY.length) return saved.index;
     } catch (_) { /* ignore */ }
@@ -152,7 +179,16 @@
   }
 
   function trackName(m) {
-    return m.track || trackNames[m.youtubeId] || "";
+    return m.track || m.title || trackNames[m.youtubeId] || "";
+  }
+
+  function displayName(m) {
+    return trackName(m) || `Track ${m.pos + 1}`;
+  }
+
+  function positionLabel(m) {
+    const f = FOLDERS[m.folder];
+    return `${f.title} · ${m.pos + 1}/${f.tracks.length}`;
   }
 
   function learnName(id, raw) {
@@ -166,7 +202,7 @@
 
   // Best effort: look the name up before the video loads. The player fills it in otherwise.
   function fetchName(m) {
-    if (!m || m.track || trackNames[m.youtubeId] || !window.fetch) return;
+    if (!m || trackName(m) || !window.fetch) return;
     const url = "https://www.youtube.com/oembed?format=json&url="
       + encodeURIComponent(`https://www.youtube.com/watch?v=${m.youtubeId}`);
     fetch(url)
@@ -223,8 +259,26 @@
     el.btnPlay.setAttribute("aria-label", isPlayingish() ? "Pause" : "Play");
 
     if (phase === "playing") startProgress(); else stopProgress();
+    if (phase === "playing") scheduleReveal(); else if (phase !== "loading") hideVideo();
+    if (phase === "loading" && state.wantPlay && !state.started) startStaticSound(); else stopStaticSound();
     updateIdle();
     startViz();
+  }
+
+  // The video only shows once it has been playing for a moment, so YouTube's own
+  // play/pause flash happens behind the static.
+  function scheduleReveal() {
+    if (state.revealed || revealTimer) return;
+    revealTimer = setTimeout(() => {
+      revealTimer = 0;
+      if (state.phase === "playing") { state.revealed = true; updateIdle(); }
+    }, REVEAL_DELAY_MS);
+  }
+
+  function hideVideo() {
+    clearTimeout(revealTimer);
+    revealTimer = 0;
+    state.revealed = false;
   }
 
   function renderTitle() {
@@ -233,12 +287,15 @@
       el.nowTitleText.textContent = "No mixtapes";
       return;
     }
-    const name = trackName(m);
-    el.nowTitleText.textContent = name || m.title;
-    el.nowTitle.title = name || m.title;
-    if (state.view === "now") el.statusLabel.textContent = m.title;
-    el.menuList.querySelectorAll(".menu-item").forEach((b, i) => {
-      b.setAttribute("aria-current", i === state.index ? "true" : "false");
+    const name = displayName(m);
+    el.lcdTrack.textContent = name;
+    el.lcdTrack.title = name;
+    el.nowTitleText.textContent = name;
+    el.nowTitle.title = name;
+    if (state.view === "now") el.statusLabel.textContent = positionLabel(m);
+    el.menuList.querySelectorAll(".menu-item").forEach((b) => {
+      const on = b.dataset.track ? Number(b.dataset.track) === state.index : Number(b.dataset.folder) === m.folder;
+      b.setAttribute("aria-current", on ? "true" : "false");
     });
     fitMarquee();
   }
@@ -259,9 +316,10 @@
   function updateIdle() {
     // Our own screen covers the video until it's really playing, and while paused —
     // so YouTube's title / play-button overlays never show.
-    const showIdle = state.phase !== "error"
-      && (!state.started || state.phase === "paused" || state.phase === "ended" || state.phase === "blocked");
+    const showIdle = state.phase !== "error" && !state.revealed;
+    const tuning = state.phase === "loading" || state.phase === "playing";
     el.idle.dataset.hidden = showIdle ? "false" : "true";
+    el.idle.dataset.mode = tuning ? "static" : "art";
     if (showIdle) startIdleAnimation(); else stopIdleAnimation();
   }
 
@@ -271,7 +329,7 @@
     el.fallback.hidden = false;
     state.wantPlay = false;
     setPhase("error");
-    announce(`${trackName(m) || m.title} can’t be played here. You can watch it on YouTube or shuffle for another.`);
+    announce(`${displayName(m)} can’t be played here. You can watch it on YouTube or shuffle for another.`);
   }
 
   function hideFallback() {
@@ -338,6 +396,50 @@
       d[i] = v * 0.85; d[i + 1] = v; d[i + 2] = v * 0.92; d[i + 3] = 255;
     }
     noiseCtx.putImageData(noiseImage, 0, 0);
+    // A bright band rolling up the screen, like a detuned TV.
+    const h = el.noise.height;
+    const y = h - ((performance.now() / 18) % (h + 12));
+    noiseCtx.fillStyle = "rgba(255, 255, 255, 0.28)";
+    noiseCtx.fillRect(0, y, el.noise.width, 5);
+  }
+
+  let staticSound = null;
+  function startStaticSound() {
+    if (!LOADING_STATIC_SOUND || staticSound) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const buf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      const band = audioCtx.createBiquadFilter();
+      band.type = "bandpass";
+      band.frequency.value = 2200;
+      band.Q.value = 0.6;
+      const g = audioCtx.createGain();
+      const t = audioCtx.currentTime;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.045, t + 0.15);
+      src.connect(band).connect(g).connect(audioCtx.destination);
+      src.start();
+      staticSound = { src, g };
+    } catch (_) { staticSound = null; }
+  }
+
+  function stopStaticSound() {
+    if (!staticSound) return;
+    const { src, g } = staticSound;
+    staticSound = null;
+    try {
+      const t = audioCtx.currentTime;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.linearRampToValueAtTime(0, t + 0.25);
+      src.stop(t + 0.3);
+    } catch (_) { /* ignore */ }
   }
 
   function drawArt() {
@@ -537,7 +639,7 @@
       case YT_STATE.ENDED:
         setPhase("ended");
         // Roll straight into the next mixtape, like a tape flipping over.
-        select((state.index + 1) % LIBRARY.length, { play: true });
+        select(neighbour(1), { play: true });
         break;
       default:
         break;
@@ -623,6 +725,7 @@
     if (!LIBRARY.length) return;
     state.index = ((i % LIBRARY.length) + LIBRARY.length) % LIBRARY.length;
     state.started = false;
+    hideVideo();
     clearStallTimers();
     hideFallback();
     resetProgress();
@@ -631,7 +734,7 @@
     save();
     fetchName(current());
     loadCurrent(play);
-    const name = trackName(current()) || current().title;
+    const name = displayName(current());
     announce(announceAs || `${name}${play ? ", playing" : " selected. Press play to listen."}`);
   }
 
@@ -653,7 +756,7 @@
         return;
       }
       loadCurrent(true);
-      announce(`${trackName(m) || m.title}, playing`);
+      announce(`${displayName(m)}, playing`);
       return;
     }
 
@@ -671,47 +774,103 @@
       state.wantPlay = true;
       p.playVideo();
       if (!state.started) { setPhase("loading"); watchForStall(); }
-      announce(`${trackName(m) || m.title}, playing`);
+      announce(`${displayName(m)}, playing`);
     }
   }
 
+  // Previous / next stay inside the current folder (wrapping around).
+  function neighbour(delta) {
+    const m = current();
+    const tracks = FOLDERS[m.folder].tracks;
+    return tracks[(m.pos + delta + tracks.length) % tracks.length].index;
+  }
+
   function step(delta) {
-    select(state.index + delta, { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
-    if (state.view === "menu") setHighlight(state.index);
+    select(neighbour(delta), { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
+    if (state.view === "menu" && state.menuFolder === current().folder) setHighlight(current().pos);
   }
 
   function shuffle() {
     if (!LIBRARY.length) return;
-    const next = randomOtherIndex(LIBRARY.length, state.index);
+    // Any track in any folder — never the one playing now (even if it's in two folders).
+    let next = randomOtherIndex(LIBRARY.length, state.index);
+    for (let i = 0; i < 20 && LIBRARY[next].youtubeId === current().youtubeId; i++) {
+      next = randomOtherIndex(LIBRARY.length, state.index);
+    }
     el.btnShuffle.classList.remove("is-spun");
     void el.btnShuffle.offsetWidth; // restart the icon animation
     el.btnShuffle.classList.add("is-spun");
     if (state.view === "menu") closeMenu(false);
     const m = LIBRARY[next];
-    select(next, { play: true, announceAs: `Shuffled to ${trackName(m) || m.title}, playing` });
+    select(next, { play: true, announceAs: `Shuffled to ${displayName(m)} from ${FOLDERS[m.folder].title}, playing` });
   }
 
-  // ─── Menu ─────────────────────────────────────────────────
-  function buildMenu() {
+  // ─── Menu: folders → tracks ──────────────────────────────
+  function renderMenu() {
+    const atRoot = state.menuFolder === null;
+    const entries = atRoot
+      ? FOLDERS.map((f, fi) => ({
+          label: f.title,
+          count: f.tracks.length,
+          data: { folder: fi },
+          current: current().folder === fi,
+          act: () => enterFolder(fi, 0),
+        }))
+      : FOLDERS[state.menuFolder].tracks.map((t) => ({
+          label: displayName(t),
+          data: { track: t.index },
+          current: t.index === state.index,
+          act: () => {
+            select(t.index, { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
+            closeMenu(true);
+          },
+        }));
+
+    state.menuActions = entries.map((e) => e.act);
     const frag = document.createDocumentFragment();
-    LIBRARY.forEach((m, i) => {
+    entries.forEach((e, i) => {
       const li = document.createElement("li");
       const b = document.createElement("button");
       b.type = "button";
       b.className = "menu-item";
-      b.id = `mix-${i}`;
-      b.dataset.index = String(i);
+      b.id = `menu-item-${i}`;
+      b.dataset.pos = String(i);
+      Object.entries(e.data).forEach(([k, v]) => { b.dataset[k] = String(v); });
       b.tabIndex = -1;
-      b.innerHTML = '<span class="mi-title"></span><span class="mi-mark" aria-hidden="true">♪</span><span class="mi-chev" aria-hidden="true">›</span>';
-      b.querySelector(".mi-title").textContent = m.title;
-      b.addEventListener("click", () => {
-        select(i, { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
-        closeMenu(true);
-      });
+      b.setAttribute("aria-current", e.current ? "true" : "false");
+      b.innerHTML = '<span class="mi-title"></span><span class="mi-mark" aria-hidden="true">♪</span><span class="mi-count" aria-hidden="true"></span><span class="mi-chev" aria-hidden="true">›</span>';
+      b.querySelector(".mi-title").textContent = e.label;
+      if (e.count) {
+        b.querySelector(".mi-count").textContent = String(e.count);
+        b.setAttribute("aria-label", `${e.label}, folder, ${e.count} tracks`);
+      }
+      b.addEventListener("click", () => { setHighlight(i); e.act(); });
       li.appendChild(b);
       frag.appendChild(li);
     });
+    el.menuList.textContent = "";
     el.menuList.appendChild(frag);
+    el.menuList.setAttribute("aria-label", atRoot ? "Folders" : FOLDERS[state.menuFolder].title);
+    el.statusLabel.textContent = atRoot ? "Mixtapes" : FOLDERS[state.menuFolder].title;
+    el.btnMenu.setAttribute("aria-label", atRoot ? "Menu: back to now playing" : "Menu: back to folders");
+  }
+
+  function enterFolder(fi, highlight) {
+    state.menuFolder = fi;
+    renderMenu();
+    setHighlight(highlight, { focus: true });
+  }
+
+  // MENU goes up a level: tracks → folders → now playing.
+  function menuBack() {
+    if (state.menuFolder !== null) {
+      const fi = state.menuFolder;
+      state.menuFolder = null;
+      renderMenu();
+      setHighlight(fi, { focus: true });
+    } else {
+      closeMenu(true);
+    }
   }
 
   function menuItems() { return el.menuList.querySelectorAll(".menu-item"); }
@@ -734,13 +893,13 @@
   function openMenu() {
     if (state.view === "menu" || !LIBRARY.length) return;
     state.view = "menu";
+    state.menuFolder = null;
     el.screen.dataset.view = "menu";
     el.menu.hidden = false;
-    el.statusLabel.textContent = "Choose a mixtape";
     el.btnMenu.setAttribute("aria-expanded", "true");
-    el.btnMenu.setAttribute("aria-label", "Menu: back to now playing");
-    el.btnSelect.setAttribute("aria-label", "Select highlighted mixtape");
-    setHighlight(state.index, { focus: true });
+    el.btnSelect.setAttribute("aria-label", "Select highlighted item");
+    renderMenu();
+    setHighlight(current().folder, { focus: true });
   }
 
   function closeMenu(returnFocus) {
@@ -749,28 +908,27 @@
     state.view = "now";
     el.screen.dataset.view = "now";
     el.menu.hidden = true;
-    el.statusLabel.textContent = current().title;
+    el.statusLabel.textContent = positionLabel(current());
     el.btnMenu.setAttribute("aria-expanded", "false");
-    el.btnMenu.setAttribute("aria-label", "Menu: show mixtape list");
+    el.btnMenu.setAttribute("aria-label", "Menu: browse folders");
     el.btnSelect.setAttribute("aria-label", "Select: play or pause");
     if (returnFocus || hadFocus) el.btnMenu.focus({ preventScroll: true });
   }
 
   function toggleMenu() {
-    if (state.view === "menu") closeMenu(false); else openMenu();
+    if (state.view === "menu") menuBack(); else openMenu();
   }
 
   function pressCenter() {
     if (state.view === "menu") {
-      select(state.highlight, { play: KEEP_PLAYING_ON_CHANGE && isPlayingish() });
-      closeMenu(false);
+      const act = state.menuActions[state.highlight];
+      if (act) act();
     } else {
       togglePlay();
     }
   }
 
   // ─── Click wheel rotation ─────────────────────────────────
-  let audioCtx = null;
   function tick() {
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
@@ -902,7 +1060,7 @@
       case "End":
         if (state.view !== "menu") return;
         e.preventDefault();
-        setHighlight(e.key === "Home" ? 0 : LIBRARY.length - 1, { focus: true });
+        setHighlight(e.key === "Home" ? 0 : menuItems().length - 1, { focus: true });
         break;
       case "Enter":
         if (state.view === "menu" && !onControl) { e.preventDefault(); pressCenter(); }
@@ -926,7 +1084,7 @@
   // Keep the menu highlight in sync when tabbing/clicking into it.
   el.menuList.addEventListener("focusin", (e) => {
     const b = e.target.closest(".menu-item");
-    if (b) setHighlight(Number(b.dataset.index));
+    if (b) setHighlight(Number(b.dataset.pos));
   });
 
   // Pause the animations when the tab is hidden.
@@ -938,7 +1096,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMarquee);
 
   // ─── Boot ─────────────────────────────────────────────────
-  buildMenu();
   if (!LIBRARY.length) {
     el.nowTitleText.textContent = "No mixtapes";
     [el.btnMenu, el.btnPrev, el.btnNext, el.btnPlay, el.btnSelect, el.btnShuffle].forEach((b) => { b.disabled = true; });
