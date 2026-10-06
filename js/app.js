@@ -11,9 +11,15 @@
     return src
       .map((f, fi) => ({
         title: String((f && f.title) || `Folder ${fi + 1}`),
+        facts: f && Array.isArray(f.facts) ? f.facts.map(String) : [],
         tracks: (f && Array.isArray(f.tracks) ? f.tracks : [])
           .filter((t) => t && typeof t.youtubeId === "string" && t.youtubeId.trim())
-          .map((t) => ({ title: String(t.title || ""), youtubeId: t.youtubeId.trim(), track: t.track ? String(t.track) : "" })),
+          .map((t) => ({
+            title: String(t.title || ""),
+            youtubeId: t.youtubeId.trim(),
+            track: t.track ? String(t.track) : "",
+            facts: Array.isArray(t.facts) ? t.facts.map(String) : [],
+          })),
       }))
       .filter((f) => f.tracks.length);
   })();
@@ -49,6 +55,9 @@
     statusIcon: $("status-icon"),
     statusLabel: $("status-label"),
     lcdTrack: $("lcd-track"),
+    fact: $("fact"),
+    factText: $("fact-text"),
+    factClose: $("fact-close"),
     batt: $("batt"),
     battPct: $("batt-pct"),
     battFill: $("batt-fill"),
@@ -263,6 +272,7 @@
 
     if (phase === "playing") startProgress(); else stopProgress();
     if (phase === "playing") scheduleReveal(); else if (phase !== "loading") hideVideo();
+    if (phase === "playing") scheduleFact(); else if (phase !== "loading") cancelFact();
     if (phase === "loading" && state.wantPlay && !state.started) startStaticSound(); else stopStaticSound();
     updateIdle();
     startViz();
@@ -762,6 +772,7 @@
     state.index = ((i % LIBRARY.length) + LIBRARY.length) % LIBRARY.length;
     state.started = false;
     hideVideo();
+    cancelFact(true);
     clearStallTimers();
     hideFallback();
     resetProgress();
@@ -1141,6 +1152,64 @@
 
   if (window.ResizeObserver) new ResizeObserver(() => fitMarquee()).observe(el.nowTitle);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMarquee);
+
+  // ─── "Did you know?" facts ───────────────────────────────
+  // 5s into a track a fact slides up over the video: the song's own fact
+  // first if it has one, otherwise one about its folder / album. Long tracks
+  // rotate in a new one every so often, never repeating the last few.
+  const FACT_FIRST_MS = 5000;
+  const FACT_EVERY_MS = 75000;
+  const factState = { timer: 0, hideTimer: 0, shownFor: null, recent: [] };
+
+  function pickFact(m) {
+    const own = m.facts || [];
+    const album = FOLDERS[m.folder].facts || [];
+    const fresh = (list) => list.filter((f) => !factState.recent.includes(f));
+    let pool = factState.shownFor !== m.index ? fresh(own) : [];
+    if (!pool.length) pool = fresh(own.concat(album));
+    if (!pool.length) pool = own.concat(album).filter((f) => f !== factState.recent[factState.recent.length - 1]);
+    return pool.length ? pool[randomInt(pool.length)] : "";
+  }
+
+  function showFact() {
+    factState.timer = 0;
+    const m = current();
+    if (state.phase !== "playing" || document.documentElement.classList.contains("intro-active")) return;
+    const fact = pickFact(m);
+    if (fact) {
+      factState.shownFor = m.index;
+      factState.recent = factState.recent.concat(fact).slice(-4);
+      el.factText.textContent = fact;
+      el.fact.hidden = false;
+      el.fact.classList.remove("is-leaving");
+      clearTimeout(factState.hideTimer);
+      factState.hideTimer = setTimeout(hideFact, Math.min(16000, 6000 + fact.length * 45));
+    }
+    factState.timer = setTimeout(showFact, FACT_EVERY_MS);
+  }
+
+  function hideFact() {
+    clearTimeout(factState.hideTimer);
+    factState.hideTimer = 0;
+    if (el.fact.hidden) return;
+    if (reduceMotion.matches) { el.fact.hidden = true; return; }
+    el.fact.classList.add("is-leaving");
+    setTimeout(() => { if (el.fact.classList.contains("is-leaving")) el.fact.hidden = true; }, 300);
+  }
+
+  function scheduleFact() {
+    if (factState.timer) return;
+    factState.timer = setTimeout(showFact, FACT_FIRST_MS);
+  }
+
+  // Pausing stops the countdown; changing track also clears what's on screen.
+  function cancelFact(clearScreen) {
+    clearTimeout(factState.timer);
+    factState.timer = 0;
+    if (clearScreen) hideFact();
+  }
+
+  el.factClose.addEventListener("click", hideFact);
 
   // ─── Battery ──────────────────────────────────────────────
   // Shows the device's real battery where the browser shares it; otherwise a
