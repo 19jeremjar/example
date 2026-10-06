@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Avalanches: On Air</title>
+  <meta name="description" content="The Avalanches: On Air — a pocket-sized mixtape player.">
+  <meta name="theme-color" content="#f3ede1">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Silkscreen&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="stage">
+    <header class="masthead">
+      <p class="kicker">Explore Mixtapes &amp; Tracks from</p>
+      <h1 class="title">
+        <span class="title-main">The Avalanches</span><span class="visually-hidden">:</span>
+        <span class="title-tag"><span class="onair-dot" aria-hidden="true"></span>On Air</span>
+      </h1>
+    </header>
+
+    <section class="ipod" id="ipod" aria-label="Mixtape player">
+      <!-- Little friends hanging off the player (decorative) -->
+      <svg class="pal pal-pink" viewBox="0 0 120 90" aria-hidden="true" focusable="false">
+        <path d="M18 70 C10 40 30 12 60 12 C90 12 110 40 102 70 Z" fill="#ff6fae" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
+        <path d="M34 20 L28 4 L44 15 M86 20 L92 4 L76 15" fill="#ff6fae" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
+        <circle cx="47" cy="42" r="9" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="49" cy="44" r="3.6" fill="#141414"/>
+        <circle cx="73" cy="42" r="9" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="75" cy="44" r="3.6" fill="#141414"/>
+        <path d="M52 58 Q60 64 68 58" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round"/>
+        <rect x="24" y="64" width="22" height="20" rx="9" fill="#ff6fae" stroke="#141414" stroke-width="3.5"/>
+        <rect x="74" y="64" width="22" height="20" rx="9" fill="#ff6fae" stroke="#141414" stroke-width="3.5"/>
+      </svg>
+      <svg class="pal pal-blue" viewBox="0 0 110 130" aria-hidden="true" focusable="false">
+        <path d="M14 112 C2 80 4 30 30 16 C50 4 74 14 78 40 C82 66 80 96 70 114 C56 126 26 126 14 112 Z" fill="#2350ff" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
+        <path d="M26 20 L20 2 L38 14 M58 12 L66 -2 L68 18" fill="#2350ff" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
+        <circle cx="42" cy="44" r="10" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="46" cy="45" r="4" fill="#141414"/>
+        <circle cx="64" cy="46" r="8" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="67" cy="47" r="3.4" fill="#141414"/>
+        <ellipse cx="54" cy="68" rx="7" ry="5" fill="#141414"/>
+        <path d="M66 74 C80 70 92 72 98 78" fill="none" stroke="#141414" stroke-width="13" stroke-linecap="round"/>
+        <path d="M66 74 C80 70 92 72 98 78" fill="none" stroke="#2350ff" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="99" cy="80" r="8" fill="#2350ff" stroke="#141414" stroke-width="3.5"/>
+      </svg>
+      <svg class="pal pal-orange" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="58" cy="52" r="34" fill="#ff7a1a" stroke="#141414" stroke-width="3.5"/>
+        <path d="M48 20 Q52 4 62 10 Q58 16 60 19" fill="#ff7a1a" stroke="#141414" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M44 46 l8 -6 M52 46 l-8 -6" stroke="#141414" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="68" cy="44" r="7" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="66" cy="45" r="3" fill="#141414"/>
+        <path d="M48 64 Q58 72 70 63" fill="none" stroke="#141414" stroke-width="3" stroke-linecap="round"/>
+        <rect x="6" y="54" width="26" height="16" rx="8" fill="#ff7a1a" stroke="#141414" stroke-width="3.5"/>
+      </svg>
+      <svg class="pal pal-green" viewBox="0 0 130 110" aria-hidden="true" focusable="false">
+        <path d="M30 100 C14 92 14 52 36 38 C58 24 94 26 110 46 C126 66 120 96 100 102 Z" fill="#3ef06a" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
+        <circle cx="62" cy="60" r="10" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="60" cy="58" r="4" fill="#141414"/>
+        <circle cx="88" cy="58" r="10" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="86" cy="56" r="4" fill="#141414"/>
+        <path d="M66 80 Q76 88 86 80" fill="#141414" stroke="#141414" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M40 46 C30 32 22 20 18 10" fill="none" stroke="#141414" stroke-width="13" stroke-linecap="round"/>
+        <path d="M40 46 C30 32 22 20 18 10" fill="none" stroke="#3ef06a" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="17" cy="9" r="8" fill="#3ef06a" stroke="#141414" stroke-width="3.5"/>
+      </svg>
+
+      <div class="ipod-body">
+        <div class="screen" id="screen" data-phase="idle" data-view="now">
+          <div class="lcd-head">
+            <span class="rec-dot" aria-hidden="true"></span>
+            <div class="lcd-head-text">
+              <span class="lcd-station">The Avalanches: On Air</span>
+              <span class="lcd-mix" id="status-label">Mixtape 01</span>
+            </div>
+            <span class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          </div>
+
+          <div class="now" id="now-view">
+            <div class="video-area" id="video-area">
+              <div class="yt-mount"><div id="yt-mount"></div></div>
+              <div class="idle" id="idle" aria-hidden="true">
+                <canvas class="noise" id="noise" width="96" height="54"></canvas>
+                <pre class="idle-art" id="idle-art"></pre>
+              </div>
+              <div class="fallback" id="fallback" hidden>
+                <pre class="fallback-art" aria-hidden="true">  (x_x)  ~ no signal ~</pre>
+                <p class="fallback-text">This one can’t be played here.</p>
+                <a class="fallback-link" id="fallback-link" href="#" target="_blank" rel="noopener">Watch on YouTube ↗</a>
+                <p class="fallback-hint">…or hit Shuffle for another.</p>
+              </div>
+            </div>
+            <div class="viz" aria-hidden="true"><canvas id="viz" width="119" height="26"></canvas></div>
+            <div class="now-info">
+              <p class="now-title" id="now-title"><span id="now-title-text">—</span></p>
+              <div class="progress" aria-hidden="true"><span class="progress-bar" id="progress-bar"></span></div>
+              <p class="now-status"><span><span class="status-icon" id="status-icon" aria-hidden="true"></span> <span id="now-status">Press play</span></span><span class="now-time" id="now-time"></span></p>
+            </div>
+          </div>
+
+          <div class="menu" id="menu" hidden>
+            <ul class="menu-list" id="menu-list" aria-label="Mixtapes"></ul>
+          </div>
+        </div>
+
+        <div class="wheel" id="wheel">
+          <button type="button" class="wheel-btn wheel-menu" id="btn-menu" aria-label="Menu: show mixtape list" aria-controls="menu" aria-expanded="false">MENU</button>
+          <button type="button" class="wheel-btn wheel-prev" id="btn-prev" aria-label="Previous mixtape">
+            <svg viewBox="0 0 32 16" aria-hidden="true" focusable="false"><path d="M4 2v12M16 2L6 8l10 6zM28 2L18 8l10 6z"/></svg>
+          </button>
+          <button type="button" class="wheel-btn wheel-next" id="btn-next" aria-label="Next mixtape">
+            <svg viewBox="0 0 32 16" aria-hidden="true" focusable="false"><path d="M28 2v12M16 2l10 6-10 6zM4 2l10 6-10 6z"/></svg>
+          </button>
+          <button type="button" class="wheel-btn wheel-play" id="btn-play" aria-label="Play">
+            <svg viewBox="0 0 32 16" aria-hidden="true" focusable="false"><path d="M4 2l10 6-10 6zM19 2v12M26 2v12"/></svg>
+          </button>
+          <button type="button" class="wheel-center" id="btn-select" aria-label="Select"></button>
+        </div>
+
+        <button type="button" class="shuffle" id="btn-shuffle" aria-label="Shuffle: play a random mixtape">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 4.8C14.3 16 15.5 17 17.5 17H21M17.5 14 21 17l-3.5 3M3 17h3.5c1.2 0 2.1-.4 2.9-1.1M21 7h-3.5c-1.2 0-2.1.4-2.9 1.1M17.5 4 21 7l-3.5 3"/></svg>
+          <span>Shuffle</span>
+        </button>
+      </div>
+    </section>
+
+    <p class="keys" aria-hidden="true">space play/pause · ← → skip · M menu · S shuffle</p>
+    <p class="visually-hidden" id="live" aria-live="polite" aria-atomic="true"></p>
+  </main>
+
+  <script src="js/mixtapes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
