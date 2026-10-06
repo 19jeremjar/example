@@ -33,10 +33,12 @@
 
     <section class="ipod" id="ipod" aria-label="Mixtape player">
       <div class="ipod-body">
-        <div class="intro" id="intro" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-text">
+        <div class="intro" id="intro" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-text" data-step="1">
+          <button type="button" class="intro-close" id="intro-close" aria-label="Close tips">✕</button>
+          <p class="intro-count" aria-hidden="true"><span id="intro-count">1</span> / 2</p>
           <h2 class="intro-title" id="intro-title">Tune in</h2>
-          <p class="intro-text" id="intro-text">Albums, remixes and DJ sets from The Avalanches on one little iPod. Press <b>MENU</b> to browse the folders, or hit <b>Shuffle</b> for a surprise.</p>
-          <button type="button" class="intro-next" id="intro-next">Got it</button>
+          <p class="intro-text" id="intro-text">Press <b>MENU</b> to pick a folder, then a track.</p>
+          <button type="button" class="intro-next" id="intro-next">Next</button>
         </div>
         <div class="screen" id="screen" data-phase="idle" data-view="now">
           <div class="lcd-head">

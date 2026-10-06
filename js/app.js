@@ -1070,7 +1070,8 @@
   document.addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (document.documentElement.classList.contains("intro-active")) {
-      finishIntro(); // any key dismisses the tip (and still does its job below)
+      if (introEl.contains(e.target) && e.key !== "Escape") return; // Enter/Space on the card's own button
+      finishIntro(); // any other key dismisses the tip (and still does its job below)
       if (e.key === "Escape") { e.preventDefault(); return; }
     }
     const t = e.target;
@@ -1186,8 +1187,8 @@
   })();
 
   // ─── Intro tip (first visit) ─────────────────────────────
-  // One card over the screen pointing at MENU. "Got it", or using any
-  // control, puts it away for good (add ?intro to the URL to see it again).
+  // Two cards over the iPod: one pointing at MENU, then one at Shuffle.
+  // "Got it", or using any control, puts it away for good (?intro shows it again).
   const INTRO_KEY = "avalanches-on-air:intro";
   const introEl = $("intro");
 
@@ -1205,11 +1206,48 @@
     setTimeout(done, 400); // in case animations are off
   }
 
+  const INTRO_STEPS = [
+    {
+      title: "Tune in",
+      html: "Press <b>MENU</b> to pick a folder, then a track.",
+      button: "Next",
+    },
+    {
+      title: "Discover something new",
+      html: "Press <b>Shuffle</b> to play a random track.",
+      button: "Got it",
+    },
+  ];
+  let introStep = 0;
+
+  function showIntroStep(i) {
+    introStep = i;
+    const step = INTRO_STEPS[i];
+    introEl.dataset.step = String(i + 1);
+    document.documentElement.dataset.introStep = String(i + 1);
+    $("intro-count").textContent = String(i + 1);
+    $("intro-title").textContent = step.title;
+    $("intro-text").innerHTML = step.html;
+    $("intro-next").textContent = step.button;
+    if (i > 0 && !reduceMotion.matches) {
+      introEl.classList.remove("is-swapping");
+      void introEl.offsetWidth;
+      introEl.classList.add("is-swapping");
+    }
+  }
+
   if (introEl) {
+    showIntroStep(0);
     $("intro-next").addEventListener("click", () => {
-      finishIntro();
-      el.btnMenu.focus({ preventScroll: true });
+      if (introStep < INTRO_STEPS.length - 1) {
+        showIntroStep(introStep + 1);
+        $("intro-next").focus({ preventScroll: true });
+      } else {
+        finishIntro();
+        el.btnShuffle.focus({ preventScroll: true });
+      }
     });
+    $("intro-close").addEventListener("click", finishIntro);
     // Pressing any iPod control also dismisses it (and the control still works).
     [el.wheel, el.btnShuffle].forEach((c) => c.addEventListener("pointerdown", finishIntro));
     [el.btnMenu, el.btnPrev, el.btnNext, el.btnPlay, el.btnSelect, el.btnShuffle].forEach((b) => b.addEventListener("click", finishIntro));
