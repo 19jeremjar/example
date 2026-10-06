@@ -273,7 +273,6 @@
     if (phase === "playing") startProgress(); else stopProgress();
     if (phase === "playing") scheduleReveal(); else if (phase !== "loading") hideVideo();
     if (phase === "playing") scheduleFact(); else if (phase !== "loading") cancelFact();
-    if (phase === "loading" && state.wantPlay && !state.started) startStaticSound(); else stopStaticSound();
     updateIdle();
     startViz();
   }
@@ -366,6 +365,8 @@
     const tuning = state.phase === "loading" || state.phase === "playing";
     el.idle.dataset.hidden = showIdle ? "false" : "true";
     el.idle.dataset.mode = tuning ? "static" : "art";
+    // The fuzz sound follows the fuzz picture.
+    if (showIdle && tuning && state.wantPlay) startStaticSound(); else stopStaticSound();
     if (showIdle) startIdleAnimation(); else stopIdleAnimation();
   }
 
@@ -450,6 +451,17 @@
   }
 
   let staticSound = null;
+
+  // Browsers (iOS especially) only allow page audio after a tap, so warm the
+  // audio up on the first one.
+  function unlockAudio() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    } catch (_) { /* no Web Audio */ }
+  }
+  ["pointerdown", "keydown", "touchstart"].forEach((ev) =>
+    document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
   function startStaticSound() {
     if (!LOADING_STATIC_SOUND || staticSound) return;
     try {
@@ -468,7 +480,7 @@
       const g = audioCtx.createGain();
       const t = audioCtx.currentTime;
       g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.045, t + 0.15);
+      g.gain.linearRampToValueAtTime(0.08, t + 0.08);
       src.connect(band).connect(g).connect(audioCtx.destination);
       src.start();
       staticSound = { src, g };
