@@ -118,113 +118,88 @@ body::before {
   line-height: 0.92;
 }
 
-/* ───────── Intro ───────── */
+/* ───────── Intro tip (first visit) ───────── */
 
-.intro { display: none; width: min(88vw, 400px); }
-.intro-active .intro { display: block; }
-.intro-active .ipod { display: none; }
+.intro { display: none; }
 
-.intro-card {
-  padding: 26px 24px 20px;
+/* Sits over the screen, pointing down at MENU. */
+.intro-active .intro {
+  position: absolute;
+  z-index: 10;
+  left: 9cqw;
+  right: 9cqw;
+  top: 95cqw;
+  transform: translateY(-100%);
+  display: block;
+  padding: 5.5cqw 5.5cqw 5cqw;
+  text-align: center;
   background: #fbfaf6;
   border: var(--line) solid var(--ink);
-  border-radius: 22px;
-  box-shadow: 0 6px 0 var(--ink), 0 24px 40px -18px rgba(70, 48, 20, 0.35);
-  text-align: center;
-  animation: intro-in 0.45s cubic-bezier(.2, 1.4, .4, 1);
+  border-radius: 5cqw;
+  box-shadow: 0 1.4cqw 0 var(--ink), 0 6cqw 9cqw -4cqw rgba(70, 48, 20, 0.45);
+  animation: intro-in 0.45s cubic-bezier(.2, 1.4, .4, 1) both;
 }
 
-.intro-step[hidden] { display: none; }
-.intro-step { animation: intro-step 0.3s ease; }
-
-.intro-count {
-  margin: 0 0 12px;
-  font-family: var(--pixel);
-  font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  opacity: 0.6;
+/* the arrow */
+.intro-active .intro::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4.4cqw;
+  width: 7cqw;
+  height: 7cqw;
+  transform: translateX(-50%) rotate(45deg);
+  background: #fbfaf6;
+  border-right: var(--line) solid var(--ink);
+  border-bottom: var(--line) solid var(--ink);
 }
-
-.intro-art {
-  display: inline-block;
-  margin: 0 0 6px;
-  padding: 10px 16px;
-  font-family: var(--lcd-font);
-  font-size: 1.25rem;
-  line-height: 0.95;
-  text-align: left;
-  color: var(--lcd-ink);
-  background: linear-gradient(170deg, var(--lcd) 0%, var(--lcd-lo) 100%);
-  border: 2px solid var(--ink);
-  border-radius: 10px;
-}
-
-.intro-wheel { display: block; width: 120px; height: 120px; margin: 0 auto 6px; }
-.intro-wheel-menu { fill: var(--blue); stroke: var(--ink); stroke-width: 2; animation: menu-pulse 1.4s ease-in-out infinite; }
-.intro-wheel-label { font: 700 9px -apple-system, "Helvetica Neue", Arial, sans-serif; letter-spacing: 0.08em; fill: #fff; }
 
 .intro-title {
-  margin: 8px 0 8px;
+  margin: 0 0 2cqw;
   font-family: var(--serif);
   font-weight: 400;
-  font-size: 2.1rem;
+  font-size: 8.6cqw;
+  line-height: 1;
   letter-spacing: -0.02em;
-  outline: none;
 }
 
 .intro-text {
   margin: 0 auto;
-  max-width: 30ch;
-  font-size: 1.12rem;
-  line-height: 1.35;
+  font-size: 4.6cqw;
+  line-height: 1.3;
   color: var(--ink-soft);
 }
 
-.intro-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 22px;
-}
+.intro-text b { font-family: var(--pixel); font-weight: 400; font-size: 0.78em; letter-spacing: 0.08em; color: var(--ink); }
 
-.intro-dots { display: flex; gap: 6px; margin-right: auto; }
-.intro-dots i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink); }
-.intro-dots i.is-on { background: var(--ink); }
-
-.intro-skip,
 .intro-next {
+  margin-top: 4cqw;
   min-height: 44px;
+  padding: 0 7cqw;
   font-family: var(--pixel);
-  font-size: 0.75rem;
+  font-size: 3.6cqw;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ink);
-  cursor: pointer;
-}
-
-.intro-skip { padding: 0 10px; background: none; border: 0; opacity: 0.6; }
-.intro-skip:hover { opacity: 1; }
-
-.intro-next {
-  padding: 0 20px;
   background: var(--green);
   border: var(--line) solid var(--ink);
   border-radius: 999px;
-  box-shadow: 0 4px 0 var(--ink);
+  box-shadow: 0 1cqw 0 var(--ink);
+  cursor: pointer;
   transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
-.intro-next:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
-
-.intro-skip:focus-visible,
+.intro-next:active { transform: translateY(0.8cqw); box-shadow: 0 0.2cqw 0 var(--ink); }
 .intro-next:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
-.ipod.is-entering { animation: ipod-in 0.6s cubic-bezier(.2, 1.3, .4, 1); }
+/* MENU glows while the tip is up */
+.intro-active .wheel-menu { color: var(--blue); animation: menu-glow 1.2s ease-in-out infinite; }
 
-@keyframes intro-in { from { opacity: 0; transform: translateY(14px) scale(0.96); } }
-@keyframes intro-step { from { opacity: 0; transform: translateX(10px); } }
-@keyframes ipod-in { from { opacity: 0; transform: translateY(40px) scale(0.9) rotate(-2deg); } }
-@keyframes menu-pulse { 50% { fill: #6f8cff; } }
+.intro.is-leaving { animation: intro-out 0.25s ease forwards; }
+
+@keyframes intro-in { from { opacity: 0; transform: translateY(-92%) scale(0.94); } }
+@keyframes intro-out { to { opacity: 0; transform: translateY(-104%) scale(0.96); } }
+@keyframes menu-glow { 50% { color: var(--ink); } }
 
 
 

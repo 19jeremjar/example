@@ -744,7 +744,7 @@
     }
 
     state.pending = { id, autoplay };
-    if (state.player) return; // still booting — onReady picks up `pending`
+    if (state.player) return; // still booting; onReady picks up `pending`
 
     loadYouTubeApi()
       .then((YT) => {
@@ -1070,8 +1070,8 @@
   document.addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (document.documentElement.classList.contains("intro-active")) {
-      if (e.key === "Escape") { e.preventDefault(); finishIntro(); }
-      return; // the iPod isn't on screen yet
+      finishIntro(); // any key dismisses the tip (and still does its job below)
+      if (e.key === "Escape") { e.preventDefault(); return; }
     }
     const t = e.target;
     if (t && t.closest && t.closest("input, textarea, select, [contenteditable='true']")) return;
@@ -1185,50 +1185,34 @@
     }, 75000);
   })();
 
-  // ─── Intro (first visit) ─────────────────────────────────
+  // ─── Intro tip (first visit) ─────────────────────────────
+  // One card over the screen pointing at MENU. "Got it", or using any
+  // control, puts it away for good (add ?intro to the URL to see it again).
   const INTRO_KEY = "avalanches-on-air:intro";
-  const intro = {
-    root: $("intro"),
-    steps: document.querySelectorAll(".intro-step"),
-    dots: document.querySelectorAll(".intro-dots i"),
-    next: $("intro-next"),
-    skip: $("intro-skip"),
-    step: 0,
-  };
-
-  function showIntroStep(i) {
-    intro.step = i;
-    intro.steps.forEach((el, idx) => { el.hidden = idx !== i; });
-    intro.dots.forEach((d, idx) => d.classList.toggle("is-on", idx === i));
-    const last = i === intro.steps.length - 1;
-    intro.next.textContent = last ? "Let’s go" : "Next →";
-    intro.skip.hidden = last;
-    const title = intro.steps[i].querySelector(".intro-title");
-    if (i > 0 && title) title.focus({ preventScroll: true });
-  }
+  const introEl = $("intro");
 
   function finishIntro() {
     const html = document.documentElement;
     if (!html.classList.contains("intro-active")) return;
     try { localStorage.setItem(INTRO_KEY, "done"); } catch (_) { /* ignore */ }
-    html.classList.remove("intro-active");
-    html.classList.add("intro-done");
-    const ipod = $("ipod");
-    if (!reduceMotion.matches) {
-      ipod.classList.add("is-entering");
-      ipod.addEventListener("animationend", () => ipod.classList.remove("is-entering"), { once: true });
-    }
-    fitMarquee();
-    el.btnMenu.focus({ preventScroll: true });
+    const done = () => {
+      html.classList.remove("intro-active");
+      html.classList.add("intro-done");
+    };
+    if (reduceMotion.matches) { done(); return; }
+    introEl.classList.add("is-leaving");
+    introEl.addEventListener("animationend", done, { once: true });
+    setTimeout(done, 400); // in case animations are off
   }
 
-  if (intro.root && intro.next) {
-    intro.next.addEventListener("click", () => {
-      if (intro.step < intro.steps.length - 1) showIntroStep(intro.step + 1);
-      else finishIntro();
+  if (introEl) {
+    $("intro-next").addEventListener("click", () => {
+      finishIntro();
+      el.btnMenu.focus({ preventScroll: true });
     });
-    intro.skip.addEventListener("click", finishIntro);
-    if (document.documentElement.classList.contains("intro-active")) showIntroStep(0);
+    // Pressing any iPod control also dismisses it (and the control still works).
+    [el.wheel, el.btnShuffle].forEach((c) => c.addEventListener("pointerdown", finishIntro));
+    [el.btnMenu, el.btnPrev, el.btnNext, el.btnPlay, el.btnSelect, el.btnShuffle].forEach((b) => b.addEventListener("click", finishIntro));
   }
 
   // ─── Boot ─────────────────────────────────────────────────
