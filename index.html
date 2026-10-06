@@ -12,6 +12,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Silkscreen&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    // Decide before first paint whether to show the intro (first visit, or ?intro in the URL).
+    (function () {
+      var seen = false;
+      try { seen = localStorage.getItem("avalanches-on-air:intro") === "done"; } catch (e) {}
+      if (/[?&]intro\b/.test(location.search)) seen = false;
+      document.documentElement.classList.add(seen ? "intro-done" : "intro-active");
+    })();
+  </script>
 </head>
 <body>
   <main class="stage">
@@ -21,6 +30,36 @@
         <span class="title-main">The Avalanches</span>
       </h1>
     </header>
+
+    <section class="intro" id="intro" aria-label="How it works">
+      <div class="intro-card">
+        <div class="intro-step" data-step="1">
+          <p class="intro-count">01 / 02</p>
+          <pre class="intro-art" aria-hidden="true">   ,/\,,/\,
+  ( =o  o= )  ♪
+ \(   ~~   )/
+   \_/  \_/</pre>
+          <h2 class="intro-title" tabindex="-1">Tune in</h2>
+          <p class="intro-text">Albums, remixes and DJ sets from The Avalanches, loaded onto one little iPod.</p>
+        </div>
+        <div class="intro-step" data-step="2" hidden>
+          <p class="intro-count">02 / 02</p>
+          <svg class="intro-wheel" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+            <circle cx="60" cy="60" r="56" fill="#e6e5e0" stroke="#141414" stroke-width="3"/>
+            <path class="intro-wheel-menu" d="M28 25 A50 50 0 0 1 92 25 L74 44 A24 24 0 0 0 46 44 Z" />
+            <text x="60" y="27" text-anchor="middle" class="intro-wheel-label">MENU</text>
+            <circle cx="60" cy="60" r="20" fill="#fbfaf6" stroke="#141414" stroke-width="3"/>
+          </svg>
+          <h2 class="intro-title" tabindex="-1">Press MENU</h2>
+          <p class="intro-text">MENU opens the folders. Pick one, then pick a track — press MENU again to go back. Hit <strong>Shuffle</strong> any time for a surprise.</p>
+        </div>
+        <div class="intro-actions">
+          <span class="intro-dots" aria-hidden="true"><i class="is-on"></i><i></i></span>
+          <button type="button" class="intro-skip" id="intro-skip">Skip</button>
+          <button type="button" class="intro-next" id="intro-next">Next →</button>
+        </div>
+      </div>
+    </section>
 
     <section class="ipod" id="ipod" aria-label="Mixtape player">
       <div class="ipod-body">
@@ -84,7 +123,6 @@
       </div>
     </section>
 
-    <p class="keys" aria-hidden="true">space play/pause · ← → skip · M menu · S shuffle</p>
     <p class="visually-hidden" id="live" aria-live="polite" aria-atomic="true"></p>
   </main>
 

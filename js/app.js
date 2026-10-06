@@ -1069,6 +1069,10 @@
 
   document.addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (document.documentElement.classList.contains("intro-active")) {
+      if (e.key === "Escape") { e.preventDefault(); finishIntro(); }
+      return; // the iPod isn't on screen yet
+    }
     const t = e.target;
     if (t && t.closest && t.closest("input, textarea, select, [contenteditable='true']")) return;
     const onControl = t && t.closest && t.closest("button, a");
@@ -1180,6 +1184,52 @@
       try { localStorage.setItem(BATTERY_KEY, JSON.stringify({ level: battery.level, t: Date.now() })); } catch (_) { /* ignore */ }
     }, 75000);
   })();
+
+  // ─── Intro (first visit) ─────────────────────────────────
+  const INTRO_KEY = "avalanches-on-air:intro";
+  const intro = {
+    root: $("intro"),
+    steps: document.querySelectorAll(".intro-step"),
+    dots: document.querySelectorAll(".intro-dots i"),
+    next: $("intro-next"),
+    skip: $("intro-skip"),
+    step: 0,
+  };
+
+  function showIntroStep(i) {
+    intro.step = i;
+    intro.steps.forEach((el, idx) => { el.hidden = idx !== i; });
+    intro.dots.forEach((d, idx) => d.classList.toggle("is-on", idx === i));
+    const last = i === intro.steps.length - 1;
+    intro.next.textContent = last ? "Let’s go" : "Next →";
+    intro.skip.hidden = last;
+    const title = intro.steps[i].querySelector(".intro-title");
+    if (i > 0 && title) title.focus({ preventScroll: true });
+  }
+
+  function finishIntro() {
+    const html = document.documentElement;
+    if (!html.classList.contains("intro-active")) return;
+    try { localStorage.setItem(INTRO_KEY, "done"); } catch (_) { /* ignore */ }
+    html.classList.remove("intro-active");
+    html.classList.add("intro-done");
+    const ipod = $("ipod");
+    if (!reduceMotion.matches) {
+      ipod.classList.add("is-entering");
+      ipod.addEventListener("animationend", () => ipod.classList.remove("is-entering"), { once: true });
+    }
+    fitMarquee();
+    el.btnMenu.focus({ preventScroll: true });
+  }
+
+  if (intro.root && intro.next) {
+    intro.next.addEventListener("click", () => {
+      if (intro.step < intro.steps.length - 1) showIntroStep(intro.step + 1);
+      else finishIntro();
+    });
+    intro.skip.addEventListener("click", finishIntro);
+    if (document.documentElement.classList.contains("intro-active")) showIntroStep(0);
+  }
 
   // ─── Boot ─────────────────────────────────────────────────
   if (!LIBRARY.length) {
