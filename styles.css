@@ -153,8 +153,9 @@ body::before {
   border-bottom: var(--line) solid var(--ink);
 }
 
-/* Step 2 moves down to point at Shuffle. */
-.intro-active .intro[data-step="2"] { bottom: 25.5cqw; }
+/* The Shuffle step moves down to point at it; the welcome step has no arrow. */
+.intro-active .intro[data-target="shuffle"] { bottom: 25.5cqw; }
+.intro-active .intro[data-target="none"]::after { display: none; }
 
 .intro-close {
   position: absolute;
@@ -231,8 +232,8 @@ body::before {
 .intro-next:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 
 /* The control being explained glows */
-.intro-active[data-intro-step="1"] .wheel-menu { color: var(--blue); animation: menu-glow 1.2s ease-in-out infinite; }
-.intro-active[data-intro-step="2"] .shuffle { animation: shuffle-glow 1.2s ease-in-out infinite; }
+.intro-active[data-intro-target="menu"] .wheel-menu { color: var(--blue); animation: menu-glow 1.2s ease-in-out infinite; }
+.intro-active[data-intro-target="shuffle"] .shuffle { animation: shuffle-glow 1.2s ease-in-out infinite; }
 
 .intro.is-leaving { animation: intro-out 0.25s ease forwards; }
 
