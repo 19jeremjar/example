@@ -1159,6 +1159,7 @@
   // rotate in a new one every so often, never repeating the last few.
   const FACT_FIRST_MS = 5000;
   const FACT_EVERY_MS = 75000;
+  const FACT_SHOW_MS = 10000;   // how long each fact stays up
   const factState = { timer: 0, hideTimer: 0, shownFor: null, recent: [] };
 
   function pickFact(m) {
@@ -1183,7 +1184,7 @@
       el.fact.hidden = false;
       el.fact.classList.remove("is-leaving");
       clearTimeout(factState.hideTimer);
-      factState.hideTimer = setTimeout(hideFact, Math.min(16000, 6000 + fact.length * 45));
+      factState.hideTimer = setTimeout(hideFact, FACT_SHOW_MS);
     }
     factState.timer = setTimeout(showFact, FACT_EVERY_MS);
   }
