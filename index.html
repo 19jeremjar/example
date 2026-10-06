@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>The Avalanches: On Air</title>
-  <meta name="description" content="The Avalanches: On Air — a pocket-sized mixtape player.">
+  <meta name="description" content="The Avalanches: On Air. A pocket-sized mixtape player.">
   <meta name="theme-color" content="#f3ede1">
   <meta name="color-scheme" content="light">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -12,6 +12,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Silkscreen&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    // Decide before first paint whether to show the intro (first visit, or ?intro in the URL).
+    (function () {
+      var seen = false;
+      try { seen = localStorage.getItem("avalanches-on-air:intro") === "done"; } catch (e) {}
+      if (/[?&]intro\b/.test(location.search)) seen = false;
+      document.documentElement.classList.add(seen ? "intro-done" : "intro-active");
+    })();
+  </script>
 </head>
 <body>
   <main class="stage">
@@ -24,6 +33,13 @@
 
     <section class="ipod" id="ipod" aria-label="Mixtape player">
       <div class="ipod-body">
+        <div class="intro" id="intro" role="dialog" aria-labelledby="intro-title" aria-describedby="intro-text" data-step="1">
+          <button type="button" class="intro-close" id="intro-close" aria-label="Close tips">✕</button>
+          <p class="intro-count" aria-hidden="true"><span id="intro-count">1</span> / 2</p>
+          <h2 class="intro-title" id="intro-title">Tune in</h2>
+          <p class="intro-text" id="intro-text">Press <b>MENU</b> to pick a folder, then a track.</p>
+          <button type="button" class="intro-next" id="intro-next">Next</button>
+        </div>
         <div class="screen" id="screen" data-phase="idle" data-view="now">
           <div class="lcd-head">
             <span class="rec-dot" aria-hidden="true"></span>
@@ -31,7 +47,7 @@
               <span class="lcd-station" id="lcd-track">The Avalanches</span>
               <span class="lcd-mix" id="status-label">Mixtape 01</span>
             </div>
-            <span class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="batt" id="batt" role="img" aria-label="Battery 100%"><span class="batt-pct" id="batt-pct">100%</span><span class="batt-icon" aria-hidden="true"><span class="batt-fill" id="batt-fill"></span></span></span>
           </div>
 
           <div class="now" id="now-view">
@@ -50,7 +66,7 @@
             </div>
             <div class="viz" aria-hidden="true"><canvas id="viz" width="119" height="26"></canvas></div>
             <div class="now-info">
-              <p class="now-title" id="now-title"><span id="now-title-text">—</span></p>
+              <p class="now-title" id="now-title"><span id="now-title-text"></span></p>
               <div class="progress" aria-hidden="true"><span class="progress-bar" id="progress-bar"></span></div>
               <p class="now-status"><span><span class="status-icon" id="status-icon" aria-hidden="true"></span> <span id="now-status">Press play</span></span><span class="now-time" id="now-time"></span></p>
             </div>
@@ -76,13 +92,14 @@
         </div>
 
         <button type="button" class="shuffle" id="btn-shuffle" aria-label="Shuffle: play a random mixtape">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 4.8C14.3 16 15.5 17 17.5 17H21M17.5 14 21 17l-3.5 3M3 17h3.5c1.2 0 2.1-.4 2.9-1.1M21 7h-3.5c-1.2 0-2.1.4-2.9 1.1M17.5 4 21 7l-3.5 3"/></svg>
-          <span>Shuffle</span>
+          <span class="shuffle-face">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 4.8C14.3 16 15.5 17 17.5 17H21M17.5 14 21 17l-3.5 3M3 17h3.5c1.2 0 2.1-.4 2.9-1.1M21 7h-3.5c-1.2 0-2.1.4-2.9 1.1M17.5 4 21 7l-3.5 3"/></svg>
+            <span class="shuffle-label">Shuffle</span>
+          </span>
         </button>
       </div>
     </section>
 
-    <p class="keys" aria-hidden="true">space play/pause · ← → skip · M menu · S shuffle</p>
     <p class="visually-hidden" id="live" aria-live="polite" aria-atomic="true"></p>
   </main>
 
