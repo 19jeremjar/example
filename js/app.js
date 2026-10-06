@@ -1166,12 +1166,12 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMarquee);
 
   // ─── "Did you know?" facts ───────────────────────────────
-  // 5s into a track a fact slides up over the video: the song's own fact
-  // first if it has one, otherwise one about its folder / album. Long tracks
-  // rotate in a new one every so often, never repeating the last few.
+  // 5s into a track a fact slides up over the video and stays until closed:
+  // the song's own fact first if it has one, otherwise one about its folder /
+  // album. Long tracks swap in a new one every so often, never repeating the
+  // last few.
   const FACT_FIRST_MS = 5000;
   const FACT_EVERY_MS = 75000;
-  const FACT_SHOW_MS = 10000;   // how long each fact stays up
   const factState = { timer: 0, hideTimer: 0, shownFor: null, recent: [] };
 
   function pickFact(m) {
@@ -1195,8 +1195,7 @@
       el.factText.textContent = fact;
       el.fact.hidden = false;
       el.fact.classList.remove("is-leaving");
-      clearTimeout(factState.hideTimer);
-      factState.hideTimer = setTimeout(hideFact, FACT_SHOW_MS);
+      // It stays up until closed (or the track changes).
     }
     factState.timer = setTimeout(showFact, FACT_EVERY_MS);
   }
