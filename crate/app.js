@@ -224,7 +224,7 @@
     els.line.textContent = record.line;
     els.spotify.href = spotifyUrl(record);
     els.tickets.href = ticketUrl(artist);
-    els.ticketsText.textContent = `${artist.name} — Get tickets`;
+    els.ticketsText.textContent = `☆ ${artist.name.toLowerCase()} tickets`;
   }
 
   /* ---------- Shuffle ---------- */
@@ -304,8 +304,8 @@
     els.result.classList.remove("is-revealing");
     void els.result.offsetWidth;
     els.result.classList.add("is-revealing");
-    els.shuffle.textContent = "Shuffle again";
-    els.shuffle.classList.replace("btn--accent", "btn--light");
+    els.shuffle.textContent = "shuffle again";
+    els.shuffle.classList.replace("btn--pink", "btn--white");
     els.status.textContent = `Now spinning: ${artists[record.artist].name}, ${record.track}.`;
     track("record_revealed", record);
 
@@ -353,8 +353,8 @@
       link.href = ticketUrl(artist);
       link.target = "_blank";
       link.rel = "noopener";
-      link.textContent = "Tickets";
-      link.setAttribute("aria-label", `${artist.name}: get tickets (opens Secret Sounds)`);
+      link.textContent = "tickets";
+      link.setAttribute("aria-label", `${artist.name}: get tickets (opens ticket site)`);
       link.addEventListener("click", () => track("ticket_clicked", null, artist.id));
       li.append(text, link);
       els.lineupList.append(li);

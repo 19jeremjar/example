@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Secret Sounds Discovery Crate</title>
+  <title>Discovery Crate</title>
   <meta name="description" content="Pull a record. Find something new. Shuffle the crate to discover a track from the lineup, then listen on Spotify or get tickets.">
-  <meta name="theme-color" content="#f4eee2">
+  <meta name="theme-color" content="#f6f0ff">
   <meta name="color-scheme" content="light">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%231d1b19'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23e8462a'/%3E%3Ccircle cx='16' cy='16' r='1.5' fill='%23f4eee2'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%232b2140'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ff9cc9'/%3E%3Ccircle cx='16' cy='16' r='1.5' fill='%23f6f0ff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Archivo+Black&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <!--
     Analytics: events are pushed to window.dataLayer (see app.js).
@@ -20,62 +20,74 @@
 <body>
   <main class="page">
     <header class="head">
-      <p class="eyebrow">Secret Sounds</p>
-      <h1 class="title">Discovery Crate</h1>
-      <p class="lede">Rediscover old favourites. Find new ones.</p>
+      <h1 class="title">discovery crate <span class="sparkle" aria-hidden="true">✿</span></h1>
+      <p class="lede">rediscover old favourites. find new ones.</p>
     </header>
 
-    <section class="deck" id="deck" aria-label="Record crate and turntable">
-      <div class="crate" aria-hidden="true">
-        <div class="crate-sleeves" id="crate-sleeves"></div>
-        <div class="crate-front">
-          <span class="crate-handle"></span>
-          <span class="crate-stamp">Pull a record</span>
-        </div>
+    <section class="window" aria-label="Record crate and turntable">
+      <div class="window-bar" aria-hidden="true">
+        <span class="window-name">crate.exe</span>
+        <span class="window-btns"><i></i><i></i><i></i></span>
       </div>
 
-      <div class="turntable" id="turntable" aria-hidden="true">
-        <div class="platter">
-          <div class="record" id="record">
-            <div class="record-label" id="record-label"><span id="record-label-text">SS</span></div>
+      <div class="deck" id="deck">
+        <div class="crate" aria-hidden="true">
+          <div class="crate-sleeves" id="crate-sleeves"></div>
+          <div class="crate-front">
+            <span class="crate-stamp">pull a record ♡</span>
           </div>
         </div>
-        <div class="tonearm" id="tonearm"><span class="tonearm-arm"></span></div>
-        <div class="stand" id="stand">
-          <p class="stand-empty">Your record<br>lands here</p>
+
+        <div class="turntable" id="turntable" aria-hidden="true">
+          <div class="platter">
+            <div class="record" id="record">
+              <div class="record-label" id="record-label"><span id="record-label-text">♡</span></div>
+            </div>
+          </div>
+          <div class="tonearm" id="tonearm"><span class="tonearm-arm"></span></div>
+          <div class="stand" id="stand">
+            <p class="stand-empty">your record<br>lands here</p>
+          </div>
+          <span class="tt-light" id="tt-light"></span>
         </div>
-        <span class="tt-light" id="tt-light"></span>
-        <span class="tt-speed">33</span>
       </div>
     </section>
 
-    <section class="result" id="result" hidden tabindex="-1" aria-labelledby="r-artist">
-      <p class="eyebrow eyebrow--accent">Now spinning</p>
-      <h2 class="result-artist" id="r-artist"></h2>
-      <p class="result-track" id="r-track"></p>
-      <p class="result-line" id="r-line"></p>
-      <div class="actions">
-        <a class="btn btn--dark" id="r-spotify" href="#" target="_blank" rel="noopener">
-          Listen on Spotify <span aria-hidden="true">↗</span><span class="visually-hidden">(opens Spotify)</span>
-        </a>
-        <a class="btn btn--accent" id="r-tickets" href="#" target="_blank" rel="noopener">
-          <span id="r-tickets-text">Get tickets</span> <span aria-hidden="true">↗</span><span class="visually-hidden">(opens Secret Sounds)</span>
-        </a>
+    <section class="window result" id="result" hidden tabindex="-1" aria-labelledby="r-artist">
+      <div class="window-bar window-bar--mint" aria-hidden="true">
+        <span class="window-name">now_spinning.txt</span>
+        <span class="window-btns"><i></i><i></i><i></i></span>
+      </div>
+      <div class="result-body">
+        <h2 class="result-artist" id="r-artist"></h2>
+        <p class="result-track" id="r-track"></p>
+        <p class="result-line" id="r-line"></p>
+        <div class="actions">
+          <a class="btn btn--mint" id="r-spotify" href="#" target="_blank" rel="noopener">
+            ▶ listen on spotify<span class="visually-hidden"> (opens Spotify)</span>
+          </a>
+          <a class="btn btn--pink" id="r-tickets" href="#" target="_blank" rel="noopener">
+            <span id="r-tickets-text">get tickets</span><span class="visually-hidden"> (opens ticket site)</span>
+          </a>
+        </div>
       </div>
     </section>
 
     <div class="controls">
-      <button type="button" class="btn btn--accent btn--big" id="shuffle">Shuffle the Crate</button>
-      <button type="button" class="link" id="lineup-open" aria-haspopup="dialog">View the lineup</button>
+      <button type="button" class="btn btn--pink btn--big" id="shuffle">shuffle the crate</button>
+      <button type="button" class="link" id="lineup-open" aria-haspopup="dialog">view the lineup</button>
     </div>
 
     <p class="status" id="status" role="status" aria-live="polite"></p>
   </main>
 
   <dialog class="sheet" id="lineup" aria-labelledby="lineup-title">
+    <div class="window-bar" aria-hidden="true">
+      <span class="window-name">lineup.txt</span>
+    </div>
     <div class="sheet-inner">
       <div class="sheet-head">
-        <h2 class="sheet-title" id="lineup-title">The lineup</h2>
+        <h2 class="sheet-title" id="lineup-title">the lineup</h2>
         <button type="button" class="sheet-close" id="lineup-close" aria-label="Close lineup">✕</button>
       </div>
       <ul class="lineup-list" id="lineup-list"></ul>

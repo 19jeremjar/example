@@ -25,7 +25,7 @@
       "name": "Death Cab for Cutie",
       "weight": 15,
       "cities": ["brisbane", "melbourne", "sydney"],
-      "note": "Own Secret Sounds tour · Nov 2026 · Sydney, Melbourne, Brisbane",
+      "note": "Own tour · Nov 2026 · Sydney, Melbourne, Brisbane",
       "tickets": {
         "default": "https://www.secretsounds.com/all-events"
       }
@@ -53,33 +53,33 @@
   ],
 
   "records": [
-    { "id": "strokes-reptilia", "artist": "strokes", "track": "Reptilia", "line": "A sharp left turn into the night.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#e8462a", "fg": "#1d1b19", "pattern": "rings" } },
-    { "id": "strokes-adults", "artist": "strokes", "track": "The Adults Are Talking", "line": "Still sounds like the conversation you missed.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#2b5fd9", "fg": "#f6f0e4", "pattern": "stripes" } },
-    { "id": "strokes-last-nite", "artist": "strokes", "track": "Last Nite", "line": "The one that started every party you remember.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#f2c230", "fg": "#1d1b19", "pattern": "split" } },
-    { "id": "strokes-someday", "artist": "strokes", "track": "Someday", "line": "Nostalgia for a summer that hasn't ended yet.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#efe4cf", "fg": "#e8462a", "pattern": "sun" } },
-    { "id": "strokes-hard-to-explain", "artist": "strokes", "track": "Hard to Explain", "line": "No explanation needed. Just press play.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#1d1b19", "fg": "#f2c230", "pattern": "grid" } },
-    { "id": "strokes-1251", "artist": "strokes", "track": "12:51", "line": "A late text that arrives exactly on time.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#7fc6b0", "fg": "#1d1b19", "pattern": "dots" } },
-    { "id": "strokes-yolo", "artist": "strokes", "track": "You Only Live Once", "line": "Opening-track energy. Take the hint.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#e8462a", "fg": "#f6f0e4", "pattern": "bars" } },
-    { "id": "strokes-is-this-it", "artist": "strokes", "track": "Is This It", "line": "The question that answered a decade.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#efe4cf", "fg": "#1d1b19", "pattern": "circle" } },
-    { "id": "strokes-under-cover", "artist": "strokes", "track": "Under Cover of Darkness", "line": "The comeback that never felt like one.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#1d1b19", "fg": "#e8462a", "pattern": "rings" } },
-    { "id": "strokes-bad-decisions", "artist": "strokes", "track": "Bad Decisions", "line": "Make one tonight. Make it this.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#f08aa8", "fg": "#1d1b19", "pattern": "stripes" } },
+    { "id": "strokes-reptilia", "artist": "strokes", "track": "Reptilia", "line": "A sharp left turn into the night.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ff9fb2", "fg": "#2b2140", "pattern": "rings" } },
+    { "id": "strokes-adults", "artist": "strokes", "track": "The Adults Are Talking", "line": "Still sounds like the conversation you missed.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#9dbcff", "fg": "#ffffff", "pattern": "stripes" } },
+    { "id": "strokes-last-nite", "artist": "strokes", "track": "Last Nite", "line": "The one that started every party you remember.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ffe38a", "fg": "#2b2140", "pattern": "split" } },
+    { "id": "strokes-someday", "artist": "strokes", "track": "Someday", "line": "Nostalgia for a summer that hasn't ended yet.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#fff3dc", "fg": "#ff9fb2", "pattern": "sun" } },
+    { "id": "strokes-hard-to-explain", "artist": "strokes", "track": "Hard to Explain", "line": "No explanation needed. Just press play.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#b3a4ff", "fg": "#ffe38a", "pattern": "grid" } },
+    { "id": "strokes-1251", "artist": "strokes", "track": "12:51", "line": "A late text that arrives exactly on time.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#aee8d2", "fg": "#2b2140", "pattern": "dots" } },
+    { "id": "strokes-yolo", "artist": "strokes", "track": "You Only Live Once", "line": "Opening-track energy. Take the hint.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ff9fb2", "fg": "#ffffff", "pattern": "bars" } },
+    { "id": "strokes-is-this-it", "artist": "strokes", "track": "Is This It", "line": "The question that answered a decade.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#fff3dc", "fg": "#2b2140", "pattern": "circle" } },
+    { "id": "strokes-under-cover", "artist": "strokes", "track": "Under Cover of Darkness", "line": "The comeback that never felt like one.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#b3a4ff", "fg": "#ff9fb2", "pattern": "rings" } },
+    { "id": "strokes-bad-decisions", "artist": "strokes", "track": "Bad Decisions", "line": "Make one tonight. Make it this.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ffbcd8", "fg": "#2b2140", "pattern": "stripes" } },
 
-    { "id": "barnett-pedestrian", "artist": "courtney", "track": "Pedestrian at Best", "line": "Notice everything. Pretend you didn't.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#8fc3a5", "fg": "#1d1b19", "pattern": "grid" } },
-    { "id": "barnett-avant-gardener", "artist": "courtney", "track": "Avant Gardener", "line": "A small disaster, perfectly observed.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#f08a5d", "fg": "#1d1b19", "pattern": "sun" } },
-    { "id": "barnett-depreston", "artist": "courtney", "track": "Depreston", "line": "A house inspection that turns into a life.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#c9b3e6", "fg": "#1d1b19", "pattern": "split" } },
-    { "id": "barnett-elevator", "artist": "courtney", "track": "Elevator Operator", "line": "Small-town daydreams, twenty floors up.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#1d1b19", "fg": "#8fc3a5", "pattern": "bars" } },
+    { "id": "barnett-pedestrian", "artist": "courtney", "track": "Pedestrian at Best", "line": "Notice everything. Pretend you didn't.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#bdeacb", "fg": "#2b2140", "pattern": "grid" } },
+    { "id": "barnett-avant-gardener", "artist": "courtney", "track": "Avant Gardener", "line": "A small disaster, perfectly observed.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ffc4a3", "fg": "#2b2140", "pattern": "sun" } },
+    { "id": "barnett-depreston", "artist": "courtney", "track": "Depreston", "line": "A house inspection that turns into a life.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ddccff", "fg": "#2b2140", "pattern": "split" } },
+    { "id": "barnett-elevator", "artist": "courtney", "track": "Elevator Operator", "line": "Small-town daydreams, twenty floors up.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#b3a4ff", "fg": "#bdeacb", "pattern": "bars" } },
 
-    { "id": "dcfc-soul-meets-body", "artist": "deathcab", "track": "Soul Meets Body", "line": "For the part you replay on the way home.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#2f4b7c", "fg": "#f6f0e4", "pattern": "circle" } },
-    { "id": "dcfc-crooked-teeth", "artist": "deathcab", "track": "Crooked Teeth", "line": "A record that knows too much.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#d8d0bf", "fg": "#2f4b7c", "pattern": "dots" } },
-    { "id": "dcfc-follow-you", "artist": "deathcab", "track": "I Will Follow You into the Dark", "line": "The quiet one everyone knows the words to.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#9bb7d4", "fg": "#1d1b19", "pattern": "rings" } },
-    { "id": "dcfc-transatlanticism", "artist": "deathcab", "track": "Transatlanticism", "line": "Eight minutes. Worth every one.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#1d1b19", "fg": "#9bb7d4", "pattern": "stripes" } },
+    { "id": "dcfc-soul-meets-body", "artist": "deathcab", "track": "Soul Meets Body", "line": "For the part you replay on the way home.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#8fa6e0", "fg": "#ffffff", "pattern": "circle" } },
+    { "id": "dcfc-crooked-teeth", "artist": "deathcab", "track": "Crooked Teeth", "line": "A record that knows too much.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#efe9de", "fg": "#8fa6e0", "pattern": "dots" } },
+    { "id": "dcfc-follow-you", "artist": "deathcab", "track": "I Will Follow You into the Dark", "line": "The quiet one everyone knows the words to.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#c2d8f2", "fg": "#2b2140", "pattern": "rings" } },
+    { "id": "dcfc-transatlanticism", "artist": "deathcab", "track": "Transatlanticism", "line": "Eight minutes. Worth every one.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#b3a4ff", "fg": "#c2d8f2", "pattern": "stripes" } },
 
-    { "id": "promiseland-take-down", "artist": "promiseland", "track": "Take Down the House", "line": "The night just got louder.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ff3fa4", "fg": "#1d1b19", "pattern": "grid" } },
-    { "id": "promiseland-3d-flower", "artist": "promiseland", "track": "3D Flower (feat. Julian Casablancas)", "line": "Where the support act meets the headliner.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#1d1b19", "fg": "#c6ff3d", "pattern": "sun" } },
+    { "id": "promiseland-take-down", "artist": "promiseland", "track": "Take Down the House", "line": "The night just got louder.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ff9cd4", "fg": "#2b2140", "pattern": "grid" } },
+    { "id": "promiseland-3d-flower", "artist": "promiseland", "track": "3D Flower (feat. Julian Casablancas)", "line": "Where the support act meets the headliner.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#b3a4ff", "fg": "#dcff85", "pattern": "sun" } },
 
-    { "id": "beck-lost-cause", "artist": "beck", "track": "Lost Cause", "line": "A detour with the windows down.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#5bbfb5", "fg": "#1d1b19", "pattern": "split" } },
-    { "id": "beck-golden-age", "artist": "beck", "track": "The Golden Age", "line": "Find the long way home.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#f7a72d", "fg": "#1d1b19", "pattern": "sun" } },
-    { "id": "beck-loser", "artist": "beck", "track": "Loser", "line": "1993's strangest anthem still holds up.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#f2e14c", "fg": "#1d1b19", "pattern": "dots" } },
-    { "id": "beck-where-its-at", "artist": "beck", "track": "Where It's At", "line": "Two turntables. You've already got one.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#c43e3e", "fg": "#f6f0e4", "pattern": "bars" } }
+    { "id": "beck-lost-cause", "artist": "beck", "track": "Lost Cause", "line": "A detour with the windows down.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#a3e4dd", "fg": "#2b2140", "pattern": "split" } },
+    { "id": "beck-golden-age", "artist": "beck", "track": "The Golden Age", "line": "Find the long way home.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ffcb7a", "fg": "#2b2140", "pattern": "sun" } },
+    { "id": "beck-loser", "artist": "beck", "track": "Loser", "line": "1993's strangest anthem still holds up.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#fff08a", "fg": "#2b2140", "pattern": "dots" } },
+    { "id": "beck-where-its-at", "artist": "beck", "track": "Where It's At", "line": "Two turntables. You've already got one.", "spotifyUrl": "", "image": "", "sleeve": { "bg": "#ff9a9a", "fg": "#ffffff", "pattern": "bars" } }
   ]
 }
