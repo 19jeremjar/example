@@ -35,6 +35,10 @@ The site includes a small serverless helper, `api/playlist.js`:
 
 Open either on the deployed site and copy the results into `js/mixtapes.js`. The player itself only reads `js/mixtapes.js`, so the site keeps working even if YouTube changes its pages.
 
+## Secret Sounds Discovery Crate
+
+The `crate/` folder is a separate microsite served at `/crate/`: shuffle a record crate to discover a track from The Strokes' lineup. See [`crate/README.md`](crate/README.md).
+
 ## Running locally
 
 Serve the folder with any static server, for example:
