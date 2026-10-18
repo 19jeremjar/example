@@ -77,7 +77,7 @@
 
   // ─── Room state → scene ──────────────────────────────────
   const scene = $("#scene");
-  const PERIMETER = 2 * (164 + 536);
+  const PERIMETER = 2 * (388 + 204);
 
   function renderScene() {
     const n = solvedCount();
@@ -85,7 +85,7 @@
     const lit = state.door ? PERIMETER : (n / 3) * PERIMETER;
     light.style.strokeDasharray = `${lit} ${PERIMETER}`;
     light.style.opacity = n || state.door ? 1 : 0.06;
-    $(".door-fill", scene).style.opacity = state.door ? 0.95 : 0;
+    $(".door-logo", scene).style.opacity = state.door ? 1 : 0;
     scene.classList.toggle("tv-on", state.cities.tv);
     scene.classList.toggle("drawer-open", state.drawerOpen);
     scene.classList.toggle("hat-moved", state.code);
@@ -200,7 +200,7 @@
         const n = solvedCount();
         say(n === 3
           ? `${city.name}. That's all three. Somewhere in the room, something is humming.`
-          : `${city.name}. A third of the doorway flickers to life. ${n} of 3.`);
+          : `${city.name}. A third of the rectangle flickers to life. ${n} of 3.`);
         if (onSolve) onSolve();
       } else {
         misses++;
@@ -224,21 +224,23 @@
         <div class="tv">
           <div class="tv-screen">
             <div class="tv-layer tv-art">${artFor("tv")}</div>
-            <div class="tv-layer tv-bars">
-              <div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <p>CONSUMPTION</p><p class="small">please stand by</p>
+            <div class="tv-layer tv-ident">
+              <span class="oval">75</span>
+              <span class="ident-name">THE1975</span>
+              <span class="ident-sub">Consumption · please stand by</span>
             </div>
-            <canvas class="tv-layer tv-static" width="160" height="120"></canvas>
+            <canvas class="tv-layer tv-static" width="120" height="90"></canvas>
             <div class="tv-layer tv-scan"></div>
             <p class="tv-osd"></p>
           </div>
           <div class="tv-panel">
+            <span class="tv-brand">ColorTrak</span>
             <button type="button" class="tv-btn" data-act="power">Power</button>
-            <button type="button" class="tv-btn" data-act="ch">CH ▲</button>
-            <label class="tv-tune">Fine tune
-              <input type="range" min="0" max="100" value="${tune}" aria-label="Fine tune">
-            </label>
+            <button type="button" class="tv-btn" data-act="ch">Channel</button>
           </div>
+          <label class="tv-tune"><span>Fine tune</span>
+            <input type="range" min="0" max="100" value="${tune}" aria-label="Fine tune">
+          </label>
         </div>`));
       body.appendChild(el(`<p class="window-text">An old set, still warm. Someone sat here watching before climbing inside the house.</p>`));
       body.appendChild(guessForm("tv"));
@@ -251,11 +253,11 @@
 
       function drawStatic(t) {
         raf = requestAnimationFrame(drawStatic);
-        if (t - last < 45) return;
+        if (t - last < 70) return;
         last = t;
         const d = img.data;
         for (let i = 0; i < d.length; i += 4) {
-          const v = Math.random() * 255;
+          const v = 70 + Math.random() * 120;
           d[i] = d[i + 1] = d[i + 2] = v;
           d[i + 3] = 255;
         }
@@ -268,11 +270,11 @@
         tv.classList.toggle("on", on);
         screen.dataset.ch = on ? ch : "off";
         if (!on) { staticLevel = 0; osd.textContent = ""; }
-        else if (ch === 1) { staticLevel = 1; osd.textContent = "CH 1"; }
-        else if (ch === 2) { staticLevel = 0.12; osd.textContent = "CH 2"; }
+        else if (ch === 1) { staticLevel = 0.6; osd.textContent = "CH 1"; }
+        else if (ch === 2) { staticLevel = 0.06; osd.textContent = "CH 2"; }
         else {
           const c = clarity();
-          staticLevel = Math.max(0.04, 0.92 * (1 - c) ** 1.4);
+          staticLevel = Math.max(0.03, 0.55 * (1 - c) ** 1.4);
           art.style.filter = `blur(${((1 - c) * 9).toFixed(1)}px) contrast(${0.8 + c * 0.25}) saturate(${0.4 + c * 0.6})`;
           art.style.transform = c < 0.85 ? `translateY(${((1 - c) * 18 * Math.sin(Date.now() / 90)).toFixed(1)}px) scale(1.05)` : "scale(1.02)";
           const pct = Math.round(c * 100);
@@ -296,7 +298,7 @@
         } else if (on) {
           SFX.click();
           ch = ch % 3 + 1;
-          if (ch === 2) say("A test card. Somebody's idea of a joke.");
+          if (ch === 2) say("A station ident. Somebody's idea of a joke.");
           if (ch === 3 && clarity() < 0.9) say("Something's there behind the snow. Try the fine tune dial.");
         }
         render();
@@ -309,7 +311,7 @@
       raf = requestAnimationFrame(drawStatic);
       const wobble = setInterval(() => { if (on && ch === 3 && clarity() < 0.85) render(); }, 120);
       render();
-      if (!state.cities.tv) say("A television. The power button is stiff but it works.");
+      if (!state.cities.tv) say("A stack of old televisions. The wood-grain one at the bottom is still plugged in.");
       return () => { cancelAnimationFrame(raf); clearInterval(wobble); SFX.setStatic(0); };
     });
   }
@@ -395,7 +397,7 @@
         <div class="hat-stage ${state.code ? "lifted" : ""}">
           <div class="note">
             <p class="note-code">${digits}</p>
-            <p class="handwriting"><span>for the drawer.</span><span>and for the door.</span></p>
+            <p class="handwriting"><span>for the drawer.</span><span>and for the box.</span></p>
           </div>
           <svg class="hat-big" viewBox="0 0 260 240" aria-hidden="true">
             <path d="M74 140 Q30 40 70 6 Q110 40 104 138Z" fill="#ece7df"/>
@@ -426,7 +428,7 @@
 
   // ─── Object 03 · The desk drawer ─────────────────────────
   function openDrawer() {
-    openWindow("The desk drawer", (body) => {
+    openWindow("The cabinet drawer", (body) => {
       if (state.drawerOpen) { buildPuzzle(body); return; }
       const wheels = [0, 0, 0, 0];
       body.appendChild(el(`
@@ -549,16 +551,16 @@
     checkDone(true);
   }
 
-  // ─── Object 05 · The glowing doorway ─────────────────────
+  // ─── Object 05 · The rectangle ───────────────────────────
   function openDoor() {
     const n = solvedCount();
     if (state.door) { showReveal(); return; }
-    openWindow("The doorway", (body) => {
+    openWindow("The rectangle", (body) => {
       const lights = CITY_KEYS.map((k) => `<li class="${state.cities[k] ? "on" : ""}"><i></i>${state.cities[k] ? CFG.cities[k].name : CFG.cities[k].label}</li>`).join("");
       body.appendChild(el(`<ul class="door-status">${lights}</ul>`));
       if (n < 3) {
-        body.appendChild(el(`<p class="window-text">A rectangle of nothing. The frame is cold. ${n ? `${n} of 3 places found, and the light has crept that far around the frame.` : "There's a dead keypad beside it."}</p>`));
-        say(n ? "The doorway is still waiting on the rest of the places." : "Dark. Something needs to power this.");
+        body.appendChild(el(`<p class="window-text">A rectangle of nothing, hanging in the dark. The outline is cold. ${n ? `${n} of 3 places found, and the light has crept that far around the frame.` : "There's a dead keypad on the wall below it."}</p>`));
+        say(n ? "The rectangle is still waiting on the rest of the places." : "Dark. Something needs to power this.");
         return;
       }
       let entry = "";
@@ -572,7 +574,7 @@
             <button type="button" data-k="enter" aria-label="Enter">↵</button>
           </div>
         </div>`));
-      body.appendChild(el(`<p class="window-text">The frame hums. The keypad has woken up and wants four digits.</p>`));
+      body.appendChild(el(`<p class="window-text">The outline hums. The keypad below it has woken up and wants four digits.</p>`));
       const display = $(".keypad-display", body), pad = $(".keypad", body);
       const show = () => { display.textContent = entry.padEnd(4, "_").split("").join(" "); };
       function submit() {
@@ -601,7 +603,7 @@
         show();
         if (entry.length === 4) setTimeout(submit, 180);
       });
-      say("The doorway is humming. It wants a code.");
+      say("The rectangle is humming. It wants a code.");
     });
   }
 
@@ -653,18 +655,18 @@
     const isNew = findSecret("lamp");
     refresh();
     say(isNew
-      ? "Secret found. With the lamp off, the doorway looks brighter. Funny how that works."
+      ? "Secret found. With the lamp off, the rectangle looks brighter. Funny how that works."
       : state.lampOff ? "Click. Darker." : "Click. Warm again.");
   }
 
   // ─── Hints ───────────────────────────────────────────────
   const hints = [
-    [() => !state.cities.tv, "tv", "The television still works. Turn it on and flick through the channels."],
+    [() => !state.cities.tv, "tv", "One of those old televisions still works. Turn it on and flick through the channels."],
     [() => !state.cities.photo, "photo", "That photograph is hanging crooked. Take it down, turn it the right way up, and read the back."],
-    [() => !state.code, "hat", "The rabbit-ear hat on the desk is sitting a little too neatly."],
-    [() => !state.drawerOpen, "drawer", "You have a four-digit code. The desk drawer has a four-digit lock."],
+    [() => !state.code, "hat", "The rabbit-ear hat on the cabinet is sitting a little too neatly."],
+    [() => !state.drawerOpen, "drawer", "You have a four-digit code. The cabinet drawer has a four-digit lock."],
     [() => !state.cities.drawer, "drawer", "Put the torn photograph in the drawer back together."],
-    [() => !state.door, "door", "Every place is found. The doorway is waiting."],
+    [() => !state.door, "door", "Every place is found. The rectangle is waiting."],
   ];
 
   $("#hint-btn").addEventListener("click", () => {
@@ -684,8 +686,8 @@
     const scroller = $("#scene-scroll");
     if (scroller.scrollWidth <= scroller.clientWidth) return;
     const box = spot.getBBox();
-    const right = box.x + box.width / 2 > 800;
-    scroller.scrollTo({ left: right ? scroller.scrollWidth : 0, behavior: "smooth" });
+    const cx = ((box.x + box.width / 2) / 1600) * scroller.scrollWidth;
+    scroller.scrollTo({ left: cx - scroller.clientWidth / 2, behavior: "smooth" });
   }
 
   // ─── Wiring ──────────────────────────────────────────────
@@ -700,8 +702,14 @@
   });
 
   const scroller = $("#scene-scroll");
-  $("#pan-left").addEventListener("click", () => scroller.scrollBy({ left: -scroller.clientWidth, behavior: "smooth" }));
-  $("#pan-right").addEventListener("click", () => scroller.scrollBy({ left: scroller.clientWidth, behavior: "smooth" }));
+  $("#pan-left").addEventListener("click", () => scroller.scrollBy({ left: -scroller.clientWidth / 2, behavior: "smooth" }));
+  $("#pan-right").addEventListener("click", () => scroller.scrollBy({ left: scroller.clientWidth / 2, behavior: "smooth" }));
+
+  // Phones: trim the empty black above and below the set so the room is taller.
+  const narrow = window.matchMedia("(max-width: 760px)");
+  const fitScene = () => scene.setAttribute("viewBox", narrow.matches ? "0 80 1600 770" : "0 0 1600 900");
+  fitScene();
+  narrow.addEventListener("change", fitScene);
   const panState = () => {
     const max = scroller.scrollWidth - scroller.clientWidth;
     $("#pan-left").hidden = scroller.scrollLeft < 8;
@@ -746,9 +754,10 @@
       intro.hidden = true;
       $("#game").hidden = false;
       requestAnimationFrame(() => $("#game").classList.add("show"));
+      if (scroller.scrollWidth > scroller.clientWidth) scroller.scrollLeft = (scroller.scrollWidth - scroller.clientWidth) / 2;
       panState();
       const started = solvedCount() || state.code || state.secrets.length;
-      if (state.door) say("The doorway is still glowing.");
+      if (state.door) say("The rectangle is still glowing.");
       else say(started
         ? `Welcome back. ${solvedCount()} of 3 places found so far.`
         : "You're inside. It's quieter than you expected. Look around and click on anything that catches your eye.");

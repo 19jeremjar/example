@@ -62,14 +62,15 @@ window.SFX = (() => {
       staticNode.buffer = noiseBuf;
       staticNode.loop = true;
       const f = ctx.createBiquadFilter();
-      f.type = "highpass";
-      f.frequency.value = 900;
+      f.type = "bandpass";
+      f.frequency.value = 2200;
+      f.Q.value = 0.5;
       staticGain = ctx.createGain();
       staticGain.gain.value = 0;
       staticNode.connect(f).connect(staticGain).connect(master);
       staticNode.start();
     }
-    if (staticGain) staticGain.gain.setTargetAtTime(level * 0.16, ctx.currentTime, 0.05);
+    if (staticGain) staticGain.gain.setTargetAtTime(level * 0.08, ctx.currentTime, 0.05);
     if (staticNode && level <= 0) {
       const n = staticNode;
       staticNode = null;
