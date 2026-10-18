@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>House of Secrets</title>
+  <meta name="description" content="The 1975 — House of Secrets. Find the objects. Decode the clues. Discover where we're going.">
+  <meta name="theme-color" content="#070605">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Caveat:wght@500;700&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ─── Enter ─────────────────────────────────────────── -->
+  <section class="intro" id="intro">
+    <div class="intro-box" aria-hidden="true"></div>
+    <p class="intro-kicker">The 1975</p>
+    <h1 class="intro-title">House of Secrets</h1>
+    <p class="intro-line">You've seen the house. Now find out what's inside.</p>
+    <button type="button" class="btn btn-solid" id="enter-btn">Enter the house</button>
+    <p class="intro-note">Sound on · about five minutes</p>
+  </section>
+
+  <!-- ─── The house ─────────────────────────────────────── -->
+  <main class="game" id="game" hidden>
+    <header class="topbar">
+      <p class="wordmark">The 1975 <span>—</span> House of Secrets</p>
+      <div class="top-actions">
+        <button type="button" class="btn btn-ghost" id="hint-btn">Hint</button>
+        <button type="button" class="btn btn-ghost" id="sound-btn" aria-pressed="true">Sound on</button>
+        <button type="button" class="btn btn-ghost" id="reset-btn">Restart</button>
+      </div>
+    </header>
+
+    <div class="scene-wrap">
+      <div class="scene-scroll" id="scene-scroll">
+        <div class="scene-inner">
+          <svg class="scene" id="scene" viewBox="0 0 1600 900" role="group" aria-label="The living room of the house">
+            <defs>
+              <pattern id="wallpaper" width="80" height="96" patternUnits="userSpaceOnUse">
+                <rect width="80" height="96" fill="#6a5242"/>
+                <rect width="40" height="96" fill="#715747"/>
+                <path d="M40 22 q10 13 0 28 q-10 -15 0 -28z" fill="#7b604e" opacity=".8"/>
+                <path d="M0 70 q10 13 0 28 q-10 -15 0 -28z M80 70 q10 13 0 28 q-10 -15 0 -28z" fill="#7b604e" opacity=".8"/>
+                <circle cx="40" cy="74" r="2.5" fill="#806450"/>
+              </pattern>
+              <pattern id="floorboards" width="260" height="44" patternUnits="userSpaceOnUse">
+                <rect width="260" height="44" fill="#3d2b1f"/>
+                <rect y="22" width="260" height="22" fill="#38271c"/>
+                <path d="M0 21.5 H260 M0 43.5 H260 M170 0 V22 M60 22 V44" stroke="#24180f" stroke-width="2"/>
+              </pattern>
+              <linearGradient id="wallshade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#000" stop-opacity=".55"/>
+                <stop offset=".45" stop-color="#000" stop-opacity="0"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".25"/>
+              </linearGradient>
+              <radialGradient id="lampglow">
+                <stop offset="0" stop-color="#ffd593" stop-opacity=".55"/>
+                <stop offset=".45" stop-color="#ffb963" stop-opacity=".16"/>
+                <stop offset="1" stop-color="#ffb963" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="vignette" cx="50%" cy="46%" r="72%">
+                <stop offset=".55" stop-color="#000" stop-opacity="0"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".78"/>
+              </radialGradient>
+              <linearGradient id="tinyphoto" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#9a9a9a"/><stop offset="1" stop-color="#3f3f3f"/>
+              </linearGradient>
+              <filter id="grain" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/>
+                <feColorMatrix type="saturate" values="0"/>
+              </filter>
+              <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="10" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+                <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#000" flood-opacity=".55"/>
+              </filter>
+            </defs>
+
+            <!-- room -->
+            <rect width="1600" height="770" fill="url(#wallpaper)"/>
+            <rect width="1600" height="770" fill="url(#wallshade)"/>
+            <rect y="148" width="1600" height="10" fill="#47332a"/>
+            <rect y="600" width="1600" height="160" fill="#4d392b"/>
+            <g fill="none" stroke="#3a2a1f" stroke-width="3">
+              <rect x="20" y="624" width="250" height="112"/><rect x="900" y="624" width="160" height="112"/>
+              <rect x="1080" y="624" width="250" height="112"/><rect x="1350" y="624" width="230" height="112"/>
+            </g>
+            <rect y="592" width="1600" height="12" fill="#3c2b20"/>
+            <rect y="758" width="1600" height="16" fill="#2b1e16"/>
+            <rect y="772" width="1600" height="128" fill="url(#floorboards)"/>
+            <polygon points="560,800 880,800 930,884 510,884" fill="#57302a"/>
+            <polygon points="576,808 864,808 906,876 534,876" fill="none" stroke="#7a4a3a" stroke-width="3"/>
+
+            <!-- lamp light -->
+            <circle class="glow-floor" cx="86" cy="300" r="300" fill="url(#lampglow)"/>
+            <circle class="glow-desk" cx="1392" cy="470" r="260" fill="url(#lampglow)"/>
+
+            <!-- floor lamp (secret) -->
+            <g class="hotspot" data-obj="lamp" tabindex="0" role="button" aria-label="Floor lamp">
+              <rect x="20" y="230" width="140" height="540" fill="transparent"/>
+              <path d="M86 320 V760" stroke="#241c16" stroke-width="7"/>
+              <ellipse cx="86" cy="764" rx="42" ry="8" fill="#1c1611"/>
+              <path class="lamp-shade" d="M40 324 L132 324 L114 250 L58 250Z" fill="#ead1a0"/>
+              <path d="M44 324 L128 324" stroke="#c9ab78" stroke-width="4"/>
+            </g>
+
+            <!-- television -->
+            <g class="hotspot" data-obj="tv" tabindex="0" role="button" aria-label="Television">
+              <rect x="120" y="652" width="330" height="108" rx="4" fill="#4a3424" filter="url(#shadow)"/>
+              <path d="M285 660 V752" stroke="#35251a" stroke-width="3"/>
+              <circle cx="272" cy="706" r="4" fill="#b8925c"/><circle cx="298" cy="706" r="4" fill="#b8925c"/>
+              <rect x="132" y="758" width="14" height="14" fill="#2b1e15"/><rect x="424" y="758" width="14" height="14" fill="#2b1e15"/>
+              <path d="M268 432 L214 352 M296 432 L358 346" stroke="#5b5650" stroke-width="3"/>
+              <ellipse cx="282" cy="432" rx="28" ry="8" fill="#2b2622"/>
+              <rect x="150" y="432" width="290" height="222" rx="16" fill="#2b231d" stroke="#16110d" stroke-width="3"/>
+              <rect x="166" y="448" width="202" height="190" rx="22" fill="#121212"/>
+              <rect class="tv-glass" x="178" y="460" width="178" height="166" rx="24" fill="#1d2523"/>
+              <path d="M190 476 Q210 466 250 466" stroke="#fff" stroke-opacity=".08" stroke-width="6" fill="none"/>
+              <rect x="380" y="454" width="46" height="176" rx="6" fill="#1f1914"/>
+              <circle cx="403" cy="490" r="13" fill="#3a302a" stroke="#5a4a3f" stroke-width="2"/>
+              <circle cx="403" cy="532" r="13" fill="#3a302a" stroke="#5a4a3f" stroke-width="2"/>
+              <path d="M391 566 H415 M391 576 H415 M391 586 H415 M391 596 H415 M391 606 H415" stroke="#3a302a" stroke-width="3"/>
+            </g>
+
+            <!-- framed photograph -->
+            <g class="hotspot" data-obj="photo" tabindex="0" role="button" aria-label="Framed photograph">
+              <path d="M520 168 L476 214 M520 168 L564 214" stroke="#1d1914" stroke-width="1.5"/>
+              <circle cx="520" cy="167" r="3" fill="#b8925c"/>
+              <g class="photo-hang">
+                <rect x="464" y="210" width="112" height="144" fill="#17130f" filter="url(#shadow)"/>
+                <rect x="474" y="220" width="92" height="124" fill="#e8e3d8"/>
+                <rect x="486" y="234" width="68" height="96" fill="url(#tinyphoto)"/>
+                <path d="M496 300 Q500 270 526 258 Q520 284 534 300Z M520 300 Q524 280 544 272 Q540 290 548 300Z" fill="#d9d9d9"/>
+                <rect x="498" y="250" width="44" height="64" fill="none" stroke="#fff" stroke-width="2.5"/>
+              </g>
+            </g>
+
+            <!-- light switch and keypad either side of the doorway -->
+            <rect x="574" y="470" width="18" height="30" rx="2" fill="#d8cfbd"/><rect x="580" y="478" width="6" height="12" fill="#a99e89"/>
+            <g class="door-keypad">
+              <rect x="842" y="452" width="26" height="40" rx="3" fill="#15110e" stroke="#3a2a1f" stroke-width="2"/>
+              <g fill="#3d342d"><circle cx="850" cy="462" r="2"/><circle cx="855" cy="462" r="2"/><circle cx="860" cy="462" r="2"/>
+              <circle cx="850" cy="470" r="2"/><circle cx="855" cy="470" r="2"/><circle cx="860" cy="470" r="2"/>
+              <circle cx="850" cy="478" r="2"/><circle cx="855" cy="478" r="2"/><circle cx="860" cy="478" r="2"/></g>
+              <circle class="keypad-led" cx="855" cy="486" r="2.2" fill="#5a1a14"/>
+            </g>
+
+            <!-- the doorway -->
+            <g class="hotspot door" data-obj="door" tabindex="0" role="button" aria-label="Doorway">
+              <rect x="610" y="200" width="220" height="572" fill="#3a2a1f"/>
+              <rect x="618" y="208" width="204" height="564" fill="none" stroke="#2a1d15" stroke-width="4"/>
+              <rect x="630" y="220" width="180" height="552" fill="#0a0807"/>
+              <rect class="door-fill" x="630" y="220" width="180" height="552" fill="#fffaf0" opacity="0"/>
+              <rect class="door-light" x="638" y="228" width="164" height="536" fill="none" stroke="#fffaf0" stroke-width="5" filter="url(#glow)"/>
+              <rect x="620" y="770" width="200" height="6" fill="#2a1d15"/>
+            </g>
+
+            <!-- clock (secret) -->
+            <g class="hotspot" data-obj="clock" tabindex="0" role="button" aria-label="Wall clock">
+              <circle cx="970" cy="282" r="64" fill="#3a2a1f" filter="url(#shadow)"/>
+              <circle cx="970" cy="282" r="54" fill="#ebe3d0"/>
+              <g font-family="Inter, Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#2a211a" text-anchor="middle">
+                <text x="970" y="248">1</text><text x="1007" y="288">9</text><text x="970" y="328">7</text><text x="933" y="288">5</text>
+              </g>
+              <path class="clock-hand-h" d="M970 282 L948 268" stroke="#2a211a" stroke-width="4" stroke-linecap="round"/>
+              <path class="clock-hand-m" d="M970 282 L1000 270" stroke="#2a211a" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="970" cy="282" r="4" fill="#2a211a"/>
+            </g>
+
+            <!-- framed phrase (secret) -->
+            <g class="hotspot" data-obj="sign" tabindex="0" role="button" aria-label="Framed card above the desk" transform="rotate(1.5 1260 300)">
+              <rect x="1150" y="262" width="230" height="82" fill="#17130f" filter="url(#shadow)"/>
+              <rect x="1160" y="272" width="210" height="62" fill="#ddd5c4"/>
+              <text x="1265" y="309" font-family="Caveat, cursive" font-size="25" font-weight="700" fill="#2b2620" text-anchor="middle">la poésie est dans la rue</text>
+            </g>
+
+            <!-- desk -->
+            <rect x="1060" y="556" width="424" height="22" rx="2" fill="#5a3d29" filter="url(#shadow)"/>
+            <rect x="1080" y="578" width="172" height="182" fill="#4a3222"/>
+            <rect x="1252" y="578" width="206" height="68" fill="#402c1e"/>
+            <rect x="1446" y="578" width="18" height="182" fill="#4a3222"/>
+            <rect x="1092" y="676" width="148" height="74" rx="3" fill="#56392a" stroke="#38261a" stroke-width="2"/>
+            <circle cx="1166" cy="712" r="5" fill="#b8925c"/>
+            <path d="M1300 556 h70 v-14 h-70z M1306 542 h58 v-12 h-58z M1296 530 h76 v-10 h-76z" fill="#2c3a3a"/>
+            <path d="M1306 542 h58 v-12 h-58z" fill="#7a3b2e"/><path d="M1296 530 h76 v-10 h-76z" fill="#c9b78f"/>
+            <g>
+              <ellipse cx="1404" cy="554" rx="36" ry="7" fill="#1b1b1b"/>
+              <path d="M1404 552 L1384 480 L1410 432" stroke="#262626" stroke-width="6" fill="none" stroke-linecap="round"/>
+              <path d="M1352 446 L1432 446 L1414 402 L1368 402Z" fill="#2a2a2a"/>
+              <ellipse class="desk-bulb" cx="1392" cy="448" rx="30" ry="6" fill="#ffe2a3"/>
+            </g>
+
+            <g class="hotspot" data-obj="drawer" tabindex="0" role="button" aria-label="Desk drawer">
+              <rect x="1092" y="590" width="148" height="72" fill="#140e0a"/>
+              <g class="drawer-front">
+                <rect x="1092" y="590" width="148" height="72" rx="3" fill="#5d3f2b" stroke="#38261a" stroke-width="2"/>
+                <rect x="1150" y="618" width="32" height="10" rx="5" fill="#b8925c"/>
+                <rect x="1158" y="638" width="16" height="14" rx="2" fill="#2a1d14"/>
+                <g fill="#c9b78f" font-family="VT323, monospace" font-size="10"><text x="1161" y="649">····</text></g>
+              </g>
+            </g>
+
+            <!-- rabbit hat -->
+            <g class="hotspot" data-obj="hat" tabindex="0" role="button" aria-label="A hat with rabbit ears, sitting on the desk">
+              <g class="hat-on-desk">
+                <ellipse cx="1200" cy="556" rx="70" ry="6" fill="#000" opacity=".3"/>
+                <path d="M1166 506 Q1140 420 1168 392 Q1196 418 1190 504Z" fill="#ece7df"/>
+                <path d="M1170 498 Q1156 432 1170 408 Q1184 432 1182 496Z" fill="#d9aaa4"/>
+                <path d="M1214 504 Q1226 416 1262 400 Q1270 440 1236 508Z" fill="#ece7df"/>
+                <path d="M1220 498 Q1232 432 1254 414 Q1258 444 1232 500Z" fill="#d9aaa4"/>
+                <path d="M1142 554 Q1142 494 1200 490 Q1258 494 1258 554Z" fill="#ece7df"/>
+                <path d="M1150 530 Q1200 520 1250 530 M1146 544 Q1200 534 1254 544" stroke="#d6cfc4" stroke-width="3" fill="none"/>
+                <rect x="1136" y="546" width="128" height="12" rx="6" fill="#ddd6ca"/>
+              </g>
+            </g>
+
+            <!-- plant -->
+            <g>
+              <path d="M1528 640 Q1490 560 1508 500 M1532 640 Q1540 540 1560 480 M1536 640 Q1590 580 1588 530" stroke="#3c4a33" stroke-width="5" fill="none"/>
+              <g fill="#4b5d3e"><ellipse cx="1504" cy="512" rx="16" ry="34" transform="rotate(-20 1504 512)"/><ellipse cx="1560" cy="488" rx="16" ry="36" transform="rotate(16 1560 488)"/>
+              <ellipse cx="1586" cy="540" rx="14" ry="30" transform="rotate(40 1586 540)"/><ellipse cx="1520" cy="580" rx="12" ry="26" transform="rotate(-50 1520 580)"/></g>
+              <path d="M1500 640 H1570 L1560 760 H1510Z" fill="#7a4d36"/>
+            </g>
+
+            <rect width="1600" height="900" fill="url(#vignette)" pointer-events="none"/>
+            <rect class="grain" width="1600" height="900" filter="url(#grain)" opacity=".07" pointer-events="none"/>
+          </svg>
+          <span class="snap" aria-hidden="true"></span><span class="snap snap-b" aria-hidden="true"></span>
+        </div>
+      </div>
+      <button type="button" class="pan pan-left" id="pan-left" aria-label="Look left">‹</button>
+      <button type="button" class="pan pan-right" id="pan-right" aria-label="Look right">›</button>
+    </div>
+
+    <p class="narration" id="narration" aria-live="polite"></p>
+
+    <footer class="tracker" aria-label="Clues found">
+      <div class="slot" id="slot-code"><span class="slot-label">Code</span><span class="slot-value">····</span></div>
+      <div class="slot" id="slot-tv"><span class="slot-label">City 01</span><span class="slot-value">———</span></div>
+      <div class="slot" id="slot-photo"><span class="slot-label">City 02</span><span class="slot-value">———</span></div>
+      <div class="slot" id="slot-drawer"><span class="slot-label">City 03</span><span class="slot-value">———</span></div>
+      <div class="slot slot-small" id="slot-secrets"><span class="slot-label">Secrets</span><span class="slot-value">0 / 3</span></div>
+    </footer>
+    <p class="disclaimer">Concept prototype. Example cities only.</p>
+  </main>
+
+  <!-- ─── Inspect window ────────────────────────────────── -->
+  <div class="modal" id="modal" hidden>
+    <div class="window" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="window-bar">
+        <h2 class="window-title" id="modal-title"></h2>
+        <button type="button" class="window-close" id="modal-close" aria-label="Close">✕</button>
+      </div>
+      <div class="window-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ─── Reveal ────────────────────────────────────────── -->
+  <section class="reveal" id="reveal" hidden>
+    <div class="reveal-box" aria-hidden="true"></div>
+    <h2 class="reveal-title">You found us.</h2>
+    <p class="reveal-cities" id="reveal-cities"></p>
+    <p class="reveal-line">Something is coming. Be the first to know.</p>
+    <a class="btn btn-solid" id="signup-link" href="#" target="_blank" rel="noopener">Sign up for updates ↗</a>
+    <button type="button" class="reveal-again" id="again-btn">Play again</button>
+  </section>
+
+  <script src="js/config.js"></script>
+  <script src="js/landmarks.js"></script>
+  <script src="js/sfx.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
