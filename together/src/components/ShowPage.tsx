@@ -15,10 +15,11 @@ import { createStencilPainter, rasteriseMask, type StencilPainter } from "../mos
 import type { Mosaic, MosaicPhoto } from "../mosaic/types";
 import { mosaicPath, navigate, photoPath } from "../routes";
 import { MosaicView, type MosaicViewHandle } from "./MosaicView";
+import { Intro } from "./Intro";
 import { PhotoDetail } from "./PhotoDetail";
 import { type LocalImageUrls, UploadSheet } from "./UploadSheet";
 
-const HINT_KEY = "tt-hint-seen";
+const INTRO_KEY = "tt-intro-seen";
 
 type Detail = { photo: MosaicPhoto | null; viaTap: boolean };
 
@@ -78,7 +79,8 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [hint, setHint] = useState(() => !readFlag(HINT_KEY));
+  // Welcome card on a first visit, unless they arrived on a shared photo link.
+  const [intro, setIntro] = useState(() => !readFlag(INTRO_KEY) && !photoId);
   const { colourway, next: nextColourway } = useColourway();
   const background = colourway.value;
   const labelStyle = { background, color: colourway.text };
@@ -129,16 +131,10 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  useEffect(() => {
-    if (!hint) return;
-    const t = setTimeout(() => dismissHint(), 8000);
-    return () => clearTimeout(t);
-  }, [hint]);
-
-  function dismissHint() {
-    setHint(false);
-    writeFlag(HINT_KEY);
-  }
+  const closeIntro = () => {
+    setIntro(false);
+    writeFlag(INTRO_KEY);
+  };
 
   // Follow the URL: open a deep-linked photo (flying to it first), close when it's removed from the URL.
   const detailRef = useRef(detail);
@@ -169,7 +165,6 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   }, [photoId, mosaic]);
 
   const onTapTile = (index: number, info: FrameInfo) => {
-    dismissHint();
     if (info.mix < 0.35 || mosaic.tiles[index].region !== "letter") return;
     const photo = photoAt(index);
     if (!photo) {
@@ -268,7 +263,6 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         background={background}
         insets={insets}
         onTapTile={onTapTile}
-        onInteract={hint ? dismissHint : undefined}
         onFrame={debug ? onFrame : undefined}
         centreAnchor={centreRef}
         onDockChange={setDocked}
@@ -304,10 +298,10 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
             ))}
           </span>
         </ZoomButton>
-        <ZoomButton label="Zoom in" onClick={() => (dismissHint(), view.current?.zoomBy(1.8))}>
+        <ZoomButton label="Zoom in" onClick={() => view.current?.zoomBy(1.8)}>
           +
         </ZoomButton>
-        <ZoomButton label="Zoom out" onClick={() => (dismissHint(), view.current?.zoomBy(1 / 1.8))}>
+        <ZoomButton label="Zoom out" onClick={() => view.current?.zoomBy(1 / 1.8)}>
           −
         </ZoomButton>
         <ZoomButton label="Show the whole artwork" onClick={() => view.current?.fit()}>
@@ -320,10 +314,6 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       <div className="pointer-events-none absolute inset-x-0 flex justify-center px-safe" style={{ bottom: insets.bottom + 8 }} aria-live="polite">
         {toast ? (
           <p className="box-ink max-w-[calc(100%-64px)] px-3 py-2 text-center text-xs font-bold tracking-wider animate-rise">{toast}</p>
-        ) : hint ? (
-          <p className="box-ink max-w-[calc(100%-64px)] px-3 py-2 text-center text-xs font-bold tracking-wider animate-rise">
-            PINCH TO EXPLORE. TAP A PHOTO TO SEE THE MOMENT.
-          </p>
         ) : null}
       </div>
 
@@ -352,6 +342,15 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
           cache={cache}
           onClose={closeDetail}
           onCopyLink={copyLink}
+        />
+      )}
+      {intro && (
+        <Intro
+          onAdd={() => {
+            closeIntro();
+            setUploadOpen(true);
+          }}
+          onExplore={closeIntro}
         />
       )}
       {uploadOpen && (
