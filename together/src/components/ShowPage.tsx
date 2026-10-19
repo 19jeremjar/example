@@ -369,7 +369,7 @@ function PlusButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       aria-label="Add your photo"
       title="Add your photo"
-      className="box-ink pointer-events-auto relative block h-[4.5rem] w-[4.5rem] active:bg-white active:text-[#121c16]"
+      className="box-ink plus-glow pointer-events-auto relative block h-[4.5rem] w-[4.5rem] active:bg-white active:text-[#121c16]"
     >
       <span aria-hidden className="absolute top-1/2 left-1/2 h-1.5 w-9 -translate-x-1/2 -translate-y-1/2 bg-current" />
       <span aria-hidden className="absolute top-1/2 left-1/2 h-9 w-1.5 -translate-x-1/2 -translate-y-1/2 bg-current" />

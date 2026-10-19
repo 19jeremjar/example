@@ -74,3 +74,33 @@ body {
 .box-white:disabled {
   opacity: 0.5;
 }
+
+/* The centre + button: a soft glow that drifts through the poster colours and a slow breath. */
+@keyframes plus-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 22px 3px rgb(239 50 60 / 0.38);
+    transform: scale(1);
+  }
+  25% {
+    box-shadow: 0 0 26px 4px rgb(249 157 39 / 0.42);
+    transform: scale(1.035);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px rgb(100 170 74 / 0.38);
+    transform: scale(1);
+  }
+  75% {
+    box-shadow: 0 0 26px 4px rgb(1 130 191 / 0.42);
+    transform: scale(1.035);
+  }
+}
+.plus-glow {
+  animation: plus-glow 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .plus-glow {
+    animation: none;
+    box-shadow: 0 0 22px 3px rgb(239 50 60 / 0.3);
+  }
+}
