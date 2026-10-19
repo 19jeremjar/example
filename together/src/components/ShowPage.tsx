@@ -289,9 +289,9 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         </p>
       </header>
 
-      <div className="pointer-events-none absolute right-0 flex flex-col items-end gap-px px-safe" style={{ bottom: insets.bottom + 8 }}>
+      <div className="pointer-events-none absolute right-0 flex flex-col items-end gap-1 px-safe" style={{ bottom: insets.bottom + 8 }}>
         <ZoomButton label={`Background colour: ${colourway.name}. Tap to change`} onClick={nextColourway}>
-          <span aria-hidden className="grid h-5 w-5 grid-cols-2 ring-1 ring-white">
+          <span aria-hidden className="grid h-5 w-5 grid-cols-2 ring-1 ring-[#121c16]/25">
             {/* Four poster colours as a 2×2 swatch. */}
             {COLOURWAYS.filter((c) => c.name !== "White").map((c) => (
               <span key={c.name} style={{ background: c.value }} />
@@ -390,7 +390,7 @@ function ZoomButton({ label, onClick, children }: { label: string; onClick: () =
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="pointer-events-auto flex h-11 w-11 items-center justify-center bg-ink text-xl leading-none font-bold text-white active:bg-white active:text-ink"
+      className="pointer-events-auto flex h-11 w-11 items-center justify-center bg-white/55 text-xl leading-none font-bold text-[#121c16] ring-1 ring-[#121c16]/15 backdrop-blur-sm active:bg-white/90"
     >
       {children}
     </button>
