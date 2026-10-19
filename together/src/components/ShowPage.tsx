@@ -17,7 +17,8 @@ import { PhotoDetail } from "./PhotoDetail";
 import { type LocalImageUrls, UploadSheet } from "./UploadSheet";
 
 const HINT_KEY = "tt-hint-seen";
-const COLOURWAY_KEY = "tt-colourway";
+// Bumped when the default changes, so everyone starts on the new default colour.
+const COLOURWAY_KEY = "tt-colourway-v3";
 
 type Detail = { photo: MosaicPhoto | null; viaTap: boolean };
 
@@ -82,6 +83,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     return saved >= 0 ? saved : 0;
   });
   const background = COLOURWAYS[colourway].value;
+  const labelStyle = { background, color: COLOURWAYS[colourway].text };
   useEffect(() => {
     document.body.style.background = background;
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", background);
@@ -277,14 +279,14 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       <header ref={headerRef} className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between pt-safe px-safe pb-3">
         <a
           href="/"
-          className="pointer-events-auto px-1.5 py-1 text-[11px] leading-[1.15] font-bold tracking-wider text-white"
-          style={{ background }}
+          className="pointer-events-auto px-1.5 py-1 text-[11px] leading-[1.15] font-bold tracking-wider"
+          style={labelStyle}
         >
           TOGETHER
           <br />
           TOGETHER
         </a>
-        <p className="px-1.5 py-1 text-right text-[11px] leading-[1.15] font-bold tracking-wider text-white" style={{ background }}>
+        <p className="px-1.5 py-1 text-right text-[11px] leading-[1.15] font-bold tracking-wider" style={labelStyle}>
           {show.label.split(" · ")[0]}
           <br />
           {show.label.split(" · ")[1]}
@@ -294,7 +296,8 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       <div className="pointer-events-none absolute right-0 flex flex-col items-end gap-px px-safe" style={{ bottom: insets.bottom + 8 }}>
         <ZoomButton label={`Background colour: ${COLOURWAYS[colourway].name}. Tap to change`} onClick={nextColourway}>
           <span aria-hidden className="grid h-5 w-5 grid-cols-2 ring-1 ring-white">
-            {COLOURWAYS.map((c) => (
+            {/* Four poster colours as a 2×2 swatch. */}
+            {COLOURWAYS.filter((c) => c.name !== "White").map((c) => (
               <span key={c.name} style={{ background: c.value }} />
             ))}
           </span>
@@ -323,7 +326,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       </div>
 
       <footer ref={footerRef} className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 pt-3 pb-safe px-safe">
-        <p className="px-1.5 py-0.5 text-[11px] leading-[1.3] font-bold tracking-wider text-white" style={{ background }}>
+        <p className="px-1.5 py-0.5 text-[11px] leading-[1.3] font-bold tracking-wider" style={labelStyle}>
           {total.toLocaleString("en-AU")} PHOTOS
           <br />
           LIVE · DEMO

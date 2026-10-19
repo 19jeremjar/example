@@ -77,7 +77,7 @@ export function rasteriseMask(painter: StencilPainter, cols: number, rows: numbe
 export async function createStencilPainter(config: StencilConfig, cols: number, rows: number): Promise<StencilPainter> {
   const width = DESIGN_WIDTH;
   const height = (DESIGN_WIDTH * rows) / cols;
-  if (config.kind === "vector") return vectorPainter(config.art, width, height);
+  if (config.kind === "vector") return vectorPainter(config.art, width, height, config.pull ?? 0);
   return config.kind === "image" ? imagePainter(config.url, width, height) : placeholderArcsPainter(config.text, width, height);
 }
 
@@ -87,16 +87,20 @@ type VectorArt = { width: number; height: number; sticker: VectorPath[]; lines: 
  * Official artwork as vector paths: the sticker silhouettes hold the mosaic and the linework is
  * drawn on top. Filled as Path2D every frame, so it is sharp at any zoom and costs very little.
  */
-function vectorPainter(art: VectorArt, width: number, height: number): StencilPainter {
+function vectorPainter(art: VectorArt, width: number, height: number, pull: number): StencilPainter {
+  // Pull the two words towards each other by `pull` art units each, closing the middle gap.
+  const artHeight = art.height - pull * 2;
   const margin = 0.03;
-  const scale = Math.min((width * (1 - 2 * margin)) / art.width, (height * (1 - 2 * margin)) / art.height);
+  const scale = Math.min((width * (1 - 2 * margin)) / art.width, (height * (1 - 2 * margin)) / artHeight);
   const place = new DOMMatrix()
-    .translate((width - art.width * scale) / 2, (height - art.height * scale) / 2)
+    .translate((width - art.width * scale) / 2, (height - artHeight * scale) / 2)
     .scale(scale);
   const build = (paths: VectorPath[]) =>
     paths.map(({ m, d }) => {
+      // m[5] is where the path starts vertically, enough to tell the top word from the bottom one.
+      const shift = m[5] < art.height / 2 ? 0 : -pull * 2;
       const path = new Path2D();
-      path.addPath(new Path2D(d), place.multiply(new DOMMatrix(m)));
+      path.addPath(new Path2D(d), place.translate(0, shift).multiply(new DOMMatrix(m)));
       return path;
     });
   const sticker = build(art.sticker);

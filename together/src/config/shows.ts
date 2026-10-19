@@ -3,7 +3,7 @@ import { TOGETHER_LOGO } from "./togetherLogo";
 
 export type StencilConfig =
   /** Official artwork as vector paths: sticker silhouettes hold the mosaic, linework sits on top. */
-  | { kind: "vector"; art: typeof TOGETHER_LOGO }
+  | { kind: "vector"; art: typeof TOGETHER_LOGO; /** Moves the two words this many art units closer. */ pull?: number }
   /** Generic placeholder: text set along two arcs in a system font. Replace with the official asset. */
   | { kind: "placeholder-arcs"; text: string }
   /** Transparent SVG/PNG whose alpha channel marks the artwork (e.g. the official wordmarks). */
@@ -38,10 +38,10 @@ export const SHOWS: ShowConfig[] = [
     night: "Night 01",
     available: true,
     cols: 150,
-    rows: 196,
+    rows: 160,
     seed: 20260101,
     sampleFill: 0.86,
-    stencil: { kind: "vector", art: TOGETHER_LOGO },
+    stencil: { kind: "vector", art: TOGETHER_LOGO, pull: 72 },
     wordGradients: [
       [POSTER.red, POSTER.orange],
       [POSTER.green, POSTER.blue],
@@ -56,10 +56,10 @@ export const SHOWS: ShowConfig[] = [
     night: "Night 02",
     available: false,
     cols: 150,
-    rows: 196,
+    rows: 160,
     seed: 20260102,
     sampleFill: 0.4,
-    stencil: { kind: "vector", art: TOGETHER_LOGO },
+    stencil: { kind: "vector", art: TOGETHER_LOGO, pull: 72 },
     wordGradients: [
       [POSTER.red, POSTER.orange],
       [POSTER.green, POSTER.blue],

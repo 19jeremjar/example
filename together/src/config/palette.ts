@@ -20,11 +20,13 @@ export const POSTER = {
   ink: "#121C16",
 } as const;
 
+/** Page backgrounds, with the label colour that reads on each. The first is the default. */
 export const COLOURWAYS = [
-  { name: "Red", value: POSTER.red },
-  { name: "Orange", value: POSTER.orange },
-  { name: "Green", value: POSTER.green },
-  { name: "Blue", value: POSTER.blue },
+  { name: "White", value: "#FFFFFF", text: POSTER.ink },
+  { name: "Green", value: POSTER.green, text: "#FFFFFF" },
+  { name: "Red", value: POSTER.red, text: "#FFFFFF" },
+  { name: "Orange", value: POSTER.orange, text: "#FFFFFF" },
+  { name: "Blue", value: POSTER.blue, text: "#FFFFFF" },
 ] as const;
 
 /** Top-to-bottom colour bands used by the placeholder artwork. */

@@ -229,6 +229,7 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
   // Redraw when photos or insets change.
   useEffect(() => {
     const e = engine.current;
+    e.renderer?.refreshBase();
     e.vp = { ...e.vp, insets: props.insets };
     e.requestFrame();
   }, [props.version, props.insets]);

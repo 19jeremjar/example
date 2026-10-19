@@ -21,6 +21,10 @@ const FRAME_SIDE = 0.07;
 const FRAME_BOTTOM = 0.2;
 /** White gap between Polaroids, as a share of the tile. */
 const GAP = 0.08;
+/** Pixels per tile in the baked zoomed-out texture. */
+const BASE_PX = 6;
+/** How far the baked gap pixels move towards white. */
+const GAP_TINT = 0.45;
 /** Outline ring around the letters, in stencil design units. */
 const OUTLINE_WIDTH = 16;
 
@@ -61,15 +65,54 @@ export class MosaicRenderer {
     this.mctx = this.mask.getContext("2d")!;
     this.colors = mosaic.tiles.map((t) => t.color);
     this.base = document.createElement("canvas");
-    this.base.width = mosaic.cols;
-    this.base.height = mosaic.rows;
+    this.refreshBase();
+  }
+
+  /**
+   * Bakes the zoomed-out view: each tile is a BASE_PX square mini Polaroid (a hint of white gap,
+   * a coloured frame and a darker "photo" centre), so the mosaic texture reads from a distance
+   * without loading a single photo. Call again when photos are added or removed.
+   */
+  refreshBase() {
+    const { mosaic } = this;
+    const P = BASE_PX;
+    const w = mosaic.cols * P;
+    this.base.width = w;
+    this.base.height = mosaic.rows * P;
     const bctx = this.base.getContext("2d")!;
-    const img = bctx.createImageData(mosaic.cols, mosaic.rows);
+    const img = bctx.createImageData(w, this.base.height);
+    const d = img.data;
     for (let i = 0; i < mosaic.tiles.length; i++) {
-      img.data[i * 4] = mosaic.rgb[i * 3];
-      img.data[i * 4 + 1] = mosaic.rgb[i * 3 + 1];
-      img.data[i * 4 + 2] = mosaic.rgb[i * 3 + 2];
-      img.data[i * 4 + 3] = 255;
+      const r = mosaic.rgb[i * 3];
+      const g = mosaic.rgb[i * 3 + 1];
+      const b = mosaic.rgb[i * 3 + 2];
+      const hasPhoto = mosaic.tiles[i].region === "letter" && !!this.photoAt(i);
+      // Photos vary in brightness, like the average of a real concert shot.
+      const shade = 0.22 + ((i * 2654435761) >>> 0) / 4294967296 * 0.22;
+      const col = i % mosaic.cols;
+      const row = Math.floor(i / mosaic.cols);
+      for (let y = 0; y < P; y++) {
+        for (let x = 0; x < P; x++) {
+          let rr = r;
+          let gg = g;
+          let bb = b;
+          if (x === 0 || y === 0) {
+            // White gap between Polaroids, softened so it reads as texture, not a grid.
+            rr += (255 - r) * GAP_TINT;
+            gg += (255 - g) * GAP_TINT;
+            bb += (255 - b) * GAP_TINT;
+          } else if (hasPhoto && x >= 2 && x <= P - 2 && y >= 2 && y <= P - 3) {
+            rr *= 1 - shade;
+            gg *= 1 - shade;
+            bb *= 1 - shade;
+          }
+          const o = ((row * P + y) * w + col * P + x) * 4;
+          d[o] = rr;
+          d[o + 1] = gg;
+          d[o + 2] = bb;
+          d[o + 3] = 255;
+        }
+      }
     }
     bctx.putImageData(img, 0, 0);
   }
@@ -109,7 +152,9 @@ export class MosaicRenderer {
     lctx.globalCompositeOperation = "source-over";
     lctx.globalAlpha = 1;
     lctx.clearRect(0, 0, vp.width, vp.height);
-    lctx.imageSmoothingEnabled = false;
+    // Smooth when the baked texture is shrunk, crisp when it's enlarged.
+    lctx.imageSmoothingEnabled = z * this.dpr < BASE_PX;
+    lctx.imageSmoothingQuality = "high";
     lctx.drawImage(this.base, ox, oy, mosaic.cols * z, mosaic.rows * z);
 
     let visibleTiles = 0;

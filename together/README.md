@@ -2,8 +2,8 @@
 
 A mobile-first mosaic of fan photos. Zoomed out, it's the official **TOGETHER, TOGETHER**
 wordmarks: the black linework from the tour artwork, with the sticker filled by a colour mosaic
-(red → orange on the top word, green → blue on the bottom), on a poster-colour background
-(red, orange, green or blue; switch it with the swatch button). Zoom in and each tile becomes a
+(red → orange on the top word, green → blue on the bottom). The background is white by default;
+the swatch button switches it between white and the poster colours (green, red, orange, blue). Zoom in and each tile becomes a
 Polaroid of a moment from the show, framed in the colour of its spot in the artwork.
 
 The wordmarks are vector paths extracted from the supplied tour PSD (the "Together Logos"
@@ -58,13 +58,14 @@ src/
   components/            React UI: MosaicView, ShowPage, PhotoDetail, UploadSheet
 ```
 
-- **One canvas, no image elements.** A fine 150 × 196 grid. Only the ~4,800 tiles that show
+- **One canvas, no image elements.** A fine 150 × 160 grid. Only the ~4,800 tiles that show
   through the sticker (not hidden under the linework) hold photos.
 - **Crisp at every zoom.** The sticker shape and the linework are filled as vector paths every
   frame, and the tiles are clipped to the sticker. Nothing follows the tile grid, so nothing
   looks pixelated.
-- **Artwork view (1.0×–1.8×).** The tile colours are a single 150 × 196 px bitmap, clipped to the
-  sticker. That's a few draw calls per frame and **zero photo requests**. Check the `img req`
+- **Artwork view (1.0×–1.8×).** The mosaic is one baked bitmap, clipped to the sticker. Each tile
+  is a 6 px mini Polaroid (a hint of white gap, a coloured frame, a darker "photo" centre), so you
+  can make out the mosaic from a distance without loading any photos. That's a few draw calls per frame and **zero photo requests**. Check the `img req`
   counter with `?debug`.
 - **Transition (1.8×–2.5×).** Photos fade in once tiles are at least 22 px on screen *and* past
   1.8× of the fitted view. They're fully revealed at 44 px and 2.5×. Only tiles in the viewport,
@@ -99,7 +100,7 @@ in `sticker` and dark ones in `lines`.
 Each show sets its own artwork and word gradients in `src/config/shows.ts`:
 
 ```ts
-stencil: { kind: "vector", art: TOGETHER_LOGO },
+stencil: { kind: "vector", art: TOGETHER_LOGO, pull: 72 }, // pull: move the words closer
 wordGradients: [[POSTER.red, POSTER.orange], [POSTER.green, POSTER.blue]],
 ```
 
