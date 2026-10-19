@@ -80,7 +80,17 @@ export function buildMosaic(show: ShowConfig, mask: StencilMask): Mosaic {
     });
   }
 
-  return { show, cols, rows, tiles, rgb, photos, letterCount: letters.length, fillOrder: order.slice(sampleCount) };
+  return {
+    show,
+    cols,
+    rows,
+    tiles,
+    rgb,
+    photos,
+    letterCount: letters.length,
+    fillOrder: order.slice(sampleCount),
+    centre: mask.centre ?? { x: cols / 2, y: rows / 2 },
+  };
 }
 
 export function tileIndexById(mosaic: Mosaic, id: string): number {

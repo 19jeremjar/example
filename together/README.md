@@ -17,7 +17,8 @@ white type (the city/date boxes), white boxes with spread-out letters (the guest
 sticker wordmarks themselves, and a hand-lettered aside. That aside is set in Reenie Beanie
 (Google Fonts) as a stand-in for the poster's hand lettering. The copy leans on the idea of the
 night being shared: "with very special guest: Y O U", "Put it together", "Moments shared
-together". ADD YOUR PHOTO sits between the two words, where the headliner sits on the poster.
+together". ADD YOUR PHOTO is a plain ink button centred in the space between the two words (measured
+from the artwork), where the headliner sits on the poster.
 Once you zoom in, it docks to the corner.
 
 ## Run it

@@ -118,7 +118,7 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
       propsRef.current.onFrame?.(info, e.camera);
       const anchor = propsRef.current.centreAnchor?.current;
       if (anchor) {
-        const p = worldToScreen(e.camera, e.vp, mosaic.cols / 2, mosaic.rows / 2);
+        const p = worldToScreen(e.camera, e.vp, mosaic.centre.x, mosaic.centre.y);
         const half = anchor.offsetHeight / 2;
         const docked =
           e.camera.zoom > zoomLimits(mosaic, e.vp).min * 1.35 ||

@@ -4,7 +4,7 @@ import { copyText } from "../lib/clipboard";
 import { COLOURWAYS } from "../config/palette";
 import { useColourway } from "../lib/colourway";
 import { readFlag, writeFlag } from "../lib/storage";
-import { Script, Spaced, TogetherMark } from "./Poster";
+import { TogetherMark } from "./Poster";
 import type { Camera, Insets } from "../mosaic/camera";
 import { fitZoom } from "../mosaic/camera";
 import { buildMosaic, tileIndexById } from "../mosaic/generate";
@@ -274,14 +274,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         onDockChange={setDocked}
       />
 
-      <div
-        ref={centreRef}
-        className="pointer-events-none absolute top-0 left-0 flex w-[min(62vw,270px)] flex-col items-stretch gap-1"
-        style={{ visibility: "hidden" }}
-      >
-        <Script className="text-center text-[1.45rem] whitespace-nowrap" style={{ color: colourway.text }}>
-          with very special guest:
-        </Script>
+      <div ref={centreRef} className="pointer-events-none absolute top-0 left-0" style={{ visibility: "hidden" }}>
         <AddButton onClick={() => setUploadOpen(true)} large />
       </div>
 
@@ -340,7 +333,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
           <br />
           SHARED TOGETHER
         </p>
-        <div className={docked ? "w-44" : "invisible w-44"} aria-hidden={!docked}>
+        <div className={docked ? "" : "invisible"} aria-hidden={!docked}>
           <AddButton onClick={() => setUploadOpen(true)} />
         </div>
       </footer>
@@ -368,16 +361,20 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   );
 }
 
-/** Square ink poster box with spaced lettering, like the city/date boxes. */
+/** Square ink button: plus sign and one line of bold uppercase, like the poster's boxes. */
 function AddButton({ onClick, large }: { onClick: () => void; large?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`box-ink pointer-events-auto block w-full text-left font-bold active:bg-white active:text-ink ${large ? "px-3.5 py-2.5" : "px-3 py-2"}`}
+      className={`box-ink pointer-events-auto flex items-center justify-center gap-2.5 font-bold tracking-[0.1em] whitespace-nowrap shadow-[0_0_0_2px_#ffffff] active:bg-white active:text-[#121c16] ${
+        large ? "h-14 px-6 text-base" : "h-12 px-4 text-sm"
+      }`}
     >
-      <Spaced text="ADD YOUR" className={large ? "text-[1.35rem] leading-none" : "text-sm leading-tight"} />
-      <Spaced text="PHOTO" className={large ? "text-[1.35rem] leading-none" : "text-sm leading-tight"} />
+      <span aria-hidden className="text-2xl leading-none font-normal">
+        +
+      </span>
+      ADD YOUR PHOTO
     </button>
   );
 }

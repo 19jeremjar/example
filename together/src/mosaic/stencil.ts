@@ -7,6 +7,8 @@ export type StencilMask = {
   cols: number;
   rows: number;
   region: Uint8Array;
+  /** Middle of the empty space between the words, in tiles (where ADD YOUR PHOTO sits). */
+  centre?: { x: number; y: number };
 };
 
 export const REGION_CODES: TileRegion[] = ["ground", "letter"];
@@ -52,6 +54,7 @@ export function rasteriseMask(painter: StencilPainter, cols: number, rows: numbe
   ctx.scale(width / painter.width, width / painter.width);
   ctx.fillStyle = "#000";
   painter.fill(ctx);
+  const centre = findGapCentre(ctx, width, height, cols / width);
   if (painter.lines) {
     // Tiles hidden under the linework shouldn't hold photos.
     ctx.globalCompositeOperation = "destination-out";
@@ -71,7 +74,24 @@ export function rasteriseMask(painter: StencilPainter, cols: number, rows: numbe
       coverage[row * cols + col] = sum / (255 * SAMPLES * SAMPLES);
     }
   }
-  return maskFromCoverage(cols, rows, coverage);
+  return { ...maskFromCoverage(cols, rows, coverage), centre };
+}
+
+/**
+ * Scans the middle column outwards from the vertical centre to find the bottom of the top word
+ * and the top of the bottom word, and returns the point halfway between them (in tiles).
+ */
+function findGapCentre(ctx: CanvasRenderingContext2D, width: number, height: number, toTiles: number) {
+  const x = Math.round(width / 2);
+  const column = ctx.getImageData(x, 0, 1, height).data;
+  const filled = (y: number) => column[y * 4 + 3] > 0;
+  const mid = Math.round(height / 2);
+  if (filled(mid)) return undefined;
+  let top = mid;
+  while (top > 0 && !filled(top - 1)) top--;
+  let bottom = mid;
+  while (bottom < height - 1 && !filled(bottom + 1)) bottom++;
+  return { x: x * toTiles, y: ((top + bottom) / 2) * toTiles };
 }
 
 export async function createStencilPainter(config: StencilConfig, cols: number, rows: number): Promise<StencilPainter> {

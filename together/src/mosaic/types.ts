@@ -35,4 +35,6 @@ export type Mosaic = {
   letterCount: number;
   /** Empty letter tile indices in the order new contributions fill them. */
   fillOrder: number[];
+  /** Where ADD YOUR PHOTO sits: the middle of the space between the words, in tiles. */
+  centre: { x: number; y: number };
 };
