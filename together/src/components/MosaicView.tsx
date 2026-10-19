@@ -9,6 +9,7 @@ import {
   fitCamera,
   hitTest,
   interpolateCamera,
+  worldToScreen,
   zoomAround,
   zoomLimits,
 } from "../mosaic/camera";
@@ -41,6 +42,10 @@ type Props = {
   onTapTile: (index: number, info: FrameInfo) => void;
   onInteract?: () => void;
   onFrame?: (info: FrameInfo, camera: Camera) => void;
+  /** Element kept centred on the middle of the artwork while the whole piece is in view. */
+  centreAnchor?: React.RefObject<HTMLElement | null>;
+  /** Called when the anchor leaves (true) or returns to (false) the view. */
+  onDockChange?: (docked: boolean) => void;
 };
 
 type Animation = { from: Camera; to: Camera; start: number; duration: number; done: () => void };
@@ -63,6 +68,7 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
     pinchFrom: null as Camera | null,
     highlight: undefined as { index: number; start: number } | undefined,
     lastInfo: { mix: 0, tilePx: 0, visibleTiles: 0, animating: false } as FrameInfo,
+    docked: undefined as boolean | undefined,
     requestFrame: () => {},
   });
 
@@ -110,6 +116,23 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
       info.renderMs = performance.now() - t0;
       e.lastInfo = info;
       propsRef.current.onFrame?.(info, e.camera);
+      const anchor = propsRef.current.centreAnchor?.current;
+      if (anchor) {
+        const p = worldToScreen(e.camera, e.vp, mosaic.cols / 2, mosaic.rows / 2);
+        const half = anchor.offsetHeight / 2;
+        const docked =
+          e.camera.zoom > zoomLimits(mosaic, e.vp).min * 1.35 ||
+          p.y - half < e.vp.insets.top ||
+          p.y + half > e.vp.height - e.vp.insets.bottom ||
+          p.x < 0 ||
+          p.x > e.vp.width;
+        anchor.style.transform = `translate(${p.x}px, ${p.y}px) translate(-50%, -50%)`;
+        anchor.style.visibility = docked ? "hidden" : "visible";
+        if (docked !== e.docked) {
+          e.docked = docked;
+          propsRef.current.onDockChange?.(docked);
+        }
+      }
       if (busy || info.animating) requestFrame();
     };
     const requestFrame = () => {
@@ -133,6 +156,8 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
       }
       requestFrame();
     };
+    // Polaroid captions use the handwritten web font; redraw once it arrives.
+    void document.fonts?.ready.then(requestFrame);
     const ro = new ResizeObserver(resize);
     ro.observe(container);
     resize();

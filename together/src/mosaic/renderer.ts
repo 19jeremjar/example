@@ -225,7 +225,7 @@ export class MosaicRenderer {
     const overlay = (1 - mix * 0.85) * (z > LOD.captionPx ? 0.6 : 1);
     const caption = z > LOD.captionPx;
     if (caption) {
-      c.font = `700 ${Math.round(z * 0.055)}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+      c.font = `${Math.round(z * 0.1)}px "Reenie Beanie", "Marker Felt", cursive`;
       c.textBaseline = "middle";
     }
     let drawn = 0;
@@ -294,9 +294,9 @@ export class MosaicRenderer {
           c.fillStyle = PALETTE.ink;
           const ty = y + s - bottom / 2;
           c.textAlign = "left";
-          c.fillText(photo.source === "local" ? "YOU · DEMO" : `#${photo.id.padStart(4, "0")}`, px, ty);
+          c.fillText("together", px, ty);
           c.textAlign = "right";
-          c.fillText(mosaic.show.night.toUpperCase(), px + pw, ty);
+          c.fillText(photo.source === "local" ? "you" : `#${photo.id.padStart(4, "0")}`, px + pw, ty);
         }
       }
     }

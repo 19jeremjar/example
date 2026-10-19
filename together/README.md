@@ -10,6 +10,16 @@ The wordmarks are vector paths extracted from the supplied tour PSD (the "Togeth
 smart object) into `src/config/togetherLogo.ts`. The sample photos are drawn procedurally in the
 browser, and uploads stay on the device.
 
+## Look and feel
+
+Every screen borrows the tour poster's language: two-line corner labels, solid ink boxes with
+white type (the city/date boxes), white boxes with spread-out letters (the guest boxes), the
+sticker wordmarks themselves, and a hand-lettered aside. That aside is set in Reenie Beanie
+(Google Fonts) as a stand-in for the poster's hand lettering. The copy leans on the idea of the
+night being shared: "with very special guest: Y O U", "Put it together", "Moments shared
+together". ADD YOUR PHOTO sits between the two words, where the headliner sits on the poster.
+Once you zoom in, it docks to the corner.
+
 ## Run it
 
 ```sh

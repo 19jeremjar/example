@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ShowConfig } from "../config/shows";
 import { copyText } from "../lib/clipboard";
 import { COLOURWAYS } from "../config/palette";
-import { readFlag, readString, writeFlag, writeString } from "../lib/storage";
+import { useColourway } from "../lib/colourway";
+import { readFlag, writeFlag } from "../lib/storage";
+import { Script, Spaced, TogetherMark } from "./Poster";
 import type { Camera, Insets } from "../mosaic/camera";
 import { fitZoom } from "../mosaic/camera";
 import { buildMosaic, tileIndexById } from "../mosaic/generate";
@@ -17,8 +19,6 @@ import { PhotoDetail } from "./PhotoDetail";
 import { type LocalImageUrls, UploadSheet } from "./UploadSheet";
 
 const HINT_KEY = "tt-hint-seen";
-// Bumped when the default changes, so everyone starts on the new default colour.
-const COLOURWAY_KEY = "tt-colourway-v3";
 
 type Detail = { photo: MosaicPhoto | null; viaTap: boolean };
 
@@ -46,13 +46,14 @@ export function ShowPage({ show, photoId }: { show: ShowConfig; photoId?: string
     return () => cache.clear();
   }, [cache]);
 
-  if (failed) {
-    return <p className="p-6 text-sm">The artwork couldn't load. Refresh to try again.</p>;
-  }
-  if (!built) {
+  if (failed || !built) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-xs font-bold tracking-widest text-ink/60">TOGETHER, TOGETHER</p>
+      <div className="flex h-full flex-col items-center justify-center gap-5 px-safe">
+        <TogetherMark word="top" className="w-[min(70vw,320px)]" />
+        <p className="box-ink px-3 py-2 text-xs font-bold tracking-widest">
+          {failed ? "THE ARTWORK COULDN'T LOAD. REFRESH TO TRY AGAIN." : "PUTTING IT TOGETHER…"}
+        </p>
+        <TogetherMark word="bottom" className="w-[min(70vw,320px)]" />
       </div>
     );
   }
@@ -78,12 +79,12 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [hint, setHint] = useState(() => !readFlag(HINT_KEY));
-  const [colourway, setColourway] = useState(() => {
-    const saved = COLOURWAYS.findIndex((c) => c.name === readString(COLOURWAY_KEY));
-    return saved >= 0 ? saved : 0;
-  });
-  const background = COLOURWAYS[colourway].value;
-  const labelStyle = { background, color: COLOURWAYS[colourway].text };
+  const { colourway, next: nextColourway } = useColourway();
+  const background = colourway.value;
+  const labelStyle = { background, color: colourway.text };
+  // ADD YOUR PHOTO sits between the two words; once zoomed in it docks to the corner.
+  const centreRef = useRef<HTMLDivElement>(null);
+  const [docked, setDocked] = useState(false);
   useEffect(() => {
     document.body.style.background = background;
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", background);
@@ -91,11 +92,6 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       document.body.style.background = "";
     };
   }, [background]);
-  const nextColourway = () => {
-    const next = (colourway + 1) % COLOURWAYS.length;
-    setColourway(next);
-    writeString(COLOURWAY_KEY, COLOURWAYS[next].name);
-  };
   const [debug] = useState(() => new URLSearchParams(location.search).has("debug"));
   const [debugText, setDebugText] = useState("");
 
@@ -177,7 +173,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     if (info.mix < 0.35 || mosaic.tiles[index].region !== "letter") return;
     const photo = photoAt(index);
     if (!photo) {
-      setToast("This spot's still free. Add your photo to fill one.");
+      setToast("THIS SPOT'S SAVED FOR YOU. ADD YOUR PHOTO TO FILL IT.");
       return;
     }
     view.current?.highlight(index);
@@ -196,14 +192,14 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   const copyLink = async () => {
     if (!detail?.photo) return;
     const ok = await copyText(location.origin + photoPath(show.id, detail.photo.id));
-    setToast(ok ? "Link copied." : "Couldn't copy the link.");
+    setToast(ok ? "LINK COPIED. SEND IT TO WHOEVER YOU WERE WITH." : "COULDN'T COPY THE LINK.");
   };
 
   const addLocalPhoto = async (urls: LocalImageUrls) => {
     const index = mosaic.fillOrder.find((i) => !localsRef.current.has(i));
     if (index === undefined) {
       [urls.full, urls.medium, urls.thumb].forEach(URL.revokeObjectURL);
-      setToast("The mosaic is full!");
+      setToast("THE MOSAIC IS FULL. WHAT A NIGHT.");
       setUploadOpen(false);
       return;
     }
@@ -223,7 +219,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     setVersion((v) => v + 1);
     setUploadOpen(false);
     await view.current?.flyToTile(index, { highlight: true });
-    setToast("You're in the mosaic. Demo only: not uploaded or published.");
+    setToast("YOU'RE IN. TOGETHER, TOGETHER. (DEMO ONLY: NOT UPLOADED.)");
   };
 
   const resetLocal = () => {
@@ -234,7 +230,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     setLocals(new Map());
     setVersion((v) => v + 1);
     setUploadOpen(false);
-    setToast("Your demo photos have been removed.");
+    setToast("YOUR DEMO PHOTOS HAVE BEEN REMOVED.");
   };
 
   // Free object URLs when leaving the show.
@@ -274,7 +270,20 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         onTapTile={onTapTile}
         onInteract={hint ? dismissHint : undefined}
         onFrame={debug ? onFrame : undefined}
+        centreAnchor={centreRef}
+        onDockChange={setDocked}
       />
+
+      <div
+        ref={centreRef}
+        className="pointer-events-none absolute top-0 left-0 flex w-[min(62vw,270px)] flex-col items-stretch gap-1"
+        style={{ visibility: "hidden" }}
+      >
+        <Script className="text-center text-[1.45rem] whitespace-nowrap" style={{ color: colourway.text }}>
+          with very special guest:
+        </Script>
+        <AddButton onClick={() => setUploadOpen(true)} large />
+      </div>
 
       <header ref={headerRef} className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between pt-safe px-safe pb-3">
         <a
@@ -294,7 +303,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       </header>
 
       <div className="pointer-events-none absolute right-0 flex flex-col items-end gap-px px-safe" style={{ bottom: insets.bottom + 8 }}>
-        <ZoomButton label={`Background colour: ${COLOURWAYS[colourway].name}. Tap to change`} onClick={nextColourway}>
+        <ZoomButton label={`Background colour: ${colourway.name}. Tap to change`} onClick={nextColourway}>
           <span aria-hidden className="grid h-5 w-5 grid-cols-2 ring-1 ring-white">
             {/* Four poster colours as a 2×2 swatch. */}
             {COLOURWAYS.filter((c) => c.name !== "White").map((c) => (
@@ -317,30 +326,23 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
 
       <div className="pointer-events-none absolute inset-x-0 flex justify-center px-safe" style={{ bottom: insets.bottom + 8 }} aria-live="polite">
         {toast ? (
-          <p className="max-w-[calc(100%-64px)] bg-ink px-3 py-2 text-center text-xs font-bold text-paper animate-rise">{toast}</p>
+          <p className="box-ink max-w-[calc(100%-64px)] px-3 py-2 text-center text-xs font-bold tracking-wider animate-rise">{toast}</p>
         ) : hint ? (
-          <p className="max-w-[calc(100%-64px)] bg-ink/85 px-3 py-2 text-center text-xs font-bold text-paper animate-rise">
-            Pinch to explore. Tap a photo to see the moment.
+          <p className="box-ink max-w-[calc(100%-64px)] px-3 py-2 text-center text-xs font-bold tracking-wider animate-rise">
+            PINCH TO EXPLORE. TAP A PHOTO TO SEE THE MOMENT.
           </p>
         ) : null}
       </div>
 
       <footer ref={footerRef} className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 pt-3 pb-safe px-safe">
         <p className="px-1.5 py-0.5 text-[11px] leading-[1.3] font-bold tracking-wider" style={labelStyle}>
-          {total.toLocaleString("en-AU")} PHOTOS
+          {total.toLocaleString("en-AU")} MOMENTS
           <br />
-          LIVE · DEMO
+          SHARED TOGETHER
         </p>
-        <button
-          type="button"
-          onClick={() => setUploadOpen(true)}
-          className="flex h-12 items-center gap-2.5 rounded-full bg-ink pr-5 pl-4 text-xs font-bold tracking-[0.12em] text-paper active:bg-pink"
-        >
-          <span aria-hidden className="text-lg leading-none font-normal">
-            +
-          </span>
-          ADD YOUR PHOTO
-        </button>
+        <div className={docked ? "w-44" : "invisible w-44"} aria-hidden={!docked}>
+          <AddButton onClick={() => setUploadOpen(true)} />
+        </div>
       </footer>
 
       {debug && (
@@ -360,9 +362,23 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         />
       )}
       {uploadOpen && (
-        <UploadSheet localCount={locals.size} onClose={() => setUploadOpen(false)} onSubmit={addLocalPhoto} onReset={resetLocal} />
+        <UploadSheet night={show.night} localCount={locals.size} onClose={() => setUploadOpen(false)} onSubmit={addLocalPhoto} onReset={resetLocal} />
       )}
     </main>
+  );
+}
+
+/** Square ink poster box with spaced lettering, like the city/date boxes. */
+function AddButton({ onClick, large }: { onClick: () => void; large?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`box-ink pointer-events-auto block w-full text-left font-bold active:bg-white active:text-ink ${large ? "px-3.5 py-2.5" : "px-3 py-2"}`}
+    >
+      <Spaced text="ADD YOUR" className={large ? "text-[1.35rem] leading-none" : "text-sm leading-tight"} />
+      <Spaced text="PHOTO" className={large ? "text-[1.35rem] leading-none" : "text-sm leading-tight"} />
+    </button>
   );
 }
 

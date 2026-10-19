@@ -1,8 +1,10 @@
 import { type ReactNode, useEffect, useRef } from "react";
+import { useColourway } from "../lib/colourway";
 
 /** Full-screen modal with Escape to close, focus moved in and restored on close, and a simple focus trap. */
 export function Dialog({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
+  const { colourway } = useColourway();
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -42,7 +44,8 @@ export function Dialog({ label, onClose, children }: { label: string; onClose: (
       aria-modal="true"
       aria-label={label}
       tabIndex={-1}
-      className="fixed inset-0 z-30 flex flex-col bg-white/95 outline-none"
+      className="fixed inset-0 z-30 flex flex-col overflow-y-auto outline-none"
+      style={{ background: colourway.value, color: colourway.text }}
     >
       {children}
     </div>

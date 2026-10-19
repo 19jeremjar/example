@@ -9,6 +9,8 @@
   --color-blue: #45b9d4;
   --color-green: #5cab66;
   --font-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  /* Stand-in for the posters' hand-lettered asides. */
+  --font-script: "Reenie Beanie", "Marker Felt", "Comic Sans MS", cursive;
 }
 
 html,
@@ -56,4 +58,19 @@ body {
   .animate-rise {
     animation: none;
   }
+}
+
+/* Poster boxes: solid ink with white type (city/date), and white with ink type (guest). */
+.box-ink {
+  background: #121c16;
+  color: #ffffff;
+}
+.box-white {
+  background: #ffffff;
+  color: #121c16;
+  box-shadow: inset 0 0 0 1.5px #121c16;
+}
+.box-ink:disabled,
+.box-white:disabled {
+  opacity: 0.5;
 }

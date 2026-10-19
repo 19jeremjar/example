@@ -4,6 +4,7 @@ import type { ImageCache } from "../mosaic/imageCache";
 import { imageSize, loadImage, type LoadedImage } from "../mosaic/imageLoader";
 import type { MosaicPhoto } from "../mosaic/types";
 import { Dialog } from "./Dialog";
+import { Corner, Script, Spaced } from "./Poster";
 
 type Props = {
   photo: MosaicPhoto | null;
@@ -18,57 +19,61 @@ type Props = {
 export function PhotoDetail({ photo, showLabel, frameColor, cache, onClose, onCopyLink }: Props) {
   const unavailable = !photo || photo.removed;
   return (
-    <Dialog label={unavailable ? "Photo unavailable" : "Photo"} onClose={onClose}>
-      <div className="flex items-center justify-between pt-safe px-safe">
-        <p className="text-xs font-bold tracking-widest">TOGETHER, TOGETHER</p>
-        <button
-          type="button"
-          onClick={onClose}
-          data-autofocus
-          className="-mr-3 flex h-11 min-w-11 items-center justify-center px-3 text-sm font-bold tracking-wider"
-        >
-          CLOSE <span aria-hidden className="ml-2 text-lg leading-none">×</span>
+    <Dialog label={unavailable ? "Moment unavailable" : "Moment"} onClose={onClose}>
+      <div className="flex items-start justify-between pt-safe px-safe">
+        <Corner lines={["TOGETHER", "TOGETHER"]} />
+        <button type="button" onClick={onClose} className="-m-2 p-2 text-right text-[11px] leading-[1.15] font-bold tracking-wider">
+          CLOSE
+          <br />✕
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center p-5">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 p-5">
         {unavailable ? (
-          <div className="w-full max-w-sm border border-ink/30 p-6 animate-rise">
-            <p className="text-xs font-bold tracking-widest text-ink/60">{showLabel}</p>
-            <h2 className="mt-3 text-3xl leading-none font-bold">Photo unavailable</h2>
-            <p className="mt-3 text-sm text-ink/70">
-              This moment has been removed, or the link isn't quite right. The rest of the mosaic is still here.
-            </p>
-            <button type="button" onClick={onClose} className="mt-6 h-12 w-full bg-ink text-sm font-bold tracking-wider text-paper">
-              BACK TO THE MOSAIC
+          <div className="w-full animate-rise">
+            <div className="box-ink px-4 pt-3 pb-2.5">
+              <h2 className="text-[clamp(2.2rem,11vw,3.2rem)] leading-[0.9] font-bold tracking-tight">
+                MOMENT
+                <br />
+                UNAVAILABLE
+              </h2>
+              <p className="mt-2 text-sm font-bold tracking-wider">{showLabel}</p>
+            </div>
+            <Script className="mt-4 text-center">it's been taken down, but the night goes on</Script>
+            <button type="button" onClick={onClose} className="box-white mt-4 h-14 w-full px-4 text-sm font-bold">
+              <Spaced text="BACK TO EVERYONE" />
             </button>
           </div>
         ) : (
-          <figure
-            className="w-full max-w-[min(88vw,58vh,520px)] p-[4.5%] pb-0 text-ink animate-rise"
-            style={{ background: frameColor ?? "#ffffff" }}
-          >
-            <DetailImage photo={photo} cache={cache} />
-            <figcaption className="flex items-center justify-between py-[5%] text-[11px] font-bold tracking-widest sm:text-xs">
-              <span>{showLabel}</span>
-              <span className="text-ink/60">
-                {photo.source === "local" ? "YOUR DEMO PHOTO" : `#${photo.id.padStart(4, "0")}`}
-              </span>
-            </figcaption>
-          </figure>
+          <>
+            <figure
+              className="w-full max-w-[min(100%,54vh,460px)] p-[4.5%] pb-0 text-[#121c16] animate-rise"
+              style={{ background: frameColor ?? "#ffffff" }}
+            >
+              <DetailImage photo={photo} cache={cache} />
+              <figcaption className="flex items-center justify-between py-[4%]">
+                <span className="font-script text-[1.8rem] leading-none">together, together</span>
+                <span className="text-[11px] font-bold tracking-wider">
+                  {photo.source === "local" ? "YOU" : `#${photo.id.padStart(4, "0")}`}
+                </span>
+              </figcaption>
+            </figure>
+            <p className="text-center text-[11px] font-bold tracking-wider">{showLabel}</p>
+          </>
         )}
       </div>
 
       {!unavailable && (
-        <div className="pb-safe px-safe">
+        <div className="mx-auto w-full max-w-md pb-safe px-safe">
           {photo.source === "sample" && onCopyLink ? (
-            <button type="button" onClick={onCopyLink} className="mx-auto block h-12 w-full max-w-sm bg-ink text-sm font-bold tracking-wider text-paper">
-              COPY PHOTO LINK
-            </button>
+            <>
+              <Script className="mb-2 text-center">you had to be there. send it to who was.</Script>
+              <button type="button" onClick={onCopyLink} className="box-ink h-14 w-full px-4 text-sm font-bold">
+                <Spaced text="COPY PHOTO LINK" />
+              </button>
+            </>
           ) : (
-            <p className="mx-auto max-w-sm text-center text-xs text-ink/60">
-              Demo photos stay on this device and disappear when you close the tab, so they don't get a link.
-            </p>
+            <Script className="text-center">yours, only on this phone. for now.</Script>
           )}
         </div>
       )}
