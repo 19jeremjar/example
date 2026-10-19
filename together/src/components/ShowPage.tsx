@@ -275,7 +275,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       />
 
       <div ref={centreRef} className="pointer-events-none absolute top-0 left-0" style={{ visibility: "hidden" }}>
-        <AddButton onClick={() => setUploadOpen(true)} large />
+        <PlusButton onClick={() => setUploadOpen(true)} />
       </div>
 
       <header ref={headerRef} className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between pt-safe px-safe pb-3">
@@ -361,15 +361,29 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   );
 }
 
-/** Square ink button set like the poster's date boxes: heavy, tightly set uppercase, no icon. */
-function AddButton({ onClick, large }: { onClick: () => void; large?: boolean }) {
+/** The big square + that sits between the two words. */
+function PlusButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`box-ink pointer-events-auto block leading-none font-bold tracking-[-0.01em] whitespace-nowrap active:bg-white active:text-[#121c16] ${
-        large ? "px-5 pt-3 pb-2.5 text-[1.9rem]" : "px-3.5 pt-2.5 pb-2 text-[1.3rem]"
-      }`}
+      aria-label="Add your photo"
+      title="Add your photo"
+      className="box-ink pointer-events-auto relative block h-[4.5rem] w-[4.5rem] active:bg-white active:text-[#121c16]"
+    >
+      <span aria-hidden className="absolute top-1/2 left-1/2 h-1.5 w-9 -translate-x-1/2 -translate-y-1/2 bg-current" />
+      <span aria-hidden className="absolute top-1/2 left-1/2 h-9 w-1.5 -translate-x-1/2 -translate-y-1/2 bg-current" />
+    </button>
+  );
+}
+
+/** Square ink button set like the poster's date boxes: heavy, tightly set uppercase, no icon. */
+function AddButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="box-ink pointer-events-auto block px-3.5 pt-2.5 pb-2 text-[1.3rem] leading-none font-bold tracking-[-0.01em] whitespace-nowrap active:bg-white active:text-[#121c16]"
     >
       ADD YOUR PHOTO
     </button>
