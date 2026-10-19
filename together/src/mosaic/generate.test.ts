@@ -60,9 +60,9 @@ describe("mosaic generation", () => {
 });
 
 describe("stencil mask", () => {
-  it("counts tiles that are mostly inside the artwork", () => {
+  it("counts tiles that mostly show the artwork", () => {
     const coverage = new Float32Array(4);
-    coverage.set([1, 0.3, 0.1, 0]);
+    coverage.set([1, 0.6, 0.4, 0]);
     expect([...maskFromCoverage(2, 2, coverage).region]).toEqual([1, 1, 0, 0]);
   });
 });

@@ -1,13 +1,14 @@
 # Together, Together: interactive photomosaic (MVP prototype)
 
-A mobile-first mosaic of fan photos. Zoomed out, it's a colourful artwork: two curved
-"TOGETHER" arcs in pink → orange → yellow → blue → green, with a black outline on a white
-ground. Zoom in and every tile inside the letters becomes a Polaroid of a moment from the show,
-framed in the colour of its spot in the artwork. Everything outside the letters is static.
+A mobile-first mosaic of fan photos. Zoomed out, it's the official **TOGETHER, TOGETHER**
+wordmarks: the black linework from the tour artwork, with the sticker filled by a colour mosaic
+(red → orange on the top word, green → blue on the bottom), on a poster-colour background
+(red, orange, green or blue; switch it with the swatch button). Zoom in and each tile becomes a
+Polaroid of a moment from the show, framed in the colour of its spot in the artwork.
 
-**This is a generic prototype.** The arc lettering is a placeholder set in a system font. It is
-not the official wordmark (see [Swapping in the official artwork](#swapping-in-the-official-artwork)).
-The sample photos are drawn procedurally in the browser, and uploads stay on the device.
+The wordmarks are vector paths extracted from the supplied tour PSD (the "Together Logos"
+smart object) into `src/config/togetherLogo.ts`. The sample photos are drawn procedurally in the
+browser, and uploads stay on the device.
 
 ## Run it
 
@@ -57,13 +58,13 @@ src/
   components/            React UI: MosaicView, ShowPage, PhotoDetail, UploadSheet
 ```
 
-- **One canvas, no image elements.** A fine 168 × 120 grid. Only the ~3,500 tiles inside the
-  letters hold photos.
-- **Crisp at every zoom.** The letter shape and its black outline are drawn as vectors each
-  frame, and the tiles are clipped to that shape. The edges never follow the tile grid, so they
-  never look pixelated.
-- **Artwork view (1.0×–1.8×).** The tile colours are a single 168 × 120 px bitmap, clipped to the
-  letters. That's a few draw calls per frame and **zero photo requests**. Check the `img req`
+- **One canvas, no image elements.** A fine 150 × 196 grid. Only the ~4,800 tiles that show
+  through the sticker (not hidden under the linework) hold photos.
+- **Crisp at every zoom.** The sticker shape and the linework are filled as vector paths every
+  frame, and the tiles are clipped to the sticker. Nothing follows the tile grid, so nothing
+  looks pixelated.
+- **Artwork view (1.0×–1.8×).** The tile colours are a single 150 × 196 px bitmap, clipped to the
+  sticker. That's a few draw calls per frame and **zero photo requests**. Check the `img req`
   counter with `?debug`.
 - **Transition (1.8×–2.5×).** Photos fade in once tiles are at least 22 px on screen *and* past
   1.8× of the fitted view. They're fully revealed at 44 px and 2.5×. Only tiles in the viewport,
@@ -88,18 +89,22 @@ Nothing is sent anywhere. Demo photos vanish on reload and can be removed with
 Validation: JPG, PNG or WebP, up to 10 MB (`UPLOAD` in `config/shows.ts`). HEIC is rejected
 with a clear message.
 
-## Swapping in the official artwork
+## Artwork
 
-Supply the approved transparent SVG (or high-resolution PNG with alpha), put it in `public/`,
-and change the show's stencil:
+`src/config/togetherLogo.ts` holds the official wordmarks as vector paths: the two white sticker
+silhouettes and the dark linework. To update them from a new PSD, extract the vector smart object
+(it's an Illustrator/PDF file), convert it to SVG, and regenerate the file: white-filled paths go
+in `sticker` and dark ones in `lines`.
+
+Each show sets its own artwork and word gradients in `src/config/shows.ts`:
 
 ```ts
-stencil: { kind: "image", url: "/stencil/together-together.svg" },
+stencil: { kind: "vector", art: TOGETHER_LOGO },
+wordGradients: [[POSTER.red, POSTER.orange], [POSTER.green, POSTER.blue]],
 ```
 
-The alpha channel decides the letter shape and which tiles hold photos. The outline ring is
-added automatically.
-The placeholder arc text then stops being used.
+`{ kind: "image", url }` (a transparent SVG/PNG) and the generic `placeholder-arcs` still work
+for other artwork.
 
 ## Deploying (Vercel)
 

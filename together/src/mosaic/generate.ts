@@ -1,13 +1,12 @@
-import { BAND_STOPS } from "../config/palette";
 import type { ShowConfig } from "../config/shows";
-import { gradient, hexToRgb, mix, rgbToHex, type RGB } from "./color";
+import { hexToRgb, mix, rgbToHex, type RGB } from "./color";
 import { mulberry32, shuffleInPlace } from "./random";
 import { REGION_CODES, type StencilMask } from "./stencil";
 import type { Mosaic, MosaicPhoto, MosaicTile } from "./types";
 
-const BANDS = BAND_STOPS.map(hexToRgb);
 const WHITE: RGB = [255, 255, 255];
 const BLACK: RGB = [0, 0, 0];
+
 
 export const tileId = (row: number, column: number) => `t-${row}-${column}`;
 
@@ -26,28 +25,32 @@ export function buildMosaic(show: ShowConfig, mask: StencilMask): Mosaic {
   if (mask.cols !== cols || mask.rows !== rows) throw new Error("Stencil size does not match the show grid");
   const rand = mulberry32(show.seed);
 
-  // The gradient spans from the top of the artwork to its bottom, so both arcs use all bands.
-  let top = rows;
-  let bottom = 0;
+  // Each word gets its own left-to-right gradient. Words are stacked, so split the grid into
+  // equal horizontal bands and measure each word's horizontal extent.
+  const gradients = show.wordGradients.map(([a, b]) => [hexToRgb(a), hexToRgb(b)] as const);
+  const wordOf = (row: number) => Math.min(gradients.length - 1, Math.floor((row / rows) * gradients.length));
+  const left = gradients.map(() => cols);
+  const right = gradients.map(() => 0);
   for (let i = 0; i < mask.region.length; i++) {
-    if (mask.region[i] === 1) {
-      const row = Math.floor(i / cols);
-      top = Math.min(top, row);
-      bottom = Math.max(bottom, row);
-    }
+    if (mask.region[i] !== 1) continue;
+    const w = wordOf(Math.floor(i / cols));
+    left[w] = Math.min(left[w], i % cols);
+    right[w] = Math.max(right[w], i % cols);
   }
-  const span = Math.max(1, bottom - top);
 
   const tiles: MosaicTile[] = [];
   const letters: number[] = [];
   // Every cell gets a colour, even outside the artwork, so clipped edge tiles never show gaps.
+  // The region says whether the cell shows enough of the artwork to hold a photo.
   const rgb = new Uint8ClampedArray(cols * rows * 3);
   for (let row = 0; row < rows; row++) {
     for (let column = 0; column < cols; column++) {
       const i = row * cols + column;
       const region = REGION_CODES[mask.region[i]];
       const jitter = rand() * 2 - 1;
-      const band = gradient(BANDS, (row - top) / span + (rand() - 0.5) * 0.03);
+      const w = wordOf(row);
+      const t = Math.min(1, Math.max(0, (column - left[w]) / Math.max(1, right[w] - left[w]) + (rand() - 0.5) * 0.04));
+      const band = mix(gradients[w][0], gradients[w][1], t);
       const color = jitter > 0 ? mix(band, WHITE, jitter * 0.08) : mix(band, BLACK, -jitter * 0.06);
       rgb[i * 3] = color[0];
       rgb[i * 3 + 1] = color[1];

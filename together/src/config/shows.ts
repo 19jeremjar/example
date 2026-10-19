@@ -1,4 +1,9 @@
+import { POSTER } from "./palette";
+import { TOGETHER_LOGO } from "./togetherLogo";
+
 export type StencilConfig =
+  /** Official artwork as vector paths: sticker silhouettes hold the mosaic, linework sits on top. */
+  | { kind: "vector"; art: typeof TOGETHER_LOGO }
   /** Generic placeholder: text set along two arcs in a system font. Replace with the official asset. */
   | { kind: "placeholder-arcs"; text: string }
   /** Transparent SVG/PNG whose alpha channel marks the artwork (e.g. the official wordmarks). */
@@ -17,6 +22,8 @@ export type ShowConfig = {
   /** Share of the artwork's tiles that start with a sample photo (0–1). */
   sampleFill: number;
   stencil: StencilConfig;
+  /** Colour gradient for each word of the artwork, top to bottom, running left to right. */
+  wordGradients: [string, string][];
   /** Sample photos that were "removed by moderation" — used to demo the unavailable state. */
   removedPhotoIds: string[];
   /** Sample photos whose image fails to load — used to demo error handling. */
@@ -30,11 +37,15 @@ export const SHOWS: ShowConfig[] = [
     city: "Demo City",
     night: "Night 01",
     available: true,
-    cols: 168,
-    rows: 120,
+    cols: 150,
+    rows: 196,
     seed: 20260101,
     sampleFill: 0.86,
-    stencil: { kind: "placeholder-arcs", text: "TOGETHER" },
+    stencil: { kind: "vector", art: TOGETHER_LOGO },
+    wordGradients: [
+      [POSTER.red, POSTER.orange],
+      [POSTER.green, POSTER.blue],
+    ],
     removedPhotoIds: ["7"],
     brokenPhotoIds: ["11", "404"],
   },
@@ -44,11 +55,15 @@ export const SHOWS: ShowConfig[] = [
     city: "Demo City",
     night: "Night 02",
     available: false,
-    cols: 168,
-    rows: 120,
+    cols: 150,
+    rows: 196,
     seed: 20260102,
     sampleFill: 0.4,
-    stencil: { kind: "placeholder-arcs", text: "TOGETHER" },
+    stencil: { kind: "vector", art: TOGETHER_LOGO },
+    wordGradients: [
+      [POSTER.red, POSTER.orange],
+      [POSTER.green, POSTER.blue],
+    ],
     removedPhotoIds: [],
     brokenPhotoIds: [],
   },

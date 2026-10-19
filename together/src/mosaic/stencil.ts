@@ -1,4 +1,5 @@
 import type { StencilConfig } from "../config/shows";
+import type { VectorPath } from "../config/togetherLogo";
 import type { TileRegion } from "./types";
 
 /** Per-tile region map derived from the artwork. 0 ground, 1 letter. */
@@ -19,14 +20,16 @@ export type StencilPainter = {
   height: number;
   /** Fills the artwork shape with the current fill style. */
   fill(ctx: CanvasRenderingContext2D): void;
-  /** Draws an outline ring around the shape with the current stroke style. */
-  outline(ctx: CanvasRenderingContext2D, lineWidth: number): void;
+  /** Draws an outline ring around the shape with the current stroke style (placeholder art). */
+  outline?(ctx: CanvasRenderingContext2D, lineWidth: number): void;
+  /** Draws linework that sits on top of the mosaic with the current fill style (official art). */
+  lines?(ctx: CanvasRenderingContext2D): void;
 };
 
 export const DESIGN_WIDTH = 1000;
 
-/** Share of a tile that must be inside the artwork for it to hold a photo. Edge tiles are clipped. */
-const COVERAGE_THRESHOLD = 0.25;
+/** Share of a tile that must show through the artwork for it to hold a photo. Edge tiles are clipped. */
+const COVERAGE_THRESHOLD = 0.5;
 
 /** Turns per-tile coverage (0–1) into regions. Pure, so it can be tested without a canvas. */
 export function maskFromCoverage(cols: number, rows: number, coverage: Float32Array): StencilMask {
@@ -49,6 +52,12 @@ export function rasteriseMask(painter: StencilPainter, cols: number, rows: numbe
   ctx.scale(width / painter.width, width / painter.width);
   ctx.fillStyle = "#000";
   painter.fill(ctx);
+  if (painter.lines) {
+    // Tiles hidden under the linework shouldn't hold photos.
+    ctx.globalCompositeOperation = "destination-out";
+    painter.lines(ctx);
+    ctx.globalCompositeOperation = "source-over";
+  }
 
   const data = ctx.getImageData(0, 0, width, height).data;
   const coverage = new Float32Array(cols * rows);
@@ -68,7 +77,40 @@ export function rasteriseMask(painter: StencilPainter, cols: number, rows: numbe
 export async function createStencilPainter(config: StencilConfig, cols: number, rows: number): Promise<StencilPainter> {
   const width = DESIGN_WIDTH;
   const height = (DESIGN_WIDTH * rows) / cols;
+  if (config.kind === "vector") return vectorPainter(config.art, width, height);
   return config.kind === "image" ? imagePainter(config.url, width, height) : placeholderArcsPainter(config.text, width, height);
+}
+
+type VectorArt = { width: number; height: number; sticker: VectorPath[]; lines: VectorPath[] };
+
+/**
+ * Official artwork as vector paths: the sticker silhouettes hold the mosaic and the linework is
+ * drawn on top. Filled as Path2D every frame, so it is sharp at any zoom and costs very little.
+ */
+function vectorPainter(art: VectorArt, width: number, height: number): StencilPainter {
+  const margin = 0.03;
+  const scale = Math.min((width * (1 - 2 * margin)) / art.width, (height * (1 - 2 * margin)) / art.height);
+  const place = new DOMMatrix()
+    .translate((width - art.width * scale) / 2, (height - art.height * scale) / 2)
+    .scale(scale);
+  const build = (paths: VectorPath[]) =>
+    paths.map(({ m, d }) => {
+      const path = new Path2D();
+      path.addPath(new Path2D(d), place.multiply(new DOMMatrix(m)));
+      return path;
+    });
+  const sticker = build(art.sticker);
+  const lines = build(art.lines);
+  return {
+    width,
+    height,
+    fill(ctx) {
+      for (const p of sticker) ctx.fill(p);
+    },
+    lines(ctx) {
+      for (const p of lines) ctx.fill(p);
+    },
+  };
 }
 
 /**

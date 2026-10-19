@@ -35,6 +35,8 @@ type Props = {
   photoAt: (index: number) => MosaicPhoto | undefined;
   /** Bump to redraw after photos change. */
   version: number;
+  /** Page colour around the artwork. */
+  background: string;
   insets: Insets;
   onTapTile: (index: number, info: FrameInfo) => void;
   onInteract?: () => void;
@@ -71,6 +73,7 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
     const { mosaic, stencil, cache } = propsRef.current;
     const renderer = new MosaicRenderer(canvas, mosaic, stencil, cache, (i) => propsRef.current.photoAt(i));
     e.renderer = renderer;
+    renderer.background = propsRef.current.background;
 
     const setCamera = (cam: Camera) => {
       e.camera = clampCamera(cam, mosaic, e.vp);
@@ -229,6 +232,12 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
     e.vp = { ...e.vp, insets: props.insets };
     e.requestFrame();
   }, [props.version, props.insets]);
+
+  useEffect(() => {
+    const e = engine.current;
+    if (e.renderer) e.renderer.background = props.background;
+    e.requestFrame();
+  }, [props.background]);
 
   useImperativeHandle(ref, () => ({
     zoomBy(factor) {

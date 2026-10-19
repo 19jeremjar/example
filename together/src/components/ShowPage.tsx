@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ShowConfig } from "../config/shows";
 import { copyText } from "../lib/clipboard";
-import { readFlag, writeFlag } from "../lib/storage";
+import { COLOURWAYS } from "../config/palette";
+import { readFlag, readString, writeFlag, writeString } from "../lib/storage";
 import type { Camera, Insets } from "../mosaic/camera";
 import { fitZoom } from "../mosaic/camera";
 import { buildMosaic, tileIndexById } from "../mosaic/generate";
@@ -16,6 +17,7 @@ import { PhotoDetail } from "./PhotoDetail";
 import { type LocalImageUrls, UploadSheet } from "./UploadSheet";
 
 const HINT_KEY = "tt-hint-seen";
+const COLOURWAY_KEY = "tt-colourway";
 
 type Detail = { photo: MosaicPhoto | null; viaTap: boolean };
 
@@ -75,6 +77,23 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [hint, setHint] = useState(() => !readFlag(HINT_KEY));
+  const [colourway, setColourway] = useState(() => {
+    const saved = COLOURWAYS.findIndex((c) => c.name === readString(COLOURWAY_KEY));
+    return saved >= 0 ? saved : 0;
+  });
+  const background = COLOURWAYS[colourway].value;
+  useEffect(() => {
+    document.body.style.background = background;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", background);
+    return () => {
+      document.body.style.background = "";
+    };
+  }, [background]);
+  const nextColourway = () => {
+    const next = (colourway + 1) % COLOURWAYS.length;
+    setColourway(next);
+    writeString(COLOURWAY_KEY, COLOURWAYS[next].name);
+  };
   const [debug] = useState(() => new URLSearchParams(location.search).has("debug"));
   const [debugText, setDebugText] = useState("");
 
@@ -240,7 +259,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   const total = sampleCount + locals.size;
 
   return (
-    <main className="fixed inset-0 overflow-hidden bg-white">
+    <main className="fixed inset-0 overflow-hidden" style={{ background }}>
       <MosaicView
         ref={view}
         mosaic={mosaic}
@@ -248,6 +267,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         cache={cache}
         photoAt={photoAt}
         version={version}
+        background={background}
         insets={insets}
         onTapTile={onTapTile}
         onInteract={hint ? dismissHint : undefined}
@@ -255,12 +275,16 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       />
 
       <header ref={headerRef} className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between pt-safe px-safe pb-3">
-        <a href="/" className="pointer-events-auto bg-white px-1.5 py-1 text-[11px] leading-[1.15] font-bold tracking-wider">
+        <a
+          href="/"
+          className="pointer-events-auto px-1.5 py-1 text-[11px] leading-[1.15] font-bold tracking-wider text-white"
+          style={{ background }}
+        >
           TOGETHER
           <br />
           TOGETHER
         </a>
-        <p className="bg-white px-1.5 py-1 text-right text-[11px] leading-[1.15] font-bold tracking-wider">
+        <p className="px-1.5 py-1 text-right text-[11px] leading-[1.15] font-bold tracking-wider text-white" style={{ background }}>
           {show.label.split(" · ")[0]}
           <br />
           {show.label.split(" · ")[1]}
@@ -268,6 +292,13 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       </header>
 
       <div className="pointer-events-none absolute right-0 flex flex-col items-end gap-px px-safe" style={{ bottom: insets.bottom + 8 }}>
+        <ZoomButton label={`Background colour: ${COLOURWAYS[colourway].name}. Tap to change`} onClick={nextColourway}>
+          <span aria-hidden className="grid h-5 w-5 grid-cols-2 ring-1 ring-white">
+            {COLOURWAYS.map((c) => (
+              <span key={c.name} style={{ background: c.value }} />
+            ))}
+          </span>
+        </ZoomButton>
         <ZoomButton label="Zoom in" onClick={() => (dismissHint(), view.current?.zoomBy(1.8))}>
           +
         </ZoomButton>
@@ -292,10 +323,10 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       </div>
 
       <footer ref={footerRef} className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 pt-3 pb-safe px-safe">
-        <p className="bg-white px-1.5 py-0.5 text-[11px] leading-[1.3] font-bold tracking-wider">
+        <p className="px-1.5 py-0.5 text-[11px] leading-[1.3] font-bold tracking-wider text-white" style={{ background }}>
           {total.toLocaleString("en-AU")} PHOTOS
           <br />
-          <span className="text-ink/60">LIVE · DEMO</span>
+          LIVE · DEMO
         </p>
         <button
           type="button"
@@ -339,7 +370,7 @@ function ZoomButton({ label, onClick, children }: { label: string; onClick: () =
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="pointer-events-auto flex h-11 w-11 items-center justify-center bg-white/85 text-xl leading-none font-bold text-ink ring-1 ring-ink/25 active:bg-ink active:text-paper"
+      className="pointer-events-auto flex h-11 w-11 items-center justify-center bg-ink text-xl leading-none font-bold text-white active:bg-white active:text-ink"
     >
       {children}
     </button>

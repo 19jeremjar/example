@@ -1,4 +1,4 @@
-import { PALETTE } from "../config/palette";
+import { PALETTE, POSTER } from "../config/palette";
 import { type Camera, type Viewport, fitZoom, visibleRange } from "./camera";
 import type { ImageCache } from "./imageCache";
 import { imageSize } from "./imageLoader";
@@ -42,6 +42,8 @@ export class MosaicRenderer {
   private colors: string[];
   private vp: Viewport = { width: 1, height: 1, insets: { top: 0, right: 0, bottom: 0, left: 0 } };
   private dpr = 1;
+  /** Page colour around the artwork. */
+  background: string = PALETTE.white;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -91,14 +93,16 @@ export class MosaicRenderer {
     // Ground and outline ring: static, vector.
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.globalAlpha = 1;
-    ctx.fillStyle = PALETTE.white;
+    ctx.fillStyle = this.background;
     ctx.fillRect(0, 0, vp.width, vp.height);
-    ctx.save();
-    ctx.translate(ox, oy);
-    ctx.scale(designScale, designScale);
-    ctx.strokeStyle = PALETTE.ink;
-    stencil.outline(ctx, OUTLINE_WIDTH);
-    ctx.restore();
+    if (stencil.outline) {
+      ctx.save();
+      ctx.translate(ox, oy);
+      ctx.scale(designScale, designScale);
+      ctx.strokeStyle = PALETTE.ink;
+      stencil.outline(ctx, OUTLINE_WIDTH);
+      ctx.restore();
+    }
 
     // Tiles, drawn into the layer.
     lctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -132,6 +136,15 @@ export class MosaicRenderer {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(this.layer, 0, 0);
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    if (stencil.lines) {
+      // The artwork's own linework, crisp on top of the photos.
+      ctx.save();
+      ctx.translate(ox, oy);
+      ctx.scale(designScale, designScale);
+      ctx.fillStyle = POSTER.ink;
+      stencil.lines(ctx);
+      ctx.restore();
+    }
 
     let animating = false;
     const hl = state.highlight;
@@ -144,7 +157,7 @@ export class MosaicRenderer {
         const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 6);
         const pad = Math.max(3, z * 0.06) * (1 + pulse * 0.6);
         ctx.globalAlpha = 1 - Math.max(0, t - 0.75) * 4;
-        ctx.strokeStyle = PALETTE.ink;
+        ctx.strokeStyle = PALETTE.white;
         ctx.lineWidth = Math.max(2, Math.min(6, z * 0.03));
         ctx.strokeRect(ox + col * z - pad, oy + row * z - pad, z + pad * 2, z + pad * 2);
       }
