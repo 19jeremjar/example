@@ -48,6 +48,9 @@ type Props = {
   onDockChange?: (docked: boolean) => void;
 };
 
+/** Zoom (relative to the fitted view) beyond which the centre + docks to the corner. */
+const DOCK_ZOOM = 2.4;
+
 type Animation = { from: Camera; to: Camera; start: number; duration: number; done: () => void };
 
 export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicView(props, ref) {
@@ -121,7 +124,8 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
         const p = worldToScreen(e.camera, e.vp, mosaic.centre.x, mosaic.centre.y);
         const half = anchor.offsetHeight / 2;
         const docked =
-          e.camera.zoom > zoomLimits(mosaic, e.vp).min * 1.35 ||
+          // Stays in the middle until you're zoomed in far enough for photos to show.
+          e.camera.zoom > zoomLimits(mosaic, e.vp).min * DOCK_ZOOM ||
           p.y - half < e.vp.insets.top ||
           p.y + half > e.vp.height - e.vp.insets.bottom ||
           p.x < 0 ||

@@ -19,14 +19,15 @@ sticker wordmarks themselves, and a hand-lettered aside. That aside is set in Re
 night being shared: "with very special guest: Y O U", "Put it together", "Moments shared
 together". A square ink "+" button (add your photo) sits centred in the space between the two words
 (measured from the artwork), where the headliner sits on the poster. Once you zoom in, an
-ADD YOUR PHOTO button docks to the corner.
+ADD YOUR PHOTO button docks to the corner (from about 2.4× zoom, roughly where photos start to
+show).
 
 ## Run it
 
 ```sh
 cd together
 npm install
-npm run dev          # http://localhost:5173/show/demo-night-1
+npm run dev          # http://localhost:5173/
 ```
 
 | Script | What it does |
@@ -42,15 +43,16 @@ Add `?debug` to a show URL for an overlay with zoom, tile size, render time and 
 
 ## Routes
 
+There's one live mosaic for the whole tour (every fan, every night, one picture).
+
 | Route | Purpose |
 | --- | --- |
-| `/` | Tour overview |
-| `/show/demo-night-1` | The demo show's mosaic |
-| `/show/demo-night-2` | Listed as "coming soon" (the data model supports it) |
-| `/show/demo-night-1/photo/123` | Deep link: flies to tile #123 and opens it |
-| `/show/demo-night-1/photo/7` | Demo of a removed photo (graceful "unavailable" state) |
+| `/` | The mosaic |
+| `/photo/123` | Deep link: flies to photo #123 and opens it |
+| `/photo/7` | Demo of a removed photo (graceful "unavailable" state) |
 
-Tiles #11 and #404 deliberately fail to load, to show how image errors are handled.
+Older `/show/<id>` and `/show/<id>/photo/<id>` links still open the mosaic. Photos #11 and #404
+deliberately fail to load, to show how image errors are handled.
 
 ## How it works
 

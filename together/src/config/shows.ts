@@ -11,11 +11,8 @@ export type StencilConfig =
 
 export type ShowConfig = {
   id: string;
-  /** Short label shown on photos and in the header, e.g. "DEMO SHOW · NIGHT 01". */
+  /** Two-part label for the header corner and photo captions, e.g. "TOUR · 2026". */
   label: string;
-  city: string;
-  night: string;
-  available: boolean;
   cols: number;
   rows: number;
   seed: number;
@@ -30,13 +27,14 @@ export type ShowConfig = {
   brokenPhotoIds: string[];
 };
 
+/**
+ * One live mosaic for the whole tour: every fan, every night, in one picture. The data model
+ * still supports several mosaics (e.g. per city) if that's wanted later.
+ */
 export const SHOWS: ShowConfig[] = [
   {
-    id: "demo-night-1",
-    label: "DEMO SHOW · NIGHT 01",
-    city: "Demo City",
-    night: "Night 01",
-    available: true,
+    id: "together",
+    label: "TOUR · 2026",
     cols: 150,
     rows: 160,
     seed: 20260101,
@@ -49,25 +47,9 @@ export const SHOWS: ShowConfig[] = [
     removedPhotoIds: ["7"],
     brokenPhotoIds: ["11", "404"],
   },
-  {
-    id: "demo-night-2",
-    label: "DEMO SHOW · NIGHT 02",
-    city: "Demo City",
-    night: "Night 02",
-    available: false,
-    cols: 150,
-    rows: 160,
-    seed: 20260102,
-    sampleFill: 0.4,
-    stencil: { kind: "vector", art: TOGETHER_LOGO, pull: 72 },
-    wordGradients: [
-      [POSTER.red, POSTER.orange],
-      [POSTER.green, POSTER.blue],
-    ],
-    removedPhotoIds: [],
-    brokenPhotoIds: [],
-  },
 ];
+
+export const MAIN_SHOW = SHOWS[0];
 
 export function findShow(id: string): ShowConfig | undefined {
   return SHOWS.find((s) => s.id === id);

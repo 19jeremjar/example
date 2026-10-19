@@ -7,15 +7,13 @@ import { Corner, Script, Spaced, TogetherMark } from "./Poster";
 export type LocalImageUrls = { full: string; medium: string; thumb: string };
 
 type Props = {
-  /** e.g. "Night 01". */
-  night: string;
   localCount: number;
   onClose: () => void;
   onSubmit: (urls: LocalImageUrls) => void;
   onReset: () => void;
 };
 
-export function UploadSheet({ night, localCount, onClose, onSubmit, onReset }: Props) {
+export function UploadSheet({ localCount, onClose, onSubmit, onReset }: Props) {
   const [image, setImage] = useState<HTMLCanvasElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -77,7 +75,7 @@ export function UploadSheet({ night, localCount, onClose, onSubmit, onReset }: P
               MOMENT
             </h2>
             <p className="mt-2 flex justify-between text-sm font-bold tracking-wider">
-              <span>{night.toUpperCase()}</span>
+              <span>LIVE · ALL TOUR</span>
               <Spaced text="2026" className="w-16" />
             </p>
           </div>

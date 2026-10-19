@@ -13,7 +13,7 @@ import { loadImage } from "../mosaic/imageLoader";
 import type { FrameInfo } from "../mosaic/renderer";
 import { createStencilPainter, rasteriseMask, type StencilPainter } from "../mosaic/stencil";
 import type { Mosaic, MosaicPhoto } from "../mosaic/types";
-import { navigate, photoPath, showPath } from "../routes";
+import { mosaicPath, navigate, photoPath } from "../routes";
 import { MosaicView, type MosaicViewHandle } from "./MosaicView";
 import { PhotoDetail } from "./PhotoDetail";
 import { type LocalImageUrls, UploadSheet } from "./UploadSheet";
@@ -178,7 +178,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     }
     view.current?.highlight(index);
     setDetail({ photo, viaTap: true });
-    if (photo.source === "sample") navigate(photoPath(show.id, photo.id));
+    if (photo.source === "sample") navigate(photoPath(photo.id));
   };
 
   const closeDetail = () => {
@@ -186,12 +186,12 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     setDetail(null);
     if (current?.photo?.source === "local" || !photoId) return;
     if (current?.viaTap) history.back();
-    else navigate(showPath(show.id), { replace: true });
+    else navigate(mosaicPath, { replace: true });
   };
 
   const copyLink = async () => {
     if (!detail?.photo) return;
-    const ok = await copyText(location.origin + photoPath(show.id, detail.photo.id));
+    const ok = await copyText(location.origin + photoPath(detail.photo.id));
     setToast(ok ? "LINK COPIED. SEND IT TO WHOEVER YOU WERE WITH." : "COULDN'T COPY THE LINK.");
   };
 
@@ -347,7 +347,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
       {detail && (
         <PhotoDetail
           photo={detail.photo}
-          showLabel={show.label}
+          showLabel={`TOGETHER, TOGETHER · ${show.label.replace(" · ", " ")}`}
           frameColor={detail.photo ? mosaic.tiles[tileIndexById(mosaic, detail.photo.tileId)]?.color : undefined}
           cache={cache}
           onClose={closeDetail}
@@ -355,7 +355,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         />
       )}
       {uploadOpen && (
-        <UploadSheet night={show.night} localCount={locals.size} onClose={() => setUploadOpen(false)} onSubmit={addLocalPhoto} onReset={resetLocal} />
+        <UploadSheet localCount={locals.size} onClose={() => setUploadOpen(false)} onSubmit={addLocalPhoto} onReset={resetLocal} />
       )}
     </main>
   );
