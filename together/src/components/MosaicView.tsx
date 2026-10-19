@@ -15,6 +15,7 @@ import {
 import { attachGestures } from "../mosaic/gestures";
 import type { ImageCache } from "../mosaic/imageCache";
 import { type FrameInfo, MosaicRenderer } from "../mosaic/renderer";
+import type { StencilPainter } from "../mosaic/stencil";
 import type { Mosaic, MosaicPhoto } from "../mosaic/types";
 import { prefersReducedMotion } from "../lib/motion";
 
@@ -29,6 +30,7 @@ export type MosaicViewHandle = {
 
 type Props = {
   mosaic: Mosaic;
+  stencil: StencilPainter;
   cache: ImageCache;
   photoAt: (index: number) => MosaicPhoto | undefined;
   /** Bump to redraw after photos change. */
@@ -66,8 +68,8 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
     const e = engine.current;
     const canvas = canvasRef.current!;
     const container = containerRef.current!;
-    const { mosaic, cache } = propsRef.current;
-    const renderer = new MosaicRenderer(canvas, mosaic, cache, (i) => propsRef.current.photoAt(i));
+    const { mosaic, stencil, cache } = propsRef.current;
+    const renderer = new MosaicRenderer(canvas, mosaic, stencil, cache, (i) => propsRef.current.photoAt(i));
     e.renderer = renderer;
 
     const setCamera = (cam: Camera) => {
@@ -305,9 +307,9 @@ export const MosaicView = forwardRef<MosaicViewHandle, Props>(function MosaicVie
         ref={canvasRef}
         tabIndex={0}
         role="img"
-        aria-label={`Interactive mosaic of ${props.mosaic.photos.size} fan photos. Use arrow keys to pan, plus and minus to zoom, Enter to open the photo in the centre.`}
+        aria-label={`Interactive mosaic of fan photos forming the word TOGETHER twice. Use arrow keys to pan, plus and minus to zoom, Enter to open the photo in the centre.`}
         onKeyDown={onKeyDown}
-        className="block h-full w-full touch-none select-none outline-none focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-paper"
+        className="block h-full w-full touch-none select-none outline-none focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-ink"
       />
     </div>
   );

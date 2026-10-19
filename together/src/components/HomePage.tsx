@@ -28,24 +28,24 @@ export function HomePage() {
           <br />
           the night.
         </h1>
-        <p className="mt-6 max-w-sm text-base text-paper/70">
+        <p className="mt-6 max-w-sm text-base text-ink/70">
           Every show gets its own artwork, built from the photos fans take in the room.
         </p>
       </section>
 
       <nav aria-label="Shows">
-        <ul className="divide-y divide-paper/20 border-y border-paper/20">
+        <ul className="divide-y divide-ink/20 border-y border-ink/20">
           {SHOWS.map((show) => (
             <li key={show.id}>
               {show.available ? (
                 <a href={showPath(show.id)} className="flex min-h-14 items-center justify-between py-3 text-lg font-bold hover:text-yellow">
                   <span>
-                    {show.city} <span className="text-paper/50">·</span> {show.night}
+                    {show.city} <span className="text-ink/50">·</span> {show.night}
                   </span>
                   <span aria-hidden>→</span>
                 </a>
               ) : (
-                <div className="flex min-h-14 items-center justify-between py-3 text-lg font-bold text-paper/40">
+                <div className="flex min-h-14 items-center justify-between py-3 text-lg font-bold text-ink/40">
                   <span>
                     {show.city} · {show.night}
                   </span>
@@ -55,7 +55,7 @@ export function HomePage() {
             </li>
           ))}
         </ul>
-        <p className="mt-4 text-xs text-paper/50">Prototype. Sample photos are generated; nothing is uploaded.</p>
+        <p className="mt-4 text-xs text-ink/50">Prototype. Sample photos are generated; nothing is uploaded.</p>
       </nav>
     </main>
   );

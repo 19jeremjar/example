@@ -1,6 +1,6 @@
 import type { ShowConfig } from "../config/shows";
 
-export type TileRegion = "ground" | "outline" | "letter";
+export type TileRegion = "ground" | "letter";
 
 export type MosaicTile = {
   id: string;
@@ -31,6 +31,8 @@ export type Mosaic = {
   /** Packed RGB per tile, for fast drawing. */
   rgb: Uint8ClampedArray;
   photos: Map<string, MosaicPhoto>;
-  /** Empty tile indices in the order new contributions fill them. */
+  /** Number of tiles inside the artwork (the only ones that hold photos). */
+  letterCount: number;
+  /** Empty letter tile indices in the order new contributions fill them. */
   fillOrder: number[];
 };

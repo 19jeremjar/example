@@ -42,7 +42,7 @@ export function Dialog({ label, onClose, children }: { label: string; onClose: (
       aria-modal="true"
       aria-label={label}
       tabIndex={-1}
-      className="fixed inset-0 z-30 flex flex-col bg-ink/95 outline-none"
+      className="fixed inset-0 z-30 flex flex-col bg-white/95 outline-none"
     >
       {children}
     </div>

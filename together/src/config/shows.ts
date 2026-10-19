@@ -14,7 +14,7 @@ export type ShowConfig = {
   cols: number;
   rows: number;
   seed: number;
-  /** Share of tiles that start with a sample photo (0–1). */
+  /** Share of the artwork's tiles that start with a sample photo (0–1). */
   sampleFill: number;
   stencil: StencilConfig;
   /** Sample photos that were "removed by moderation" — used to demo the unavailable state. */
@@ -30,10 +30,10 @@ export const SHOWS: ShowConfig[] = [
     city: "Demo City",
     night: "Night 01",
     available: true,
-    cols: 84,
-    rows: 60,
+    cols: 168,
+    rows: 120,
     seed: 20260101,
-    sampleFill: 0.74,
+    sampleFill: 0.86,
     stencil: { kind: "placeholder-arcs", text: "TOGETHER" },
     removedPhotoIds: ["7"],
     brokenPhotoIds: ["11", "404"],
@@ -44,8 +44,8 @@ export const SHOWS: ShowConfig[] = [
     city: "Demo City",
     night: "Night 02",
     available: false,
-    cols: 84,
-    rows: 60,
+    cols: 168,
+    rows: 120,
     seed: 20260102,
     sampleFill: 0.4,
     stencil: { kind: "placeholder-arcs", text: "TOGETHER" },

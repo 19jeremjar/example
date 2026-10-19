@@ -8,12 +8,14 @@ import { Dialog } from "./Dialog";
 type Props = {
   photo: MosaicPhoto | null;
   showLabel: string;
+  /** The tile's colour in the artwork; the frame matches it. */
+  frameColor?: string;
   cache: ImageCache;
   onClose: () => void;
   onCopyLink?: () => void;
 };
 
-export function PhotoDetail({ photo, showLabel, cache, onClose, onCopyLink }: Props) {
+export function PhotoDetail({ photo, showLabel, frameColor, cache, onClose, onCopyLink }: Props) {
   const unavailable = !photo || photo.removed;
   return (
     <Dialog label={unavailable ? "Photo unavailable" : "Photo"} onClose={onClose}>
@@ -31,22 +33,25 @@ export function PhotoDetail({ photo, showLabel, cache, onClose, onCopyLink }: Pr
 
       <div className="flex min-h-0 flex-1 items-center justify-center p-5">
         {unavailable ? (
-          <div className="w-full max-w-sm border border-paper/30 p-6 animate-rise">
-            <p className="text-xs font-bold tracking-widest text-paper/60">{showLabel}</p>
+          <div className="w-full max-w-sm border border-ink/30 p-6 animate-rise">
+            <p className="text-xs font-bold tracking-widest text-ink/60">{showLabel}</p>
             <h2 className="mt-3 text-3xl leading-none font-bold">Photo unavailable</h2>
-            <p className="mt-3 text-sm text-paper/70">
+            <p className="mt-3 text-sm text-ink/70">
               This moment has been removed, or the link isn't quite right. The rest of the mosaic is still here.
             </p>
-            <button type="button" onClick={onClose} className="mt-6 h-12 w-full bg-paper text-sm font-bold tracking-wider text-ink">
+            <button type="button" onClick={onClose} className="mt-6 h-12 w-full bg-ink text-sm font-bold tracking-wider text-paper">
               BACK TO THE MOSAIC
             </button>
           </div>
         ) : (
-          <figure className="w-full max-w-[min(88vw,58vh,520px)] bg-paper p-[4.5%] pb-0 text-ink animate-rise">
+          <figure
+            className="w-full max-w-[min(88vw,58vh,520px)] p-[4.5%] pb-0 text-ink animate-rise"
+            style={{ background: frameColor ?? "#ffffff" }}
+          >
             <DetailImage photo={photo} cache={cache} />
             <figcaption className="flex items-center justify-between py-[5%] text-[11px] font-bold tracking-widest sm:text-xs">
               <span>{showLabel}</span>
-              <span className="text-ink/50">
+              <span className="text-ink/60">
                 {photo.source === "local" ? "YOUR DEMO PHOTO" : `#${photo.id.padStart(4, "0")}`}
               </span>
             </figcaption>
@@ -57,11 +62,11 @@ export function PhotoDetail({ photo, showLabel, cache, onClose, onCopyLink }: Pr
       {!unavailable && (
         <div className="pb-safe px-safe">
           {photo.source === "sample" && onCopyLink ? (
-            <button type="button" onClick={onCopyLink} className="mx-auto block h-12 w-full max-w-sm bg-paper text-sm font-bold tracking-wider text-ink">
+            <button type="button" onClick={onCopyLink} className="mx-auto block h-12 w-full max-w-sm bg-ink text-sm font-bold tracking-wider text-paper">
               COPY PHOTO LINK
             </button>
           ) : (
-            <p className="mx-auto max-w-sm text-center text-xs text-paper/60">
+            <p className="mx-auto max-w-sm text-center text-xs text-ink/60">
               Demo photos stay on this device and disappear when you close the tab, so they don't get a link.
             </p>
           )}
@@ -104,9 +109,9 @@ function DetailImage({ photo, cache }: { photo: MosaicPhoto; cache: ImageCache }
   return (
     <div className="relative aspect-square w-full" style={{ background: PALETTE.ink }}>
       <canvas ref={canvasRef} className="block h-full w-full" role="img" aria-label="Fan photo from the show" />
-      {state === "loading" && <p className="absolute bottom-2 left-2 text-[10px] font-bold tracking-widest text-paper/70">LOADING</p>}
+      {state === "loading" && <p className="absolute bottom-2 left-2 text-[10px] font-bold tracking-widest text-ink/70">LOADING</p>}
       {state === "error" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-ink p-6 text-center text-sm text-paper/80">
+        <div className="absolute inset-0 flex items-center justify-center bg-white p-6 text-center text-sm text-ink/80">
           This photo couldn't load. Check your connection and try again.
         </div>
       )}

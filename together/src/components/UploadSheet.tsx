@@ -70,12 +70,12 @@ export function UploadSheet({ localCount, onClose, onSubmit, onReset }: Props) {
             <br />
             in the picture.
           </h2>
-          <div className="my-4 border-l-4 border-yellow py-1 pl-3 text-sm text-paper/80" role="note">
-            <strong className="text-paper">Prototype.</strong> Your photo stays on this device. Nothing is uploaded or
+          <div className="my-4 border-l-4 border-yellow py-1 pl-3 text-sm text-ink/80" role="note">
+            <strong className="text-ink">Prototype.</strong> Your photo stays on this device. Nothing is uploaded or
             published, and it disappears when you close the tab.
           </div>
           {error && (
-            <p role="alert" className="bg-pink px-3 py-2 text-sm font-bold text-ink">
+            <p role="alert" className="bg-pink px-3 py-2 text-sm font-bold text-paper">
               {error}
             </p>
           )}
@@ -107,7 +107,7 @@ export function UploadSheet({ localCount, onClose, onSubmit, onReset }: Props) {
             data-autofocus
             disabled={busy}
             onClick={() => cameraInput.current?.click()}
-            className="h-14 bg-paper text-sm font-bold tracking-wider text-ink disabled:opacity-50"
+            className="h-14 bg-ink text-sm font-bold tracking-wider text-paper disabled:opacity-50"
           >
             TAKE A PHOTO
           </button>
@@ -115,13 +115,13 @@ export function UploadSheet({ localCount, onClose, onSubmit, onReset }: Props) {
             type="button"
             disabled={busy}
             onClick={() => libraryInput.current?.click()}
-            className="h-14 border border-paper text-sm font-bold tracking-wider disabled:opacity-50"
+            className="h-14 border border-ink text-sm font-bold tracking-wider disabled:opacity-50"
           >
             {busy ? "READING PHOTO…" : "CHOOSE FROM LIBRARY"}
           </button>
-          <p className="text-center text-xs text-paper/50">JPG, PNG or WebP, up to {Math.round(UPLOAD.maxBytes / 1048576)} MB.</p>
+          <p className="text-center text-xs text-ink/50">JPG, PNG or WebP, up to {Math.round(UPLOAD.maxBytes / 1048576)} MB.</p>
           {localCount > 0 && (
-            <button type="button" onClick={onReset} className="h-11 text-xs font-bold tracking-wider text-paper/70 underline underline-offset-4">
+            <button type="button" onClick={onReset} className="h-11 text-xs font-bold tracking-wider text-ink/70 underline underline-offset-4">
               REMOVE MY {localCount} DEMO PHOTO{localCount === 1 ? "" : "S"}
             </button>
           )}
@@ -186,10 +186,10 @@ function Cropper({ image, busy, onBack, onConfirm }: CropProps) {
   return (
     <div className="flex flex-1 flex-col pb-safe px-safe">
       <div className="flex flex-1 items-center justify-center py-4">
-        <div className="w-full max-w-[min(100%,52vh,440px)] bg-paper p-[4.5%] pb-[16%]">
+        <div className="w-full max-w-[min(100%,52vh,440px)] bg-ink p-[4.5%] pb-[16%]">
           <div
             ref={boxRef}
-            className="relative aspect-square w-full touch-none overflow-hidden bg-ink"
+            className="relative aspect-square w-full touch-none overflow-hidden bg-white"
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -234,9 +234,9 @@ function Cropper({ image, busy, onBack, onConfirm }: CropProps) {
           className="h-11 flex-1 accent-yellow"
         />
       </label>
-      <p className="mb-3 text-center text-xs text-paper/60">Drag to position. Local demo only, nothing is uploaded.</p>
+      <p className="mb-3 text-center text-xs text-ink/60">Drag to position. Local demo only, nothing is uploaded.</p>
       <div className="grid grid-cols-[1fr_2fr] gap-3">
-        <button type="button" onClick={onBack} disabled={busy} className="h-14 border border-paper text-sm font-bold tracking-wider">
+        <button type="button" onClick={onBack} disabled={busy} className="h-14 border border-ink text-sm font-bold tracking-wider">
           BACK
         </button>
         <button
@@ -244,7 +244,7 @@ function Cropper({ image, busy, onBack, onConfirm }: CropProps) {
           data-autofocus
           disabled={busy || !view.scale}
           onClick={() => onConfirm({ sx: -view.x / view.scale, sy: -view.y / view.scale, side: box / view.scale })}
-          className="h-14 bg-paper text-sm font-bold tracking-wider text-ink disabled:opacity-50"
+          className="h-14 bg-ink text-sm font-bold tracking-wider text-paper disabled:opacity-50"
         >
           {busy ? "ADDING…" : "ADD TO THE MOSAIC"}
         </button>

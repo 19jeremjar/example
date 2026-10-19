@@ -26,7 +26,7 @@ function NotFound() {
     <main className="flex min-h-full flex-col items-start justify-center gap-6 px-safe">
       <p className="text-xs font-bold tracking-widest">TOGETHER, TOGETHER</p>
       <h1 className="text-5xl leading-none font-bold">This show isn't here.</h1>
-      <a href="/" className="border border-paper px-5 py-3 text-sm font-bold tracking-wider hover:bg-paper hover:text-ink">
+      <a href="/" className="border border-ink px-5 py-3 text-sm font-bold tracking-wider hover:bg-ink hover:text-paper">
         SEE ALL SHOWS
       </a>
     </main>

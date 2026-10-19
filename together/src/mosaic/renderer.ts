@@ -3,6 +3,7 @@ import { type Camera, type Viewport, fitZoom, visibleRange } from "./camera";
 import type { ImageCache } from "./imageCache";
 import { imageSize } from "./imageLoader";
 import { LOD, imageTier, photoMix } from "./lod";
+import type { StencilPainter } from "./stencil";
 import type { Mosaic, MosaicPhoto } from "./types";
 
 export type RenderState = {
@@ -16,17 +17,27 @@ export type FrameInfo = { mix: number; tilePx: number; visibleTiles: number; ani
 
 const HIGHLIGHT_MS = 2600;
 /** Polaroid proportions relative to the tile: thin sides and top, thicker bottom. */
-const FRAME_SIDE = 0.055;
-const FRAME_BOTTOM = 0.19;
-const GAP = 0.07;
+const FRAME_SIDE = 0.07;
+const FRAME_BOTTOM = 0.2;
+/** White gap between Polaroids, as a share of the tile. */
+const GAP = 0.08;
+/** Outline ring around the letters, in stencil design units. */
+const OUTLINE_WIDTH = 16;
 
 /**
- * Canvas renderer for the mosaic. At low zoom it draws a single pre-rendered bitmap of the colour
- * artwork (one pixel per tile). Once tiles are big enough it draws only the visible ones, blending
- * from solid colour into Polaroid frames and photos.
+ * Canvas renderer for the mosaic.
+ *
+ * The ground is plain white and the outline ring is drawn as vectors, so neither ever looks
+ * pixelated. Tiles are drawn into an offscreen layer (a one-pixel-per-tile colour bitmap at low
+ * zoom, Polaroid photos once tiles are big enough) and then clipped to the vector letter shape,
+ * so edges stay crisp at every zoom level.
  */
 export class MosaicRenderer {
   private ctx: CanvasRenderingContext2D;
+  private layer: HTMLCanvasElement;
+  private lctx: CanvasRenderingContext2D;
+  private mask: HTMLCanvasElement;
+  private mctx: CanvasRenderingContext2D;
   private base: HTMLCanvasElement;
   private colors: string[];
   private vp: Viewport = { width: 1, height: 1, insets: { top: 0, right: 0, bottom: 0, left: 0 } };
@@ -35,12 +46,17 @@ export class MosaicRenderer {
   constructor(
     private canvas: HTMLCanvasElement,
     private mosaic: Mosaic,
+    private stencil: StencilPainter,
     private cache: ImageCache,
     private photoAt: (index: number) => MosaicPhoto | undefined,
   ) {
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) throw new Error("Canvas 2D is not available");
     this.ctx = ctx;
+    this.layer = document.createElement("canvas");
+    this.lctx = this.layer.getContext("2d")!;
+    this.mask = document.createElement("canvas");
+    this.mctx = this.mask.getContext("2d")!;
     this.colors = mosaic.tiles.map((t) => t.color);
     this.base = document.createElement("canvas");
     this.base.width = mosaic.cols;
@@ -59,119 +75,63 @@ export class MosaicRenderer {
   resize(vp: Viewport, dpr: number) {
     this.vp = vp;
     this.dpr = Math.min(2, dpr);
-    this.canvas.width = Math.round(vp.width * this.dpr);
-    this.canvas.height = Math.round(vp.height * this.dpr);
+    this.canvas.width = this.layer.width = this.mask.width = Math.round(vp.width * this.dpr);
+    this.canvas.height = this.layer.height = this.mask.height = Math.round(vp.height * this.dpr);
   }
 
   render(state: RenderState): FrameInfo {
-    const { ctx, vp, mosaic } = this;
+    const { ctx, lctx, vp, mosaic, stencil } = this;
     const { camera: cam, now } = state;
     const z = cam.zoom;
     const ox = vp.width / 2 - cam.x * z;
     const oy = vp.height / 2 - cam.y * z;
     const mix = photoMix(z, fitZoom(mosaic, vp));
+    const designScale = (mosaic.cols * z) / stencil.width;
 
+    // Ground and outline ring: static, vector.
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.globalAlpha = 1;
-    ctx.fillStyle = PALETTE.ink;
+    ctx.fillStyle = PALETTE.white;
     ctx.fillRect(0, 0, vp.width, vp.height);
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(designScale, designScale);
+    ctx.strokeStyle = PALETTE.ink;
+    stencil.outline(ctx, OUTLINE_WIDTH);
+    ctx.restore();
+
+    // Tiles, drawn into the layer.
+    lctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    lctx.globalCompositeOperation = "source-over";
+    lctx.globalAlpha = 1;
+    lctx.clearRect(0, 0, vp.width, vp.height);
+    lctx.imageSmoothingEnabled = false;
+    lctx.drawImage(this.base, ox, oy, mosaic.cols * z, mosaic.rows * z);
 
     let visibleTiles = 0;
-    if (mix === 0) {
-      // Artwork view: one drawImage, zero photo work.
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(this.base, ox, oy, mosaic.cols * z, mosaic.rows * z);
-    } else {
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = z > 80 ? "high" : "low";
-      const range = visibleRange(cam, vp, mosaic, 1);
-      if (range) {
-        const tier = imageTier(z, this.dpr);
-        const gap = z * GAP * mix;
-        const side = z * FRAME_SIDE;
-        const bottom = z * FRAME_BOTTOM;
-        const overlay = (1 - mix * 0.82) * (z > LOD.captionPx ? 0.6 : 1);
-        const caption = z > LOD.captionPx;
-        if (caption) {
-          ctx.font = `600 ${Math.round(z * 0.055)}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
-          ctx.textBaseline = "middle";
-        }
-        for (let row = range.rowMin; row <= range.rowMax; row++) {
-          for (let col = range.colMin; col <= range.colMax; col++) {
-            visibleTiles++;
-            const i = row * mosaic.cols + col;
-            const x = ox + col * z + gap / 2;
-            const y = oy + row * z + gap / 2;
-            const s = z - gap;
-            const color = this.colors[i];
-            const photo = this.photoAt(i);
-            ctx.globalAlpha = 1;
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, s, s);
-            if (!photo) {
-              if (z > 60) {
-                // Empty slot waiting for a contribution.
-                ctx.globalAlpha = 0.28 * mix;
-                ctx.fillStyle = PALETTE.paper;
-                const c = s * 0.06;
-                ctx.fillRect(x + s / 2 - c / 2, y + s / 2 - c * 2.5, c, c * 5);
-                ctx.fillRect(x + s / 2 - c * 2.5, y + s / 2 - c / 2, c * 5, c);
-              }
-              continue;
-            }
-            // Polaroid frame fades in over the tile colour.
-            ctx.globalAlpha = mix;
-            ctx.fillStyle = PALETTE.paper;
-            ctx.fillRect(x, y, s, s);
-            const px = x + side;
-            const py = y + side;
-            const pw = s - side * 2;
-            const ph = s - side - bottom;
-            const entry = this.cache.get(tier === "medium" && photo.mediumUrl ? photo.mediumUrl : photo.thumbnailUrl);
-            let image = entry.status === "ready" ? entry.image : undefined;
-            if (!image && tier === "medium") {
-              // Show the thumbnail while the sharper image loads.
-              const thumb = this.cache.peek(photo.thumbnailUrl);
-              if (thumb?.status === "ready") image = this.cache.get(photo.thumbnailUrl).image;
-            }
-            ctx.globalAlpha = 1;
-            if (image) {
-              const { width, height } = imageSize(image);
-              // Cover-crop the square photo into the Polaroid window.
-              const scale = Math.max(pw / width, ph / height);
-              const sw = pw / scale;
-              const sh = ph / scale;
-              ctx.drawImage(image, (width - sw) / 2, (height - sh) / 2, sw, sh, px, py, pw, ph);
-              ctx.globalAlpha = overlay;
-              ctx.fillStyle = color;
-              ctx.fillRect(px, py, pw, ph);
-            } else {
-              ctx.fillStyle = color;
-              ctx.fillRect(px, py, pw, ph);
-              if (entry.status === "error" && z > 40) {
-                // Broken image: a quiet diagonal, never a browser error icon.
-                ctx.globalAlpha = 0.35 * mix;
-                ctx.strokeStyle = PALETTE.paper;
-                ctx.lineWidth = Math.max(1, z * 0.015);
-                ctx.beginPath();
-                ctx.moveTo(px + pw * 0.3, py + ph * 0.7);
-                ctx.lineTo(px + pw * 0.7, py + ph * 0.3);
-                ctx.stroke();
-              }
-            }
-            if (caption) {
-              ctx.globalAlpha = 0.55 * mix;
-              ctx.fillStyle = PALETTE.ink;
-              const cy = y + s - bottom / 2;
-              ctx.textAlign = "left";
-              ctx.fillText(photo.source === "local" ? "YOU · DEMO" : `#${photo.id.padStart(4, "0")}`, px, cy);
-              ctx.textAlign = "right";
-              ctx.fillText(mosaic.show.night.toUpperCase(), px + pw, cy);
-            }
-          }
-        }
-      }
+    if (mix > 0) {
+      lctx.imageSmoothingEnabled = true;
+      lctx.imageSmoothingQuality = z > 80 ? "high" : "low";
+      visibleTiles = this.drawTiles(lctx, cam, z, ox, oy, mix);
     }
+
+    // Clip the layer to the letter shape, then composite. The shape is painted into its own mask
+    // first, because destination-in applies per draw call and the shape takes several.
+    const { mctx } = this;
+    mctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    mctx.clearRect(0, 0, vp.width, vp.height);
+    mctx.translate(ox, oy);
+    mctx.scale(designScale, designScale);
+    mctx.fillStyle = "#000";
+    stencil.fill(mctx);
+    lctx.setTransform(1, 0, 0, 1, 0, 0);
+    lctx.globalAlpha = 1;
+    lctx.globalCompositeOperation = "destination-in";
+    lctx.drawImage(this.mask, 0, 0);
+    lctx.globalCompositeOperation = "source-over";
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(this.layer, 0, 0);
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
     let animating = false;
     const hl = state.highlight;
@@ -184,7 +144,7 @@ export class MosaicRenderer {
         const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 6);
         const pad = Math.max(3, z * 0.06) * (1 + pulse * 0.6);
         ctx.globalAlpha = 1 - Math.max(0, t - 0.75) * 4;
-        ctx.strokeStyle = PALETTE.pink;
+        ctx.strokeStyle = PALETTE.ink;
         ctx.lineWidth = Math.max(2, Math.min(6, z * 0.03));
         ctx.strokeRect(ox + col * z - pad, oy + row * z - pad, z + pad * 2, z + pad * 2);
       }
@@ -192,5 +152,97 @@ export class MosaicRenderer {
     ctx.globalAlpha = 1;
     this.cache.endFrame();
     return { mix, tilePx: z, visibleTiles, animating };
+  }
+
+  /** Visible artwork tiles as Polaroids whose frames take the tile's colour. Returns how many were drawn. */
+  private drawTiles(c: CanvasRenderingContext2D, cam: Camera, z: number, ox: number, oy: number, mix: number): number {
+    const { mosaic } = this;
+    const range = visibleRange(cam, this.vp, mosaic, 1);
+    if (!range) return 0;
+    const tier = imageTier(z, this.dpr);
+    const gap = z * GAP * mix;
+    const side = z * FRAME_SIDE;
+    const bottom = z * FRAME_BOTTOM;
+    // Light tint of the tile colour over the photo, fading as photos take over.
+    const overlay = (1 - mix * 0.85) * (z > LOD.captionPx ? 0.6 : 1);
+    const caption = z > LOD.captionPx;
+    if (caption) {
+      c.font = `700 ${Math.round(z * 0.055)}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+      c.textBaseline = "middle";
+    }
+    let drawn = 0;
+    for (let row = range.rowMin; row <= range.rowMax; row++) {
+      for (let col = range.colMin; col <= range.colMax; col++) {
+        const i = row * mosaic.cols + col;
+        if (mosaic.tiles[i].region !== "letter") continue;
+        drawn++;
+        const cx = ox + col * z;
+        const cy = oy + row * z;
+        const x = cx + gap / 2;
+        const y = cy + gap / 2;
+        const s = z - gap;
+        const color = this.colors[i];
+        // White gap around the frame, so each Polaroid reads on its own.
+        c.globalAlpha = 1;
+        c.fillStyle = PALETTE.white;
+        // Overlap neighbours by half a pixel so no anti-aliased seams show between cells.
+        c.fillRect(cx - 0.5, cy - 0.5, z + 1, z + 1);
+        c.fillStyle = color;
+        c.fillRect(x, y, s, s);
+        const photo = this.photoAt(i);
+        if (!photo) {
+          if (z > 60) {
+            // Empty slot waiting for a contribution.
+            c.globalAlpha = 0.45 * mix;
+            c.fillStyle = PALETTE.white;
+            const t = s * 0.05;
+            c.fillRect(x + s / 2 - t / 2, y + s / 2 - t * 2.5, t, t * 5);
+            c.fillRect(x + s / 2 - t * 2.5, y + s / 2 - t / 2, t * 5, t);
+          }
+          continue;
+        }
+        const px = x + side;
+        const py = y + side;
+        const pw = s - side * 2;
+        const ph = s - side - bottom;
+        const entry = this.cache.get(tier === "medium" && photo.mediumUrl ? photo.mediumUrl : photo.thumbnailUrl);
+        let image = entry.status === "ready" ? entry.image : undefined;
+        if (!image && tier === "medium" && this.cache.peek(photo.thumbnailUrl)?.status === "ready") {
+          // Show the thumbnail while the sharper image loads.
+          image = this.cache.get(photo.thumbnailUrl).image;
+        }
+        if (image) {
+          const { width, height } = imageSize(image);
+          // Cover-crop the square photo into the Polaroid window.
+          const scale = Math.max(pw / width, ph / height);
+          const sw = pw / scale;
+          const sh = ph / scale;
+          c.drawImage(image, (width - sw) / 2, (height - sh) / 2, sw, sh, px, py, pw, ph);
+          c.globalAlpha = overlay;
+          c.fillStyle = color;
+          c.fillRect(px, py, pw, ph);
+        } else if (entry.status === "error" && z > 40) {
+          // Broken image: a quiet diagonal, never a browser error icon.
+          c.globalAlpha = 0.5 * mix;
+          c.strokeStyle = PALETTE.white;
+          c.lineWidth = Math.max(1, z * 0.015);
+          c.beginPath();
+          c.moveTo(px + pw * 0.3, py + ph * 0.7);
+          c.lineTo(px + pw * 0.7, py + ph * 0.3);
+          c.stroke();
+        }
+        if (caption) {
+          c.globalAlpha = 0.7 * mix;
+          c.fillStyle = PALETTE.ink;
+          const ty = y + s - bottom / 2;
+          c.textAlign = "left";
+          c.fillText(photo.source === "local" ? "YOU · DEMO" : `#${photo.id.padStart(4, "0")}`, px, ty);
+          c.textAlign = "right";
+          c.fillText(mosaic.show.night.toUpperCase(), px + pw, ty);
+        }
+      }
+    }
+    c.globalAlpha = 1;
+    return drawn;
   }
 }

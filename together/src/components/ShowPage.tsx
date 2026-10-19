@@ -8,7 +8,7 @@ import { buildMosaic, tileIndexById } from "../mosaic/generate";
 import { ImageCache } from "../mosaic/imageCache";
 import { loadImage } from "../mosaic/imageLoader";
 import type { FrameInfo } from "../mosaic/renderer";
-import { buildStencilMask } from "../mosaic/stencil";
+import { createStencilPainter, rasteriseMask, type StencilPainter } from "../mosaic/stencil";
 import type { Mosaic, MosaicPhoto } from "../mosaic/types";
 import { navigate, photoPath, showPath } from "../routes";
 import { MosaicView, type MosaicViewHandle } from "./MosaicView";
@@ -20,14 +20,17 @@ const HINT_KEY = "tt-hint-seen";
 type Detail = { photo: MosaicPhoto | null; viaTap: boolean };
 
 export function ShowPage({ show, photoId }: { show: ShowConfig; photoId?: string }) {
-  const [mosaic, setMosaic] = useState<Mosaic | null>(null);
+  const [built, setBuilt] = useState<{ mosaic: Mosaic; stencil: StencilPainter } | null>(null);
   const [failed, setFailed] = useState(false);
   const cache = useMemo(() => new ImageCache(loadImage, 500), []);
 
   useEffect(() => {
     let cancelled = false;
-    buildStencilMask(show.stencil, show.cols, show.rows)
-      .then((mask) => !cancelled && setMosaic(buildMosaic(show, mask)))
+    createStencilPainter(show.stencil, show.cols, show.rows)
+      .then((stencil) => {
+        if (cancelled) return;
+        setBuilt({ stencil, mosaic: buildMosaic(show, rasteriseMask(stencil, show.cols, show.rows)) });
+      })
       .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
@@ -43,17 +46,19 @@ export function ShowPage({ show, photoId }: { show: ShowConfig; photoId?: string
   if (failed) {
     return <p className="p-6 text-sm">The artwork couldn't load. Refresh to try again.</p>;
   }
-  if (!mosaic) {
+  if (!built) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-xs font-bold tracking-widest text-paper/60">TOGETHER, TOGETHER</p>
+        <p className="text-xs font-bold tracking-widest text-ink/60">TOGETHER, TOGETHER</p>
       </div>
     );
   }
-  return <ShowMosaic mosaic={mosaic} cache={cache} photoId={photoId} />;
+  return <ShowMosaic mosaic={built.mosaic} stencil={built.stencil} cache={cache} photoId={photoId} />;
 }
 
-function ShowMosaic({ mosaic, cache, photoId }: { mosaic: Mosaic; cache: ImageCache; photoId?: string }) {
+type ShowMosaicProps = { mosaic: Mosaic; stencil: StencilPainter; cache: ImageCache; photoId?: string };
+
+function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   const { show } = mosaic;
   const view = useRef<MosaicViewHandle>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -148,7 +153,7 @@ function ShowMosaic({ mosaic, cache, photoId }: { mosaic: Mosaic; cache: ImageCa
 
   const onTapTile = (index: number, info: FrameInfo) => {
     dismissHint();
-    if (info.mix < 0.35) return;
+    if (info.mix < 0.35 || mosaic.tiles[index].region !== "letter") return;
     const photo = photoAt(index);
     if (!photo) {
       setToast("This spot's still free. Add your photo to fill one.");
@@ -235,10 +240,11 @@ function ShowMosaic({ mosaic, cache, photoId }: { mosaic: Mosaic; cache: ImageCa
   const total = sampleCount + locals.size;
 
   return (
-    <main className="fixed inset-0 overflow-hidden bg-ink">
+    <main className="fixed inset-0 overflow-hidden bg-white">
       <MosaicView
         ref={view}
         mosaic={mosaic}
+        stencil={stencil}
         cache={cache}
         photoAt={photoAt}
         version={version}
@@ -249,12 +255,12 @@ function ShowMosaic({ mosaic, cache, photoId }: { mosaic: Mosaic; cache: ImageCa
       />
 
       <header ref={headerRef} className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between pt-safe px-safe pb-3">
-        <a href="/" className="pointer-events-auto bg-ink px-1.5 py-1 text-[11px] leading-[1.15] font-bold tracking-wider">
+        <a href="/" className="pointer-events-auto bg-white px-1.5 py-1 text-[11px] leading-[1.15] font-bold tracking-wider">
           TOGETHER
           <br />
           TOGETHER
         </a>
-        <p className="bg-ink px-1.5 py-1 text-right text-[11px] leading-[1.15] font-bold tracking-wider">
+        <p className="bg-white px-1.5 py-1 text-right text-[11px] leading-[1.15] font-bold tracking-wider">
           {show.label.split(" · ")[0]}
           <br />
           {show.label.split(" · ")[1]}
@@ -277,36 +283,47 @@ function ShowMosaic({ mosaic, cache, photoId }: { mosaic: Mosaic; cache: ImageCa
 
       <div className="pointer-events-none absolute inset-x-0 flex justify-center px-safe" style={{ bottom: insets.bottom + 8 }} aria-live="polite">
         {toast ? (
-          <p className="max-w-[calc(100%-64px)] bg-paper px-3 py-2 text-center text-xs font-bold text-ink animate-rise">{toast}</p>
+          <p className="max-w-[calc(100%-64px)] bg-ink px-3 py-2 text-center text-xs font-bold text-paper animate-rise">{toast}</p>
         ) : hint ? (
-          <p className="max-w-[calc(100%-64px)] bg-ink/80 px-3 py-2 text-center text-xs font-bold animate-rise">
+          <p className="max-w-[calc(100%-64px)] bg-ink/85 px-3 py-2 text-center text-xs font-bold text-paper animate-rise">
             Pinch to explore. Tap a photo to see the moment.
           </p>
         ) : null}
       </div>
 
-      <footer ref={footerRef} className="absolute inset-x-0 bottom-0 pt-3 pb-safe px-safe">
-        <div className="mb-2 flex justify-between text-[11px] font-bold tracking-wider">
-          <span className="bg-ink px-1.5 py-0.5">{total.toLocaleString("en-AU")} PHOTOS</span>
-          <span className="bg-ink px-1.5 py-0.5 text-paper/70">LIVE · DEMO</span>
-        </div>
+      <footer ref={footerRef} className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 pt-3 pb-safe px-safe">
+        <p className="bg-white px-1.5 py-0.5 text-[11px] leading-[1.3] font-bold tracking-wider">
+          {total.toLocaleString("en-AU")} PHOTOS
+          <br />
+          <span className="text-ink/60">LIVE · DEMO</span>
+        </p>
         <button
           type="button"
           onClick={() => setUploadOpen(true)}
-          className="h-14 w-full bg-paper text-sm font-bold tracking-[0.12em] text-ink active:bg-yellow"
+          className="flex h-12 items-center gap-2.5 rounded-full bg-ink pr-5 pl-4 text-xs font-bold tracking-[0.12em] text-paper active:bg-pink"
         >
+          <span aria-hidden className="text-lg leading-none font-normal">
+            +
+          </span>
           ADD YOUR PHOTO
         </button>
       </footer>
 
       {debug && (
-        <pre className="pointer-events-none absolute left-2 whitespace-pre-wrap bg-ink/80 p-2 text-[10px] text-green" style={{ top: insets.top }}>
+        <pre className="pointer-events-none absolute left-2 whitespace-pre-wrap bg-white/80 p-2 text-[10px] text-green" style={{ top: insets.top }}>
           {debugText}
         </pre>
       )}
 
       {detail && (
-        <PhotoDetail photo={detail.photo} showLabel={show.label} cache={cache} onClose={closeDetail} onCopyLink={copyLink} />
+        <PhotoDetail
+          photo={detail.photo}
+          showLabel={show.label}
+          frameColor={detail.photo ? mosaic.tiles[tileIndexById(mosaic, detail.photo.tileId)]?.color : undefined}
+          cache={cache}
+          onClose={closeDetail}
+          onCopyLink={copyLink}
+        />
       )}
       {uploadOpen && (
         <UploadSheet localCount={locals.size} onClose={() => setUploadOpen(false)} onSubmit={addLocalPhoto} onReset={resetLocal} />
@@ -322,7 +339,7 @@ function ZoomButton({ label, onClick, children }: { label: string; onClick: () =
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="pointer-events-auto flex h-11 w-11 items-center justify-center bg-ink/85 text-xl leading-none font-bold text-paper ring-1 ring-paper/25 active:bg-paper active:text-ink"
+      className="pointer-events-auto flex h-11 w-11 items-center justify-center bg-white/85 text-xl leading-none font-bold text-ink ring-1 ring-ink/25 active:bg-ink active:text-paper"
     >
       {children}
     </button>

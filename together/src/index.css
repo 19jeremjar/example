@@ -19,8 +19,8 @@ body,
 
 body {
   margin: 0;
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: #ffffff;
+  color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -28,7 +28,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-paper);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
 }
 

@@ -1,8 +1,9 @@
 # Together, Together: interactive photomosaic (MVP prototype)
 
 A mobile-first mosaic of fan photos. Zoomed out, it's a colourful artwork: two curved
-"TOGETHER" arcs in pink → orange → yellow → blue → green, with an off-white sticker outline on a
-near-black ground. Zoom in and every tile becomes a Polaroid of a moment from the show.
+"TOGETHER" arcs in pink → orange → yellow → blue → green, with a black outline on a white
+ground. Zoom in and every tile inside the letters becomes a Polaroid of a moment from the show,
+framed in the colour of its spot in the artwork. Everything outside the letters is static.
 
 **This is a generic prototype.** The arc lettering is a placeholder set in a system font. It is
 not the official wordmark (see [Swapping in the official artwork](#swapping-in-the-official-artwork)).
@@ -56,15 +57,20 @@ src/
   components/            React UI: MosaicView, ShowPage, PhotoDetail, UploadSheet
 ```
 
-- **One canvas, no image elements.** The 84 × 60 grid (5,040 tiles) is drawn on a single canvas.
-- **Artwork view (1.0×–1.8×).** The whole mosaic is a single 84 × 60 px bitmap, scaled up with
-  smoothing off. That's one `drawImage` call per frame and **zero photo requests**. Check the
-  `img req` counter with `?debug`.
+- **One canvas, no image elements.** A fine 168 × 120 grid. Only the ~3,500 tiles inside the
+  letters hold photos.
+- **Crisp at every zoom.** The letter shape and its black outline are drawn as vectors each
+  frame, and the tiles are clipped to that shape. The edges never follow the tile grid, so they
+  never look pixelated.
+- **Artwork view (1.0×–1.8×).** The tile colours are a single 168 × 120 px bitmap, clipped to the
+  letters. That's a few draw calls per frame and **zero photo requests**. Check the `img req`
+  counter with `?debug`.
 - **Transition (1.8×–2.5×).** Photos fade in once tiles are at least 22 px on screen *and* past
   1.8× of the fitted view. They're fully revealed at 44 px and 2.5×. Only tiles in the viewport,
   plus a one-tile buffer, are drawn or requested.
-- **Polaroid view.** Off-white frames with a thicker bottom edge appear with the photos. A light
-  overlay in the tile colour keeps the artwork readable, and fades further at high zoom.
+- **Polaroid view.** Frames with a thicker bottom edge appear with the photos, coloured to match
+  the tile's place in the artwork, with thin white gaps between them. A light overlay in the tile
+  colour keeps the artwork readable, and fades further at high zoom.
   Above ~150 px tiles get a caption, and large tiles switch from 96 px thumbnails to 256 px images.
 - **Detail view.** Opens a 1080 px image, the only place a full-size asset is loaded. The mosaic
   stays mounted underneath, so closing it leaves the camera exactly where it was.
@@ -75,7 +81,7 @@ src/
 
 ADD YOUR PHOTO → take a photo or choose from the library → square crop (drag, pinch or slider) →
 the photo is resized in the browser to 1080/256/96 px and kept as temporary `blob:` URLs. It
-takes the next free tile (letters fill first), and the camera flies there and highlights it.
+takes the next free tile in the letters, and the camera flies there and highlights it.
 Nothing is sent anywhere. Demo photos vanish on reload and can be removed with
 "Remove my demo photos". They don't get share links.
 
@@ -91,7 +97,8 @@ and change the show's stencil:
 stencil: { kind: "image", url: "/stencil/together-together.svg" },
 ```
 
-The alpha channel decides which tiles are "letter". The outline ring is added automatically.
+The alpha channel decides the letter shape and which tiles hold photos. The outline ring is
+added automatically.
 The placeholder arc text then stops being used.
 
 ## Deploying (Vercel)

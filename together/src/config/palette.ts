@@ -7,6 +7,7 @@ export const PALETTE = {
   green: "#5CAB66",
   ink: "#0E0E0E",
   paper: "#F4F0E6",
+  white: "#FFFFFF",
 } as const;
 
 /** Top-to-bottom colour bands used inside the stencil letters. */

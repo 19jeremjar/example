@@ -9,7 +9,8 @@ function syntheticMask() {
   const coverage = new Float32Array(show.cols * show.rows);
   // Two bands standing in for the arcs.
   for (let r = 0; r < show.rows; r++)
-    for (let c = 0; c < show.cols; c++) if ((r > 10 && r < 22) || (r > 45 && r < 57)) coverage[r * show.cols + c] = c > 5 && c < 66 ? 1 : 0;
+    for (let c = 0; c < show.cols; c++)
+      if ((r > 20 && r < 44) || (r > 80 && r < 104)) coverage[r * show.cols + c] = c > 10 && c < 150 ? 1 : 0;
   return maskFromCoverage(show.cols, show.rows, coverage);
 }
 
@@ -35,25 +36,20 @@ describe("mosaic generation", () => {
       expect(tile.photoId).toBe(photo.id);
       expect(photo.showId).toBe(show.id);
     }
-    expect(m.photos.size).toBe(Math.floor(m.tiles.length * show.sampleFill));
   });
 
-  it("colours letters brightly and the ground dark", () => {
+  it("puts photos only inside the artwork", () => {
     const m = buildMosaic(show, syntheticMask());
-    const lum = (i: number) => (m.rgb[i * 3] + m.rgb[i * 3 + 1] + m.rgb[i * 3 + 2]) / 3;
-    const letter = m.tiles.findIndex((t) => t.region === "letter");
-    const ground = m.tiles.findIndex((t) => t.region === "ground");
-    expect(m.tiles.some((t) => t.region === "outline")).toBe(true);
-    expect(lum(letter)).toBeGreaterThan(90);
-    expect(lum(ground)).toBeLessThan(40);
+    const letters = m.tiles.filter((t) => t.region === "letter");
+    expect(m.letterCount).toBe(letters.length);
+    expect(m.tiles.filter((t) => t.region === "ground").every((t) => !t.photoId)).toBe(true);
+    expect(m.photos.size).toBe(Math.floor(letters.length * show.sampleFill));
   });
 
-  it("offers only empty tiles for new photos, letters first", () => {
+  it("offers only empty artwork tiles for new photos", () => {
     const m = buildMosaic(show, syntheticMask());
-    expect(m.fillOrder.every((i) => !m.tiles[i].photoId)).toBe(true);
-    expect(m.fillOrder.length).toBe(m.tiles.length - m.photos.size);
-    const firstNonLetter = m.fillOrder.findIndex((i) => m.tiles[i].region !== "letter");
-    expect(m.fillOrder.slice(firstNonLetter).every((i) => m.tiles[i].region !== "letter")).toBe(true);
+    expect(m.fillOrder.every((i) => !m.tiles[i].photoId && m.tiles[i].region === "letter")).toBe(true);
+    expect(m.fillOrder.length).toBe(m.letterCount - m.photos.size);
   });
 
   it("marks configured photos as removed or broken", () => {
@@ -64,13 +60,9 @@ describe("mosaic generation", () => {
 });
 
 describe("stencil mask", () => {
-  it("adds an outline ring around letters", () => {
-    const coverage = new Float32Array(10 * 10);
-    coverage[55] = 1;
-    const mask = maskFromCoverage(10, 10, coverage);
-    expect(mask.region[55]).toBe(2);
-    expect(mask.region[54]).toBe(1);
-    expect(mask.region[45]).toBe(1);
-    expect(mask.region[0]).toBe(0);
+  it("counts tiles that are mostly inside the artwork", () => {
+    const coverage = new Float32Array(4);
+    coverage.set([1, 0.3, 0.1, 0]);
+    expect([...maskFromCoverage(2, 2, coverage).region]).toEqual([1, 1, 0, 0]);
   });
 });
