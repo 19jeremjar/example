@@ -1,0 +1,109 @@
+# Together, Together: interactive photomosaic (MVP prototype)
+
+A mobile-first mosaic of fan photos. Zoomed out, it's a colourful artwork: two curved
+"TOGETHER" arcs in pink → orange → yellow → blue → green, with an off-white sticker outline on a
+near-black ground. Zoom in and every tile becomes a Polaroid of a moment from the show.
+
+**This is a generic prototype.** The arc lettering is a placeholder set in a system font. It is
+not the official wordmark (see [Swapping in the official artwork](#swapping-in-the-official-artwork)).
+The sample photos are drawn procedurally in the browser, and uploads stay on the device.
+
+## Run it
+
+```sh
+cd together
+npm install
+npm run dev          # http://localhost:5173/show/demo-night-1
+```
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Dev server |
+| `npm run build` | Typecheck + production build to `dist/` |
+| `npm run preview` | Serve the production build |
+| `npm test` | Unit tests (Vitest) |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript only |
+
+Add `?debug` to a show URL for an overlay with zoom, tile size, render time and image-request counts.
+
+## Routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Tour overview |
+| `/show/demo-night-1` | The demo show's mosaic |
+| `/show/demo-night-2` | Listed as "coming soon" (the data model supports it) |
+| `/show/demo-night-1/photo/123` | Deep link: flies to tile #123 and opens it |
+| `/show/demo-night-1/photo/7` | Demo of a removed photo (graceful "unavailable" state) |
+
+Tiles #11 and #404 deliberately fail to load, to show how image errors are handled.
+
+## How it works
+
+```
+src/
+  config/shows.ts        show list, grid size, seeds, stencil choice, upload limits
+  config/palette.ts      prototype colours
+  mosaic/stencil.ts      artwork → per-tile mask (letter / outline / ground)
+  mosaic/generate.ts     deterministic tiles, colours, sample photo placement, fill order
+  mosaic/camera.ts       camera maths: fit, clamp, zoom-around-point, culling, hit testing
+  mosaic/lod.ts          zoom thresholds (projected tile size + PRD multiples)
+  mosaic/renderer.ts     Canvas 2D renderer
+  mosaic/gestures.ts     pointer/touch/wheel: pan, pinch, double-tap, fling
+  mosaic/imageCache.ts   LRU image cache with request queue and eviction
+  mosaic/imageLoader.ts  loads blob/CDN URLs; draws sample photos in a Web Worker
+  components/            React UI: MosaicView, ShowPage, PhotoDetail, UploadSheet
+```
+
+- **One canvas, no image elements.** The 84 × 60 grid (5,040 tiles) is drawn on a single canvas.
+- **Artwork view (1.0×–1.8×).** The whole mosaic is a single 84 × 60 px bitmap, scaled up with
+  smoothing off. That's one `drawImage` call per frame and **zero photo requests**. Check the
+  `img req` counter with `?debug`.
+- **Transition (1.8×–2.5×).** Photos fade in once tiles are at least 22 px on screen *and* past
+  1.8× of the fitted view. They're fully revealed at 44 px and 2.5×. Only tiles in the viewport,
+  plus a one-tile buffer, are drawn or requested.
+- **Polaroid view.** Off-white frames with a thicker bottom edge appear with the photos. A light
+  overlay in the tile colour keeps the artwork readable, and fades further at high zoom.
+  Above ~150 px tiles get a caption, and large tiles switch from 96 px thumbnails to 256 px images.
+- **Detail view.** Opens a 1080 px image, the only place a full-size asset is loaded. The mosaic
+  stays mounted underneath, so closing it leaves the camera exactly where it was.
+- **Memory.** The cache holds at most 500 images (LRU). Requests for tiles that leave the
+  viewport before loading are dropped.
+
+### Simulated upload
+
+ADD YOUR PHOTO → take a photo or choose from the library → square crop (drag, pinch or slider) →
+the photo is resized in the browser to 1080/256/96 px and kept as temporary `blob:` URLs. It
+takes the next free tile (letters fill first), and the camera flies there and highlights it.
+Nothing is sent anywhere. Demo photos vanish on reload and can be removed with
+"Remove my demo photos". They don't get share links.
+
+Validation: JPG, PNG or WebP, up to 10 MB (`UPLOAD` in `config/shows.ts`). HEIC is rejected
+with a clear message.
+
+## Swapping in the official artwork
+
+Supply the approved transparent SVG (or high-resolution PNG with alpha), put it in `public/`,
+and change the show's stencil:
+
+```ts
+stencil: { kind: "image", url: "/stencil/together-together.svg" },
+```
+
+The alpha channel decides which tiles are "letter". The outline ring is added automatically.
+The placeholder arc text then stops being used.
+
+## Deploying (Vercel)
+
+Create a Vercel project from this repo with **Root Directory** set to `together`. The framework
+preset is Vite. `vercel.json` rewrites every path to `index.html` so deep links work.
+
+## Not in this prototype
+
+No backend, database, accounts, moderation, live updates or real uploads. No fan photos should
+be collected publicly until storage, consent, moderation, reporting/removal and retention are in
+place (see the PRD).
+
+Performance was checked in headless Chromium. Zoom and pan held a median of 60 fps, and the
+renderer took ~2 ms per frame. Profile on real phones before launch.

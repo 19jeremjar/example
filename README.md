@@ -4,6 +4,8 @@ A pocket-sized retro mixtape player. The whole site is one big early-2000s iPod 
 
 No build step: it's plain HTML, CSS and JavaScript.
 
+> The `together/` folder is a separate project: the **Together, Together** fan photomosaic prototype (React + Vite). See [`together/README.md`](together/README.md). It doesn't affect this site.
+
 ```
 index.html       page + iPod markup
 styles.css       all styling
