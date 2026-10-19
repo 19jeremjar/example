@@ -22,7 +22,7 @@ together". A square ink "+" button (add your photo) sits centred in the space be
 ADD YOUR PHOTO button docks to the corner (from about 2.4× zoom, roughly where photos start to
 show).
 
-First-time visitors see a single welcome card ("Welcome to the Live Wall"), closed with the
+First-time visitors see a single welcome card ("Welcome to the Together Wall"), closed with the
 cross in its corner. It's shown once per phone, and skipped when someone arrives
 on a shared photo link.
 

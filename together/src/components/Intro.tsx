@@ -35,10 +35,9 @@ export function Intro({ onClose }: { onClose: () => void }) {
           ✕
         </button>
         <TogetherMark word="top" className="mx-auto w-[78%]" />
-        <h2 id="intro-title" className="box-ink mt-4 px-4 pt-3 pb-2.5 text-[2.1rem] leading-[0.92] font-bold tracking-tight">
-          WELCOME TO
-          <br />
-          THE LIVE WALL
+        <h2 id="intro-title" className="box-ink mt-4 px-4 pt-3 pb-2.5 font-bold">
+          <span className="block text-sm tracking-[0.12em]">WELCOME TO THE</span>
+          <span className="mt-1 block text-[clamp(1.4rem,8vw,2.1rem)] leading-[0.92] tracking-tight whitespace-nowrap">TOGETHER WALL</span>
         </h2>
         <p className="mt-4 text-sm leading-snug font-bold">
           EVERY PHOTO FROM THE TOUR, IN ONE PICTURE. ADD YOURS, THEN ZOOM IN AND SEE EVERYONE ELSE'S.
