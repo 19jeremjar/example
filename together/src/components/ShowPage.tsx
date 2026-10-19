@@ -345,13 +345,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         />
       )}
       {intro && (
-        <Intro
-          onAdd={() => {
-            closeIntro();
-            setUploadOpen(true);
-          }}
-          onExplore={closeIntro}
-        />
+        <Intro onClose={closeIntro} />
       )}
       {uploadOpen && (
         <UploadSheet localCount={locals.size} onClose={() => setUploadOpen(false)} onSubmit={addLocalPhoto} onReset={resetLocal} />
