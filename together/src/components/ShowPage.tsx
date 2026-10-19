@@ -361,19 +361,16 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   );
 }
 
-/** Square ink button: plus sign and one line of bold uppercase, like the poster's boxes. */
+/** Square ink button set like the poster's date boxes: heavy, tightly set uppercase, no icon. */
 function AddButton({ onClick, large }: { onClick: () => void; large?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`box-ink pointer-events-auto flex items-center justify-center gap-2.5 font-bold tracking-[0.1em] whitespace-nowrap shadow-[0_0_0_2px_#ffffff] active:bg-white active:text-[#121c16] ${
-        large ? "h-14 px-6 text-base" : "h-12 px-4 text-sm"
+      className={`box-ink pointer-events-auto block leading-none font-bold tracking-[-0.01em] whitespace-nowrap active:bg-white active:text-[#121c16] ${
+        large ? "px-5 pt-3 pb-2.5 text-[1.9rem]" : "px-3.5 pt-2.5 pb-2 text-[1.3rem]"
       }`}
     >
-      <span aria-hidden className="text-2xl leading-none font-normal">
-        +
-      </span>
       ADD YOUR PHOTO
     </button>
   );
