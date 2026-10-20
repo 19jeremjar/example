@@ -201,7 +201,7 @@ function Cropper({ image, busy, onBack, onConfirm }: CropProps) {
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col pb-safe px-safe">
       <div className="flex flex-1 items-center justify-center py-4">
-        <div className="w-full max-w-[min(100%,50vh,440px)] bg-white p-[4.5%] pb-0 text-[#121c16] shadow-[0_0_0_1.5px_#121c16]">
+        <div className="w-full max-w-[min(100%,46vh,440px)] bg-white p-[4.5%] pb-0 text-[#121c16] shadow-[0_0_0_1.5px_#121c16]">
           <div
             ref={boxRef}
             className="relative aspect-square w-full touch-none overflow-hidden bg-[#121c16]"
@@ -241,19 +241,10 @@ function Cropper({ image, busy, onBack, onConfirm }: CropProps) {
           </div>
         </div>
       </div>
-      <label className="mb-4 flex items-center gap-3 text-xs font-bold tracking-wider">
-        ZOOM
-        <input
-          type="range"
-          min={1}
-          max={4}
-          step={0.01}
-          value={view.scale ? view.scale / min : 1}
-          onChange={(e) => zoomTo(Number(e.target.value) * min)}
-          className="h-11 flex-1 accent-[#121c16]"
-        />
-      </label>
-      <p className="mb-3 text-center text-xs font-bold tracking-wider">DRAG TO FRAME IT.</p>
+      <p className="mb-3 text-center text-[11px] leading-snug">
+        By adding your photo, you agree it can be shown publicly on the Together Wall and shared by the tour.
+        Only add photos you took.
+      </p>
       <div className="grid grid-cols-[1fr_2fr] gap-3">
         <button type="button" onClick={onBack} disabled={busy} className="box-white h-14 text-sm font-bold tracking-wider">
           BACK
@@ -265,7 +256,7 @@ function Cropper({ image, busy, onBack, onConfirm }: CropProps) {
           onClick={() => onConfirm({ sx: -view.x / view.scale, sy: -view.y / view.scale, side: box / view.scale })}
           className="box-ink h-14 text-sm font-bold tracking-wider"
         >
-          {busy ? "PUTTING IT TOGETHER…" : "PUT IT TOGETHER"}
+          {busy ? "ADDING…" : "ADD TO THE WALL"}
         </button>
       </div>
     </div>
