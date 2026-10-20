@@ -53,9 +53,10 @@ describe("mosaic generation", () => {
   });
 
   it("marks configured photos as removed or broken", () => {
-    const m = buildMosaic(show, syntheticMask());
-    expect(m.photos.get(show.removedPhotoIds[0])?.removed).toBe(true);
-    expect(m.photos.get(show.brokenPhotoIds[0])?.thumbnailUrl).toMatch(/^sample-broken:/);
+    const demo = { ...show, removedPhotoIds: ["7"], brokenPhotoIds: ["11"] };
+    const m = buildMosaic(demo, syntheticMask());
+    expect(m.photos.get("7")?.removed).toBe(true);
+    expect(m.photos.get("11")?.thumbnailUrl).toMatch(/^sample-broken:/);
   });
 });
 

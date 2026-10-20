@@ -24,8 +24,8 @@ export const POSTER = {
 export const COLOURWAYS = [
   { name: "White", value: "#FFFFFF", text: POSTER.ink },
   { name: "Green", value: POSTER.green, text: "#FFFFFF" },
-  { name: "Red", value: POSTER.red, text: "#FFFFFF" },
-  { name: "Orange", value: POSTER.orange, text: "#FFFFFF" },
+  { name: "Red", value: POSTER.red, text: POSTER.ink },
+  { name: "Orange", value: POSTER.orange, text: POSTER.ink },
   { name: "Blue", value: POSTER.blue, text: "#FFFFFF" },
 ] as const;
 

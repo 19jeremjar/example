@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Reenie Beanie (SIL Open Font License), bundled so it works offline and without Google. */
+@font-face {
+  font-family: "Reenie Beanie";
+  src: url("/fonts/reenie-beanie-latin.woff2") format("woff2");
+  font-display: swap;
+}
+
 @theme {
   --color-ink: #0e0e0e;
   --color-paper: #f4f0e6;

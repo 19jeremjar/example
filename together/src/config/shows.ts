@@ -44,8 +44,8 @@ export const SHOWS: ShowConfig[] = [
       [POSTER.red, POSTER.orange],
       [POSTER.green, POSTER.blue],
     ],
-    removedPhotoIds: ["7"],
-    brokenPhotoIds: ["11", "404"],
+    removedPhotoIds: [],
+    brokenPhotoIds: [],
   },
 ];
 

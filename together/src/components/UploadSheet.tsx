@@ -132,9 +132,7 @@ export function UploadSheet({ localCount, onClose, onSubmit, onReset }: Props) {
             </button>
           </div>
           <p className="text-center text-xs leading-snug font-bold" role="note">
-            PROTOTYPE: YOUR PHOTO STAYS ON THIS PHONE.
-            <br />
-            NOTHING IS UPLOADED OR PUBLISHED.
+            EVERY PHOTO IS CHECKED BEFORE IT JOINS THE WALL.
           </p>
           <p className="text-center text-[11px] opacity-70">JPG, PNG or WebP, up to {Math.round(UPLOAD.maxBytes / 1048576)} MB.</p>
           {localCount > 0 && (
@@ -255,7 +253,7 @@ function Cropper({ image, busy, onBack, onConfirm }: CropProps) {
           className="h-11 flex-1 accent-[#121c16]"
         />
       </label>
-      <p className="mb-3 text-center text-xs font-bold tracking-wider">DRAG TO FRAME IT. IT STAYS ON THIS PHONE.</p>
+      <p className="mb-3 text-center text-xs font-bold tracking-wider">DRAG TO FRAME IT.</p>
       <div className="grid grid-cols-[1fr_2fr] gap-3">
         <button type="button" onClick={onBack} disabled={busy} className="box-white h-14 text-sm font-bold tracking-wider">
           BACK
