@@ -17,6 +17,7 @@ import { mosaicPath, navigate, photoPath } from "../routes";
 import { MosaicView, type MosaicViewHandle } from "./MosaicView";
 import { Intro } from "./Intro";
 import { PhotoDetail } from "./PhotoDetail";
+import { ShareCard } from "./ShareCard";
 import { type LocalImageUrls, UploadSheet } from "./UploadSheet";
 
 const INTRO_KEY = "tt-intro-seen";
@@ -79,6 +80,8 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  // The fan's just-added photo, for the SHARE card.
+  const [justAdded, setJustAdded] = useState<MosaicPhoto | null>(null);
   // Welcome card on a first visit, unless they arrived on a shared photo link.
   const [intro, setIntro] = useState(() => !readFlag(INTRO_KEY) && !photoId);
   const { colourway, next: nextColourway } = useColourway();
@@ -214,7 +217,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     setVersion((v) => v + 1);
     setUploadOpen(false);
     await view.current?.flyToTile(index, { highlight: true });
-    setToast("YOU'RE IN. TOGETHER, TOGETHER. (DEMO ONLY: NOT UPLOADED.)");
+    setJustAdded(photo);
   };
 
   const resetLocal = () => {
@@ -225,6 +228,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
     setLocals(new Map());
     setVersion((v) => v + 1);
     setUploadOpen(false);
+    setJustAdded(null);
     setToast("YOUR DEMO PHOTOS HAVE BEEN REMOVED.");
   };
 
@@ -250,6 +254,7 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   );
 
   const total = sampleCount + locals.size;
+  const tileColour = (photo: MosaicPhoto) => mosaic.tiles[tileIndexById(mosaic, photo.tileId)]?.color ?? "#ffffff";
 
   return (
     <main className="fixed inset-0 overflow-hidden" style={{ background }}>
@@ -317,6 +322,18 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         ) : null}
       </div>
 
+      {justAdded && (
+        <div className="pointer-events-none absolute inset-x-0 z-10 flex justify-center px-safe" style={{ top: insets.top }}>
+          <ShareCard
+            photoUrl={justAdded.fullImageUrl}
+            frameColor={tileColour(justAdded)}
+            background={background}
+            onClose={() => setJustAdded(null)}
+            onResult={setToast}
+          />
+        </div>
+      )}
+
       <footer ref={footerRef} className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 pt-3 pb-safe px-safe">
         <p className="px-1.5 py-0.5 text-[11px] leading-[1.3] font-bold tracking-wider" style={labelStyle}>
           {total.toLocaleString("en-AU")} MOMENTS
@@ -338,7 +355,18 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
         <PhotoDetail
           photo={detail.photo}
           showLabel={`TOGETHER, TOGETHER · ${show.label.replace(" · ", " ")}`}
-          frameColor={detail.photo ? mosaic.tiles[tileIndexById(mosaic, detail.photo.tileId)]?.color : undefined}
+          frameColor={detail.photo ? tileColour(detail.photo) : undefined}
+          share={
+            detail.photo?.source === "local" ? (
+              <ShareCard
+                variant="button"
+                photoUrl={detail.photo.fullImageUrl}
+                frameColor={tileColour(detail.photo)}
+                background={background}
+                onResult={setToast}
+              />
+            ) : undefined
+          }
           cache={cache}
           onClose={closeDetail}
           onCopyLink={copyLink}

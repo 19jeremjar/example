@@ -14,9 +14,11 @@ type Props = {
   cache: ImageCache;
   onClose: () => void;
   onCopyLink?: () => void;
+  /** SHARE control for the fan's own photo. */
+  share?: React.ReactNode;
 };
 
-export function PhotoDetail({ photo, showLabel, frameColor, cache, onClose, onCopyLink }: Props) {
+export function PhotoDetail({ photo, showLabel, frameColor, cache, onClose, onCopyLink, share }: Props) {
   const unavailable = !photo || photo.removed;
   return (
     <Dialog label={unavailable ? "Moment unavailable" : "Moment"} onClose={onClose}>
@@ -73,7 +75,10 @@ export function PhotoDetail({ photo, showLabel, frameColor, cache, onClose, onCo
               </button>
             </>
           ) : (
-            <Script className="text-center">yours, only on this phone. for now.</Script>
+            <>
+              <Script className="mb-2 text-center">you're on the wall. tell everyone.</Script>
+              {share}
+            </>
           )}
         </div>
       )}

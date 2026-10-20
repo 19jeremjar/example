@@ -26,6 +26,14 @@ First-time visitors see a single welcome card ("Welcome to the Together Wall"), 
 cross in its corner. It's shown once per phone, and skipped when someone arrives
 on a shared photo link.
 
+### Share to story
+
+After a photo is added, a "You're on the Together Wall · SHARE" card appears (and the fan's photo
+view has SHARE TO YOUR STORY). It makes a 1080×1920 poster-style image and opens the phone's
+share sheet, which includes Instagram Stories. Browsers that can't share files (mostly desktop)
+save the image instead. The image is prepared as soon as the card appears, because Safari only
+allows sharing straight from a tap.
+
 ## Run it
 
 ```sh
