@@ -3,7 +3,6 @@ import type { ShowConfig } from "../config/shows";
 import { copyText } from "../lib/clipboard";
 import { COLOURWAYS } from "../config/palette";
 import { useColourway } from "../lib/colourway";
-import { readFlag, writeFlag } from "../lib/storage";
 import { TogetherMark } from "./Poster";
 import type { Camera, Insets } from "../mosaic/camera";
 import { fitZoom } from "../mosaic/camera";
@@ -20,7 +19,6 @@ import { PhotoDetail } from "./PhotoDetail";
 import { ShareCard } from "./ShareCard";
 import { type LocalImageUrls, UploadSheet } from "./UploadSheet";
 
-const INTRO_KEY = "tt-intro-seen";
 
 type Detail = { photo: MosaicPhoto | null; viaTap: boolean };
 
@@ -82,8 +80,8 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
   const [toast, setToast] = useState<string | null>(null);
   // The fan's just-added photo, for the SHARE card.
   const [justAdded, setJustAdded] = useState<MosaicPhoto | null>(null);
-  // Welcome card on a first visit, unless they arrived on a shared photo link.
-  const [intro, setIntro] = useState(() => !readFlag(INTRO_KEY) && !photoId);
+  // Welcome card on every visit, unless they arrived on a shared photo link.
+  const [intro, setIntro] = useState(() => !photoId);
   const { colourway, next: nextColourway } = useColourway();
   const background = colourway.value;
   const labelStyle = { background, color: colourway.text };
@@ -136,7 +134,6 @@ function ShowMosaic({ mosaic, stencil, cache, photoId }: ShowMosaicProps) {
 
   const closeIntro = () => {
     setIntro(false);
-    writeFlag(INTRO_KEY);
   };
 
   // Follow the URL: open a deep-linked photo (flying to it first), close when it's removed from the URL.
