@@ -8,7 +8,6 @@
 
   const CFG = window.HOUSE_CONFIG;
   const ART = window.ART;
-  const SFX = window.SFX;
   const KEYS = ["tv", "photo", "hat", "drawer"];
   const NAMES = { tv: "The television", photo: "The photograph", hat: "The rabbit hat", drawer: "The cabinet drawer" };
 
@@ -23,7 +22,6 @@
     drawerOpen: false,
     pieces: [false, false, false],
     opened: false,
-    muted: false,
   });
 
   let state = load();
@@ -160,7 +158,7 @@
     if (solvedCount() === 4 && !state.opened) say("All 4 songs found. Tap the box in the middle.");
   }
 
-  $("#modal-close").addEventListener("click", () => { SFX.tap(); closeWindow(); });
+  $("#modal-close").addEventListener("click", closeWindow);
   modal.addEventListener("click", (e) => { if (e.target === modal) closeWindow(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeWindow(); });
 
@@ -208,7 +206,7 @@
       msg.textContent = song.hint;
       hintBtn.hidden = true;
     }
-    hintBtn.addEventListener("click", () => { SFX.tap(); showHint(); });
+    hintBtn.addEventListener("click", showHint);
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -216,7 +214,6 @@
       if (!g) return;
       if (song.answers.some((a) => normalize(a) === g)) {
         state.solved[key] = true;
-        SFX.chime();
         refresh();
         flickerBox();
         showSolved();
@@ -226,7 +223,6 @@
           : `Correct: ${song.title}. ${n} of 4 songs found.`);
       } else {
         misses++;
-        SFX.buzz();
         form.classList.remove("shake");
         void form.offsetWidth;
         form.classList.add("shake");
@@ -307,7 +303,6 @@
           }
         }
         canvas.style.opacity = staticLevel;
-        SFX.setStatic(staticLevel);
         // tick off the steps as they're done
         $('[data-s="1"]', steps).classList.toggle("done", on);
         $('[data-s="2"]', steps).classList.toggle("done", on && ch === 3);
@@ -319,22 +314,20 @@
         if (!b) return;
         if (b.dataset.act === "power") {
           on = !on;
-          on ? SFX.tvOn() : SFX.thunk();
         } else if (on) {
-          SFX.click();
           ch = ch % 3 + 1;
         }
         render();
       });
       range.addEventListener("input", () => {
         tune = +range.value;
-        if (on && ch === 3) { if (tune % 4 === 0) SFX.tick(); render(); }
+        if (on && ch === 3) render();
       });
 
       raf = requestAnimationFrame(drawStatic);
       const wobble = setInterval(() => { if (on && ch === 3 && clarity() < 0.85) render(); }, 120);
       render();
-      return () => { cancelAnimationFrame(raf); clearInterval(wobble); SFX.setStatic(0); };
+      return () => { cancelAnimationFrame(raf); clearInterval(wobble); };
     });
   }
 
@@ -373,7 +366,6 @@
           if (k < 1) anim = requestAnimationFrame(step);
         };
         anim = requestAnimationFrame(step);
-        SFX.swell();
         say("Now you can see the whole picture.");
       }
 
@@ -385,7 +377,6 @@
       body.addEventListener("click", (e) => {
         const b = e.target.closest("[data-act]");
         if (!b || !b.closest(".controls")) return;
-        SFX.paper();
         if (b.dataset.act === "rotate") rot += 90;
         else {
           flipped = !flipped;
@@ -421,7 +412,6 @@
       btn.addEventListener("click", () => {
         const lifted = stage.classList.toggle("lifted");
         btn.textContent = lifted ? "Put it back" : "Lift the hat";
-        SFX.paper();
         if (lifted && !state.hatLifted) {
           state.hatLifted = true;
           refresh();
@@ -444,7 +434,6 @@
         </div>`);
       slot.appendChild(closed);
       $("[data-act=open]", closed).addEventListener("click", () => {
-        SFX.drawer();
         state.drawerOpen = true;
         refresh();
         closed.classList.add("opening");
@@ -491,7 +480,6 @@
       state.pieces[i] = true;
       p.classList.add("placed");
       place(p, i);
-      SFX.thunk();
       save();
       checkDone();
     }
@@ -514,7 +502,6 @@
         sx = e.clientX; sy = e.clientY; ox = pos[i].x; oy = pos[i].y;
         p.style.zIndex = ++z;
         p.classList.add("dragging");
-        SFX.paper();
       });
       p.addEventListener("pointermove", (e) => {
         if (!p.classList.contains("dragging")) return;
@@ -526,7 +513,6 @@
         if (!p.classList.contains("dragging")) return;
         p.classList.remove("dragging");
         if (Math.abs(pos[i].x) < 8 && Math.abs(pos[i].y) < 8) snap(p, i);
-        else SFX.tap();
       };
       p.addEventListener("pointerup", drop);
       p.addEventListener("pointercancel", drop);
@@ -555,7 +541,6 @@
     // All four found: open it.
     state.opened = true;
     save();
-    SFX.hum();
     say("The box is opening…");
     scene.classList.add("opening");
     flickerBox();
@@ -574,14 +559,28 @@
     setTimeout(() => {
       reveal.hidden = false;
       requestAnimationFrame(() => reveal.classList.add("show"));
-      SFX.swell();
     }, 700);
   }
 
+  // ─── How to play ─────────────────────────────────────────
+  function showHowTo() {
+    openWindow("How to play", (body) => {
+      body.appendChild(el(`
+        <ol class="how">
+          <li><span>1</span>Tap the numbered objects to find four clues.</li>
+          <li><span>2</span>Each clue leads to a song by The 1975. Type its name.</li>
+          <li><span>3</span>Name all four songs to open the box in the middle.</li>
+        </ol>`));
+      body.appendChild(el(`<p class="window-text">Stuck? Tap <strong>Hint</strong> at the top to see where to look next.</p>`));
+      const start = el(`<div class="controls"><button type="button" class="btn btn-solid">Start</button></div>`);
+      $("button", start).addEventListener("click", closeWindow);
+      body.appendChild(start);
+    });
+  }
+  $("#howto-btn").addEventListener("click", showHowTo);
+
   // ─── Hint button: what to do next ────────────────────────
   $("#hint-btn").addEventListener("click", () => {
-    SFX.init();
-    SFX.tap();
     const next = KEYS.find((k) => !state.solved[k]);
     const target = next || "box";
     say(next
@@ -605,7 +604,7 @@
 
   // ─── Wiring ──────────────────────────────────────────────
   const handlers = { tv: openTV, photo: openPhoto, hat: openHat, drawer: openDrawer, box: openBox };
-  function open(key) { SFX.init(); SFX.tap(); handlers[key](); }
+  function open(key) { handlers[key](); }
 
   $$(".hotspot", scene).forEach((spot) => {
     spot.addEventListener("click", () => open(spot.dataset.obj));
@@ -630,23 +629,8 @@
   fitScene();
   narrow.addEventListener("change", fitScene);
 
-  const soundBtn = $("#sound-btn");
-  function renderSound() {
-    soundBtn.textContent = state.muted ? "Sound off" : "Sound on";
-    soundBtn.setAttribute("aria-pressed", String(!state.muted));
-    SFX.setMuted(state.muted);
-  }
-  soundBtn.addEventListener("click", () => {
-    SFX.init();
-    state.muted = !state.muted;
-    renderSound();
-    save();
-  });
-
   function reset() {
-    const muted = state.muted;
     state = fresh();
-    state.muted = muted;
     save();
     location.reload();
   }
@@ -656,9 +640,6 @@
   $("#again-btn").addEventListener("click", reset);
 
   $("#enter-btn").addEventListener("click", () => {
-    SFX.init();
-    renderSound();
-    SFX.thunk();
     const intro = $("#intro");
     intro.classList.add("leaving");
     setTimeout(() => {
@@ -672,10 +653,9 @@
       const n = solvedCount();
       if (state.opened) say("The box is open. Tap it to see the message again.");
       else if (n) say(`Welcome back. You've found ${n} of 4 songs.`);
-      else say("Tap number 1, the TV, to begin.");
+      else { say("Tap number 1, the TV, to begin."); showHowTo(); }
     }, 600);
   });
 
-  renderSound();
   renderTracker();
 })();

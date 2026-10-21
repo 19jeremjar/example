@@ -4,7 +4,7 @@ A point-and-click mystery set in a 2D version of the *At Their Very Best* stage 
 
 > You've seen the house. Now find out what's inside.
 
-**How it plays (about five minutes):** four clues are hidden around the house, each marked with a number. Each clue points to a song by The 1975. Name all four songs and the box in the middle opens onto the signup link.
+**How it plays:** four clues are hidden around the house, each marked with a number. Each clue points to a song by The 1975. Name all four songs and the box in the middle opens onto the signup link.
 
 There's no build step: it's plain HTML, CSS and JavaScript.
 
@@ -13,7 +13,6 @@ index.html     page, plus the illustrated room (one inline SVG with clickable ob
 img/           The 1975 logo, white and black versions
 js/config.js   ← the four songs, clues, hints and signup link (edit here)
 js/art.js      the clue pictures
-js/sfx.js      analogue sound effects, synthesised with Web Audio (no audio files)
 js/game.js     game logic
 ```
 
@@ -32,6 +31,7 @@ Other features:
 - Guesses ignore case, spaces and punctuation. **Need a hint?** shows the clue's hint, and so do two wrong guesses.
 - The numbered markers turn into ticks as songs are found. The tracker under the room lists the songs found so far.
 - **Hint** in the top bar points to the next unsolved clue.
+- **How to play** opens automatically on a first visit and is always in the top bar. There is no sound.
 - Progress is saved in `localStorage`. **Restart** clears it.
 - On phones the room is shown at twice the screen width. Swipe or use ‹ › to move between three views; the middle one shows the whole box. Clue windows open as bottom sheets.
 - Every object can be opened with the keyboard. Photo pieces can be placed by pressing Enter.
