@@ -99,7 +99,7 @@
       $(".slot-value", slot).textContent = state.solved[k] ? CFG.songs[k].title : "?";
       slot.classList.toggle("found", state.solved[k]);
     });
-    $("#progress").textContent = n === 4 ? "All four songs found. Open the box." : `${n} of 4 songs found`;
+    $("#progress").textContent = n === 4 ? "All 4 songs found. Tap the box." : `${n} of 4 songs found`;
   }
 
   function refresh() {
@@ -157,7 +157,7 @@
     modal.hidden = true;
     document.body.classList.remove("modal-open");
     if (returnFocus && returnFocus.focus) returnFocus.focus({ preventScroll: true });
-    if (solvedCount() === 4 && !state.opened) say("All four songs found. The box in the middle is open. Tap it.");
+    if (solvedCount() === 4 && !state.opened) say("All 4 songs found. Tap the box in the middle.");
   }
 
   $("#modal-close").addEventListener("click", () => { SFX.tap(); closeWindow(); });
@@ -187,7 +187,7 @@
       <form class="guess" autocomplete="off">
         <label class="guess-label" for="guess-${key}">Which song is it?</label>
         <div class="guess-row">
-          <input id="guess-${key}" class="guess-input" type="text" placeholder="Song title" spellcheck="false" autocapitalize="words" enterkeyhint="done">
+          <input id="guess-${key}" class="guess-input" type="text" placeholder="Type the song title" spellcheck="false" autocapitalize="words" enterkeyhint="done">
           <button type="submit" class="btn btn-solid">Guess</button>
         </div>
         <div class="guess-foot">
@@ -222,8 +222,8 @@
         showSolved();
         const n = solvedCount();
         say(n === 4
-          ? `${song.title}. That's all four songs. The box in the middle is open.`
-          : `${song.title}. That's ${n} of 4. Part of the box lights up.`);
+          ? `Correct: ${song.title}. All 4 songs found. Close this and tap the box.`
+          : `Correct: ${song.title}. ${n} of 4 songs found.`);
       } else {
         misses++;
         SFX.buzz();
@@ -231,7 +231,7 @@
         void form.offsetWidth;
         form.classList.add("shake");
         if (misses >= 2) showHint();
-        else { msg.classList.remove("is-hint"); msg.textContent = "Not that one. Try again."; }
+        else { msg.classList.remove("is-hint"); msg.textContent = "Not quite. Try again."; }
         input.select();
       }
     });
@@ -265,7 +265,7 @@
             <input type="range" min="0" max="100" value="${tune}" aria-label="Tune">
           </label>
         </div>`));
-      const steps = el(`<ol class="steps"><li data-s="1">Press Power</li><li data-s="2">Change to channel 3</li><li data-s="3">Slide Tune until the picture is clear</li></ol>`);
+      const steps = el(`<ol class="steps"><li data-s="1">Press Power</li><li data-s="2">Press Channel until you reach CH 3</li><li data-s="3">Slide Tune until the picture is clear</li></ol>`);
       body.appendChild(steps);
 
       const tv = $(".tv", body), screen = $(".tv-screen", body), osd = $(".tv-osd", body);
@@ -390,7 +390,7 @@
         else {
           flipped = !flipped;
           if (flipped && !state.photoRead) { state.photoRead = true; save(); }
-          say(flipped ? "There's handwriting on the back." : rot % 360 ? "It's still on its side. Rotate it." : "");
+          say(flipped ? "There's writing on the back." : rot % 360 ? "It's still sideways. Tap Rotate." : "");
         }
         render();
       });
@@ -425,7 +425,7 @@
         if (lifted && !state.hatLifted) {
           state.hatLifted = true;
           refresh();
-          say("A folded note. It's describing a music video.");
+          say("There was a note under the hat.");
         }
       });
     });
@@ -449,7 +449,7 @@
         refresh();
         closed.classList.add("opening");
         setTimeout(() => { slot.innerHTML = ""; buildPuzzle(slot); }, 500);
-        say("Inside: three torn pieces of a photo.");
+        say("Three torn pieces of a photo. Drag them into the frame.");
       });
     });
   }
@@ -498,7 +498,7 @@
 
     function checkDone(initial) {
       const left = state.pieces.filter((x) => !x).length;
-      if (left) { if (!initial) status.textContent = `${left} piece${left > 1 ? "s" : ""} to go.`; return; }
+      if (left) { if (!initial) status.textContent = `${left} piece${left > 1 ? "s" : ""} left.`; return; }
       board.classList.add("complete");
       status.textContent = "The photo is back together.";
       if (!initial && !state.solved.drawer) say("The photo is back together. Which song is it?");
@@ -543,12 +543,12 @@
     const n = solvedCount();
     if (n < 4) {
       openWindow("The box", (body) => {
-        body.appendChild(el(`<p class="window-how">The box opens when you've named all four songs.</p>`));
+        body.appendChild(el(`<p class="window-how">The box opens once you've named all 4 songs.</p>`));
         body.appendChild(el(`
           <ol class="box-list">
             ${KEYS.map((k, i) => `<li class="${state.solved[k] ? "done" : ""}"><span>${i + 1}</span>${state.solved[k] ? CFG.songs[k].title : NAMES[k]}</li>`).join("")}
           </ol>`));
-        body.appendChild(el(`<p class="window-text">${n} of 4 found. Look for the numbered markers around the house.</p>`));
+        body.appendChild(el(`<p class="window-text">${n} of 4 found. Tap the numbered objects in the room to find the rest.</p>`));
       });
       return;
     }
@@ -556,7 +556,7 @@
     state.opened = true;
     save();
     SFX.hum();
-    say("The box opens.");
+    say("The box is opening…");
     scene.classList.add("opening");
     flickerBox();
     setTimeout(renderScene, 600);
@@ -585,8 +585,8 @@
     const next = KEYS.find((k) => !state.solved[k]);
     const target = next || "box";
     say(next
-      ? `Try clue ${clueNumber(next)}: ${NAMES[next].toLowerCase()}. It's marked with a ${clueNumber(next)}.`
-      : state.opened ? "You've opened the box." : "All four songs found. Tap the box in the middle.");
+      ? `Next: clue ${clueNumber(next)}, ${NAMES[next].toLowerCase()}. Look for the ${clueNumber(next)}.`
+      : state.opened ? "You've opened the box." : "All 4 songs found. Tap the box in the middle.");
     const spot = $(`[data-obj="${target}"]`, scene);
     spot.classList.remove("pulse");
     void spot.getBoundingClientRect();
@@ -651,7 +651,7 @@
     location.reload();
   }
   $("#reset-btn").addEventListener("click", () => {
-    if (confirm("Start again from the beginning? Your progress will be cleared.")) reset();
+    if (confirm("Start over? Your progress will be cleared.")) reset();
   });
   $("#again-btn").addEventListener("click", reset);
 
@@ -671,8 +671,8 @@
       panState();
       const n = solvedCount();
       if (state.opened) say("The box is open. Tap it to see the message again.");
-      else if (n) say(`Welcome back. ${n} of 4 songs found.`);
-      else say("Tap the numbered objects to find each clue. Start with 1, the television.");
+      else if (n) say(`Welcome back. You've found ${n} of 4 songs.`);
+      else say("Tap number 1, the TV, to begin.");
     }, 600);
   });
 
