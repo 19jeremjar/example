@@ -1,6 +1,6 @@
 # The Avalanches: On Air
 
-> Also in this repo: [**The 1975 — House of Secrets**](house-of-secrets/), a point-and-click escape room that reveals tour cities. See [house-of-secrets/README.md](house-of-secrets/README.md).
+> Also in this repo: [**The 1975 — House of Secrets**](house-of-secrets/), a point-and-click mystery where fans name four songs to open the box. See [house-of-secrets/README.md](house-of-secrets/README.md).
 
 A pocket-sized retro mixtape player. The whole site is one big early-2000s iPod that plays YouTube mixtapes on its screen.
 

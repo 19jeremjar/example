@@ -1,55 +1,55 @@
 # The 1975 — House of Secrets
 
-A point-and-click mystery set in a 2D version of the *At Their Very Best* stage house: a white set against black, with a spiral staircase, shuttered windows, a stack of vintage TVs and the pitched-roof room. Fans investigate five objects, solve three location puzzles, find the code and power up the band's glowing rectangle. The rectangle then opens onto the signup link.
+A point-and-click mystery set in a 2D version of the *At Their Very Best* stage house: a white set against black, with a spiral staircase, shuttered windows, a stack of vintage TVs and the pitched-roof room.
 
 > You've seen the house. Now find out what's inside.
 
-There's no build step: it's plain HTML, CSS and JavaScript, like the rest of this repo.
+**How it plays (about five minutes):** four clues are hidden around the house, each marked with a number. Each clue points to a song by The 1975. Name all four songs and the box in the middle opens onto the signup link.
+
+There's no build step: it's plain HTML, CSS and JavaScript.
 
 ```
-index.html        page, plus the illustrated room (one inline SVG with clickable layers)
-img/              The 1975 logo, white and black versions
-styles.css        all styling
-js/config.js      ← cities, answers, code, signup link (edit here)
-js/landmarks.js   built-in landmark illustrations
-js/sfx.js         analogue sound effects, synthesised with Web Audio (no audio files)
-js/game.js        game logic
+index.html     page, plus the illustrated room (one inline SVG with clickable objects)
+img/           The 1975 logo, white and black versions
+js/config.js   ← the four songs, clues, hints and signup link (edit here)
+js/art.js      the clue pictures
+js/sfx.js      analogue sound effects, synthesised with Web Audio (no audio files)
+js/game.js     game logic
 ```
 
-## How it plays (about 3–5 minutes)
+## The four clues
 
-| # | Object | Reference | What you do | Unlocks |
-| --- | --- | --- | --- | --- |
-| 01 | Television stack | The Consumption interlude | Power on the wood-grain console, change channels, fine-tune until the picture locks | City 01 |
-| 02 | Framed photograph | 2013 monochrome, the rectangle | Take it down, rotate it upright, read the back, then step back from the frame | City 02 |
-| 03 | Cabinet drawer | Hidden notes and archives | Open the combination lock, then drag three torn fragments together | City 03 |
-| 04 | Rabbit hat | *Sincerity Is Scary* | Lift it to find the folded note with **1 9 7 5** | Code for the drawer and the door |
-| 05 | The rectangle | The box | Its outline lights a third at a time as cities are found. With all three, the keypad below it wakes up | Reveal and signup |
-
-The clues are linked, as in Crimson Room: the hat gives the code, the code opens the drawer, and the drawer holds the last city. There are also three optional secrets: the clock with only 1, 9, 7 and 5 on its face, the *La poésie est dans la rue* card, and the floor lamp.
+| # | Object | What you do | Song |
+| --- | --- | --- | --- |
+| 1 | Television | Press Power, go to channel 3 and tune until the picture is clear | Paris |
+| 2 | Photograph | Rotate it upright, turn it over to read the back, and the whole picture appears | The City |
+| 3 | Rabbit hat | Lift it to find a note describing a music video | Sincerity Is Scary |
+| 4 | Cabinet drawer | Open it and drag three torn pieces back into a photo | Chocolate |
+| | The box | Lights up a quarter at a time. After the fourth song, tap it to open it | — |
 
 Other features:
-- A clue tracker under the room shows the code, the three cities and the secrets found.
-- **Hint** gives the next step and makes that object pulse.
-- After three wrong guesses on a city, its hint from the config appears.
+- Each clue window has the same layout: what to do, the object, then "Which song is it?"
+- Guesses ignore case, spaces and punctuation. **Need a hint?** shows the clue's hint, and so do two wrong guesses.
+- The numbered markers turn into ticks as songs are found. The tracker under the room lists the songs found so far.
+- **Hint** in the top bar points to the next unsolved clue.
 - Progress is saved in `localStorage`. **Restart** clears it.
-- On phones the room is shown at twice the screen width. Swipe or use ‹ › to move between three views; the middle one shows the whole rectangle. Inspect windows open as bottom sheets.
-- Every object can be opened with the keyboard. Puzzle fragments can be placed by pressing Enter.
+- On phones the room is shown at twice the screen width. Swipe or use ‹ › to move between three views; the middle one shows the whole box. Clue windows open as bottom sheets.
+- Every object can be opened with the keyboard. Photo pieces can be placed by pressing Enter.
 
-## Changing the cities
+## Changing the songs
 
-Everything campaign-specific is in `js/config.js`:
+Everything is in `js/config.js`. For each of `tv`, `photo`, `hat` and `drawer`:
 
-- `cities.tv`, `cities.photo` and `cities.drawer` each have a `name`, the accepted `answers` and a `hint`.
-- Case, spaces, accents and punctuation are ignored when guesses are checked.
-- Each city uses a built-in drawing (`art: "flinders" | "opera" | "story"`). Set `image: "img/your-photo.jpg"` to use your own picture instead.
-- For the photograph, `crop: [x, y, w, h]` (in percent) sets the starting close-up.
-- `code` is the four-digit code. `signupUrl` is where the rectangle sends people.
-- Change `storageKey` to reset everyone's saved progress for a new campaign.
+- `title`: the song.
+- `answers`: accepted guesses.
+- `clue`: the instruction at the top of the window.
+- `hint`: shown by **Need a hint?**
+- `note`: the handwritten lines on the photo's back or under the hat.
+- `art`: a built-in picture (`"paris"`, `"city"` or `"chocolate"`). Set `image: "img/your-picture.jpg"` to use your own instead.
 
-The cities in the config are **examples only**, not confirmed tour locations.
+Change `storageKey` to reset everyone's saved progress.
 
-> ⚠ Don't put unannounced cities or dates in a public build. Anything shipped to the browser can be read with view-source, even if the game keeps it hidden.
+> ⚠ Anything in `config.js` is public once deployed, including the answers.
 
 ## Running locally
 

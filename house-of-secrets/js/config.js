@@ -1,54 +1,55 @@
 /* HOUSE OF SECRETS — campaign config
  *
- * Everything that changes between campaigns lives here. Swap the example
- * cities for approved tour destinations without touching the game logic.
+ * Everything that changes between campaigns lives here: the four songs,
+ * their clues and the signup link. The game logic doesn't need touching.
  *
- * ⚠ Anything in this file is public once deployed, even if the game hides it.
- *   Only ship real cities and dates after they're cleared for release.
+ * ⚠ Anything in this file is public once deployed (view-source shows it).
  */
 window.HOUSE_CONFIG = {
-  // Where the final doorway sends people.
+  // Where the box sends people once it opens.
   signupUrl: "https://example.com/signup",
   signupLabel: "Sign up for updates",
 
-  // The four-digit code: hidden under the rabbit hat, needed for the drawer and the door.
-  code: "1975",
+  // Bump the version to wipe everyone's saved progress.
+  storageKey: "house-of-secrets:v2",
 
-  // Bump the version to wipe everyone's saved progress for a new campaign.
-  storageKey: "house-of-secrets:v1",
-
-  // The three location puzzles. Keys are the objects that hold them.
-  //   name     shown once solved (and on the reveal screen)
-  //   answers  accepted guesses; case, spaces, accents and punctuation are ignored
-  //   art      a built-in landmark from js/landmarks.js ("flinders", "opera", "story")
-  //   image    optional: a path to your own image, used instead of `art`
-  //   crop     photograph only: [x, y, w, h] close-up of `image`, in percent (built-in art has its own)
-  //   hint     offered after a few wrong guesses
-  cities: {
+  // The four clues, in the order they're numbered in the room.
+  // Each object hides one song. Name all four to open the box.
+  //   title    the song, shown once it's guessed
+  //   answers  accepted guesses; case, spaces and punctuation are ignored
+  //   clue     shown in the object's window
+  //   hint     offered by the Hint button, or after two wrong guesses
+  //   art      a built-in picture from js/art.js ("paris", "city", "chocolate")
+  //   image    optional: your own picture, used instead of `art`
+  songs: {
     tv: {
-      label: "City 01",
-      name: "Melbourne",
-      answers: ["melbourne", "melb", "naarm"],
-      landmark: "Flinders Street Station",
-      art: "flinders",
-      hint: "Meet me under the clocks. Yellow stone, a green dome, trams outside.",
+      title: "Paris",
+      answers: ["paris"],
+      art: "paris",
+      clue: "Turn the TV on and tune it in. The song is named after the place on the screen.",
+      hint: "One word. A capital city. It's on I Like It When You Sleep… (2016).",
     },
     photo: {
-      label: "City 02",
-      name: "Sydney",
-      answers: ["sydney", "syd", "warrane"],
-      landmark: "Sydney Opera House",
-      art: "opera",
-      backNote: ["we've played", "by this water before.", "", "step back from the frame."],
-      hint: "Sails on a harbour, and a coathanger bridge in the distance.",
+      title: "The City",
+      answers: ["the city", "city"],
+      art: "city",
+      clue: "Turn the photo the right way up and read the back.",
+      note: ["2013.", "track two.", "named after where", "we're standing."],
+      hint: "Two words. Track two on the first album, The 1975 (2013).",
+    },
+    hat: {
+      title: "Sincerity Is Scary",
+      answers: ["sincerity is scary", "sincerity"],
+      clue: "Lift the hat. The note underneath points to a music video.",
+      note: ["a hat with rabbit ears.", "a walk through new york.", "2018."],
+      hint: "Three words. From A Brief Inquiry into Online Relationships (2018).",
     },
     drawer: {
-      label: "City 03",
-      name: "Brisbane",
-      answers: ["brisbane", "brissie", "brissy", "bris", "meanjin"],
-      landmark: "Story Bridge",
-      art: "story",
-      hint: "A steel cantilever bridge over a river city in Queensland.",
+      title: "Chocolate",
+      answers: ["chocolate"],
+      art: "chocolate",
+      clue: "Open the drawer and put the torn photo back together.",
+      hint: "One word. Something sweet, from the first album (2013).",
     },
   },
 };
