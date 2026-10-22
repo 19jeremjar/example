@@ -87,7 +87,14 @@
     scene.classList.toggle("drawer-open", state.drawerOpen);
     scene.classList.toggle("ready", n === 4);
     scene.classList.toggle("opened", state.opened);
-    KEYS.forEach((k) => $(`.marker[data-for="${k}"]`, scene).classList.toggle("done", state.solved[k]));
+    KEYS.forEach((k) => {
+      const done = state.solved[k];
+      $(`.marker[data-for="${k}"]`, scene).classList.toggle("done", done);
+      const spot = $(`[data-obj="${k}"]`, scene);
+      spot.classList.toggle("solved", done);
+      spot.setAttribute("tabindex", done ? "-1" : "0");
+      spot.setAttribute("aria-disabled", String(done));
+    });
   }
 
   function renderTracker() {
@@ -135,9 +142,11 @@
   const modalBody = $("#modal-body");
   let cleanup = null;
   let returnFocus = null;
+  let autoClose = 0;
 
   function openWindow(title, build, kicker = "") {
     if (!modal.hidden) closeWindow();
+    clearTimeout(autoClose);
     returnFocus = document.activeElement;
     $("#modal-kicker").textContent = kicker;
     $("#modal-title").textContent = title;
@@ -149,6 +158,7 @@
   }
 
   function closeWindow() {
+    clearTimeout(autoClose);
     if (modal.hidden) return;
     if (typeof cleanup === "function") cleanup();
     cleanup = null;
@@ -196,8 +206,10 @@
     const input = $("input", form), msg = $(".guess-msg", form), hintBtn = $("[data-act=hint]", form);
     let misses = 0;
 
-    function showSolved() {
-      form.innerHTML = `<p class="stamp"><span>Song ${clueNumber(key)}</span>${song.title}</p>`;
+    function showSolved(justNow) {
+      form.innerHTML = justNow
+        ? `<p class="stamp correct"><span>Correct</span>${song.title}</p>`
+        : `<p class="stamp"><span>Song ${clueNumber(key)}</span>${song.title}</p>`;
     }
     if (state.solved[key]) { showSolved(); return form; }
 
@@ -216,11 +228,12 @@
         state.solved[key] = true;
         refresh();
         flickerBox();
-        showSolved();
+        showSolved(true);
+        form.scrollIntoView({ block: "nearest", behavior: "smooth" });
         const n = solvedCount();
-        say(n === 4
-          ? `Correct: ${song.title}. All 4 songs found. Close this and tap the box.`
-          : `Correct: ${song.title}. ${n} of 4 songs found.`);
+        say(n === 4 ? `Correct: ${song.title}. All 4 songs found.` : `Correct: ${song.title}. ${n} of 4 songs found.`);
+        // Let "Correct" sink in, then close the window.
+        autoClose = setTimeout(closeWindow, 1800);
       } else {
         misses++;
         form.classList.remove("shake");
@@ -604,7 +617,10 @@
 
   // ─── Wiring ──────────────────────────────────────────────
   const handlers = { tv: openTV, photo: openPhoto, hat: openHat, drawer: openDrawer, box: openBox };
-  function open(key) { handlers[key](); }
+  function open(key) {
+    if (state.solved[key]) return; // solved objects are greyed out
+    handlers[key]();
+  }
 
   $$(".hotspot", scene).forEach((spot) => {
     spot.addEventListener("click", () => open(spot.dataset.obj));

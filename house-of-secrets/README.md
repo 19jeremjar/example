@@ -29,7 +29,7 @@ js/game.js     game logic
 Other features:
 - Each clue window has the same layout: what to do, the object, then "Which song is it?"
 - Guesses ignore case, spaces and punctuation. **Need a hint?** shows the clue's hint, and so do two wrong guesses.
-- The numbered markers turn into ticks as songs are found. The tracker under the room lists the songs found so far.
+- A right guess shows **Correct** and the window closes by itself. Solved objects turn grey and can't be opened again; their numbered markers become ticks. The tracker under the room lists the songs found so far.
 - **Hint** in the top bar points to the next unsolved clue.
 - **How to play** opens automatically on a first visit and is always in the top bar. There is no sound.
 - Progress is saved in `localStorage`. **Restart** clears it.
