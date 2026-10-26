@@ -35,6 +35,7 @@ describe('gameReducer', () => {
     s = gameReducer(s, { type: 'complete-task', task: 'beat' });
     s = gameReducer(s, { type: 'find-secret', id: 'mic' });
     s = gameReducer(s, { type: 'reveal-seen' });
+    s = gameReducer(s, { type: 'intro-seen' });
     s = gameReducer(s, { type: 'set-sound', on: false });
     s = gameReducer(s, { type: 'set-motion', motion: 'reduced' });
     const r = gameReducer(s, { type: 'reset' });
@@ -43,6 +44,7 @@ describe('gameReducer', () => {
     expect(r.revealSeen).toBe(false);
     expect(r.soundOn).toBe(false);
     expect(r.motion).toBe('reduced');
+    expect(r.introSeen).toBe(true);
   });
 });
 

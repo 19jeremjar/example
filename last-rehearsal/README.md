@@ -87,6 +87,15 @@ The renderer caps device pixel ratio at 1.75 and uses no dynamic lights or shado
 - **The setlist** is a running order ("Run the new Ecosystem songs"), not song titles. Swap in real titles in `SETLIST` if you'd like.
 - **Audio.** The game ships with synthesised sounds only. An approved clip for the final moment can be dropped into `public/` and named in `REVEAL_AUDIO_URL` (`src/config/game.ts`).
 
+## Guidance pop-ups
+
+- **Welcome tour.** Five short cards the first time someone enters: the room and the band, the controls, the three jobs, the secrets and the Object list. Each card points at the control it's about. It can be skipped, and replayed from Settings.
+- **Progress pop-ups.** After each finished job they say what's next. They also count secrets as you find them, and tell you when everything's ready to start rehearsal.
+- **Stuck nudge.** If the room sits untouched for 40 seconds, a pop-up suggests the next job. It shows once per job.
+- **Welcome back.** Returning visitors skip the tour and get a progress summary instead.
+
+The wording is in `TOUR` and `GUIDE` in `src/config/content.ts`. Timing is in `NUDGE_AFTER_MS` (`src/App.tsx`) and `TOAST_MS` (`src/ui/Guide.tsx`).
+
 ## Accessibility
 
 - An **Object list** button lists every interactive object, so the whole game can be played without touching the 3D view.

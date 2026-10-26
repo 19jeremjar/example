@@ -10,6 +10,8 @@ export interface GameState {
   secrets: string[];
   discoveries: string[];
   revealSeen: boolean;
+  /** The welcome tour has been shown (or skipped). */
+  introSeen: boolean;
   soundOn: boolean;
   motion: MotionPref;
 }
@@ -19,6 +21,7 @@ export type GameAction =
   | { type: 'find-secret'; id: string }
   | { type: 'add-discovery'; id: string }
   | { type: 'reveal-seen' }
+  | { type: 'intro-seen' }
   | { type: 'set-sound'; on: boolean }
   | { type: 'set-motion'; motion: MotionPref }
   | { type: 'reset' };
@@ -29,6 +32,7 @@ export function initialState(): GameState {
     secrets: [],
     discoveries: [],
     revealSeen: false,
+    introSeen: false,
     soundOn: true,
     motion: 'system',
   };
@@ -52,13 +56,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
     case 'reveal-seen':
       return state.revealSeen ? state : { ...state, revealSeen: true };
+    case 'intro-seen':
+      return state.introSeen ? state : { ...state, introSeen: true };
     case 'set-sound':
       return { ...state, soundOn: action.on };
     case 'set-motion':
       return { ...state, motion: action.motion };
     case 'reset':
-      // Progress goes, but the player's sound and motion settings stay.
-      return { ...initialState(), soundOn: state.soundOn, motion: state.motion };
+      // Progress goes. Settings stay, and so does the tour: they know the controls by now.
+      return { ...initialState(), soundOn: state.soundOn, motion: state.motion, introSeen: state.introSeen };
   }
 }
 
@@ -94,6 +100,7 @@ export function loadState(storage: Pick<Storage, 'getItem'> | undefined = safeSt
     secrets: isStringArray(r.secrets) ? [...new Set(r.secrets)] : [],
     discoveries: isStringArray(r.discoveries) ? [...new Set(r.discoveries)] : [],
     revealSeen: r.revealSeen === true,
+    introSeen: r.introSeen === true,
     soundOn: r.soundOn !== false,
     motion: r.motion === 'reduced' || r.motion === 'full' ? r.motion : 'system',
   };

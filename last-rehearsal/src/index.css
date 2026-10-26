@@ -223,3 +223,18 @@
 }
 .reduce-motion .pedal.is-on .echo-ring { opacity: 0.85; }
 .reduce-motion .pedal.is-on .echo-ring.delay { transform: scale(2.2); opacity: 0.4; }
+
+/* --- guide --- */
+:root { --toast-top: 7.25rem; }
+@media (min-width: 640px) { :root { --toast-top: 1rem; } }
+.toast { animation: toast-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.tour-card { animation: panel-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes toast-in { from { transform: translateY(-12px); opacity: 0; } }
+.coach-ring {
+  position: fixed;
+  border-radius: 9999px;
+  pointer-events: none;
+  box-shadow: 0 0 0 3px #e8a33a, 0 0 0 9px rgba(232, 163, 58, 0.35);
+  animation: coach-pulse 1.4s ease-in-out infinite;
+}
+@keyframes coach-pulse { 50% { box-shadow: 0 0 0 3px #e8a33a, 0 0 0 15px rgba(232, 163, 58, 0.1); } }

@@ -33,6 +33,7 @@ export function Hud(p: HudProps) {
           <button
             type="button"
             className="chip"
+            data-tour="tasks"
             aria-expanded={tasksOpen}
             aria-controls="task-list"
             onClick={() => setTasksOpen((v) => !v)}
@@ -83,7 +84,7 @@ export function Hud(p: HudProps) {
             </p>
           )}
           <div className="pointer-events-auto flex flex-wrap justify-center gap-2">
-            <button type="button" className="chip" onClick={p.onObjects}>
+            <button type="button" className="chip" data-tour="objects" onClick={p.onObjects}>
               Object list
             </button>
             {p.cameraMoved && (
@@ -91,7 +92,7 @@ export function Hud(p: HudProps) {
                 Reset view
               </button>
             )}
-            <button type="button" className="chip" onClick={p.onDiscoveries}>
+            <button type="button" className="chip" data-tour="discoveries" onClick={p.onDiscoveries}>
               Discoveries {p.state.secrets.length + p.state.discoveries.length > 0 ? `· ${p.state.secrets.length + p.state.discoveries.length}` : ''}
             </button>
           </div>

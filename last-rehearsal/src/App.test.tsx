@@ -26,6 +26,9 @@ const { default: App } = await import('./App');
 async function enter(user: ReturnType<typeof userEvent.setup>) {
   render(<App />);
   await user.click(await screen.findByRole('button', { name: 'Enter the room' }));
+  // First visit: get past the welcome tour.
+  const skip = screen.queryByRole('button', { name: 'Skip' });
+  if (skip) await user.click(skip);
 }
 
 async function openObject(user: ReturnType<typeof userEvent.setup>, name: string) {
@@ -44,6 +47,44 @@ describe('App', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent("didn't load");
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
+
+  it('walks a first-time visitor through the welcome tour, once', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Enter the room' }));
+    const tour = screen.getByRole('dialog', { name: 'Welcome to the room' });
+    expect(within(tour).getByText(/Mitch on guitar, Jewel on vocals and Zac on drums/)).toBeInTheDocument();
+    // The room can't be used until the tour is done.
+    expect(screen.queryByRole('button', { name: '3d:mitch' })).not.toBeInTheDocument();
+    for (let i = 0; i < 4; i++) await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('dialog', { name: "Can't find something?" })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: "Let's go" }));
+    expect(screen.queryByRole('dialog', { name: "Can't find something?" })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '3d:mitch' })).toBeInTheDocument();
+    unmount();
+
+    // Coming back: no tour, a welcome-back pop-up instead.
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Enter the room' }));
+    expect(screen.queryByRole('dialog', { name: 'Welcome to the room' })).not.toBeInTheDocument();
+    expect(screen.getByText(/Welcome back/)).toBeInTheDocument();
+
+    // And it can be replayed from Settings.
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    await user.click(screen.getByRole('button', { name: 'Replay the welcome tour' }));
+    expect(screen.getByRole('dialog', { name: 'Welcome to the room' })).toBeInTheDocument();
+  });
+
+  it('pops up progress as tasks and secrets are found', async () => {
+    const user = userEvent.setup();
+    await enter(user);
+    await openObject(user, 'Guitar pedals');
+    for (const name of [/Tuner pedal/, /Drive pedal/, /Echo pedal/]) await user.click(screen.getByRole('button', { name }));
+    expect(await screen.findByText(/that's one sorted\. Next up: Somewhere in the pizza boxes/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Back to the room' }));
+    await openObject(user, 'Red stool');
+    expect(await screen.findByText(/You found a secret! 16 more/, {}, { timeout: 6000 })).toBeInTheDocument();
+  }, 10000);
 
   it('opens a fact card from the room and backs out with Escape', async () => {
     const user = userEvent.setup();

@@ -1,11 +1,12 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import * as sfx from './audio/sfx';
-import { FACTS, MESSAGES, SECRETS, STORY } from './config/content';
+import { FACTS, GUIDE, MESSAGES, SECRETS, STORY, TASKS } from './config/content';
 import { HOME_VIEW, HOTSPOTS, getHotspot, hotspotForPuzzle, type CameraView, type Hotspot, type PuzzleId } from './config/hotspots';
-import { allTasksDone, gameReducer, loadState, saveState, type TaskId } from './game/state';
+import { allTasksDone, gameReducer, loadState, saveState, tasksDoneCount, type TaskId } from './game/state';
 import { useReducedMotion } from './game/useReducedMotion';
 import { BeatPuzzle } from './ui/BeatPuzzle';
 import { FactCard, InfoCard } from './ui/Cards';
+import { Toast, Tour, useToasts } from './ui/Guide';
 import { FinalReveal, Hud } from './ui/Hud';
 import { Intro } from './ui/Intro';
 import { Discoveries, ObjectList, Settings } from './ui/Menus';
@@ -29,6 +30,9 @@ const TASK_FOR_PUZZLE: Record<PuzzleId, TaskId> = { pedals: 'sound', setlist: 's
 
 const debug = new URLSearchParams(window.location.search).has('debug');
 
+/** How long the room can sit untouched before a "stuck?" nudge. */
+const NUDGE_AFTER_MS = 40_000;
+
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, () => loadState());
   const [modelUrl, setModelUrl] = useState<string | null>(null);
@@ -43,8 +47,11 @@ export default function App() {
   const [gestureHint, setGestureHint] = useState(true);
   const [showHotspots, setShowHotspots] = useState(false);
   const [reveal, setReveal] = useState<RevealPhase>('off');
+  const [tourOpen, setTourOpen] = useState(false);
   const revealTimers = useRef<number[]>([]);
   const reducedMotion = useReducedMotion(state.motion);
+  const toasts = useToasts(tourOpen || reveal === 'dark' || reveal === 'line');
+  const { push: pushToast } = toasts;
 
   useEffect(() => {
     void loadModelUrl().then(setModelUrl);
@@ -116,18 +123,47 @@ export default function App() {
     setPanel(null);
     dispatch({ type: 'reset' });
     goHome();
-  }, [goHome]);
+    pushToast(GUIDE.reset);
+  }, [goHome, pushToast]);
+
+  // Pop-ups as you make progress. Compare with the last state we saw, so
+  // loading saved progress or resetting doesn't trigger them.
+  const seen = useRef({ done: tasksDoneCount(state), secrets: state.secrets.length });
+  useEffect(() => {
+    const done = tasksDoneCount(state);
+    const secrets = state.secrets.length;
+    const before = seen.current;
+    seen.current = { done, secrets };
+    if (done > before.done) {
+      const next = TASKS.find((t) => !state.tasks[t.id]);
+      pushToast(GUIDE.taskDone(done, next?.hint), 'success');
+    }
+    if (secrets > before.secrets) pushToast(GUIDE.secretFound(secrets), 'success');
+  }, [state, pushToast]);
+
+  // If the room sits untouched for a while, suggest the next job. Once per job.
+  const nudged = useRef(new Set<string>());
+  useEffect(() => {
+    if (!entered || tourOpen || panel || reveal !== 'off') return;
+    const next = TASKS.find((t) => !state.tasks[t.id]);
+    if (!next || nudged.current.has(next.id)) return;
+    const timer = window.setTimeout(() => {
+      nudged.current.add(next.id);
+      pushToast(next.nudge);
+    }, NUDGE_AFTER_MS);
+    return () => window.clearTimeout(timer);
+  }, [entered, tourOpen, panel, reveal, state, viewKey, cameraMoved, pushToast]);
 
   // Escape backs out of whatever is open.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || !entered) return;
+      if (e.key !== 'Escape' || !entered || tourOpen) return;
       if (reveal === 'done') setReveal('off');
       else if (panel) closePanel();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [entered, panel, reveal, closePanel]);
+  }, [entered, tourOpen, panel, reveal, closePanel]);
 
   // Stop iOS Safari turning a pinch on the room into a page zoom.
   useEffect(() => {
@@ -140,9 +176,16 @@ export default function App() {
     sfx.unlock();
     sfx.setEnabled(state.soundOn);
     setEntered(true);
+    if (!state.introSeen) setTourOpen(true);
+    else pushToast(GUIDE.welcomeBack(tasksDoneCount(state), state.secrets.length));
   };
 
-  const interactive = entered && panel === null && (reveal === 'off' || reveal === 'done');
+  const finishTour = useCallback(() => {
+    setTourOpen(false);
+    dispatch({ type: 'intro-seen' });
+  }, []);
+
+  const interactive = entered && !tourOpen && panel === null && (reveal === 'off' || reveal === 'done');
   const selectedId = panel?.kind === 'hotspot' ? panel.hotspot.id : null;
   const revealActive = reveal !== 'off';
 
@@ -169,6 +212,10 @@ export default function App() {
             onMotion={(motion) => dispatch({ type: 'set-motion', motion })}
             onShowHotspots={setShowHotspots}
             onReset={resetGame}
+            onReplayTour={() => {
+              setPanel(null);
+              setTourOpen(true);
+            }}
             onClose={closePanel}
           />
         );
@@ -248,7 +295,7 @@ export default function App() {
               state={state}
               panelOpen={panel !== null || reveal === 'done'}
               cameraMoved={cameraMoved}
-              showGestureHint={gestureHint}
+              showGestureHint={gestureHint && !tourOpen}
               onObjects={() => setPanel({ kind: 'objects' })}
               onDiscoveries={() => setPanel({ kind: 'discoveries' })}
               onSettings={() => setPanel({ kind: 'settings' })}
@@ -258,6 +305,8 @@ export default function App() {
             />
           )}
           {panelContent}
+          <Toast toast={toasts.current} onDismiss={toasts.dismiss} />
+          {tourOpen && <Tour onDone={finishTour} />}
           {revealActive && (
             <FinalReveal
               phase={reveal}

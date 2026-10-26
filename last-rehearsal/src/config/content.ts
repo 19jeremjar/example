@@ -139,10 +139,81 @@ export const STORY = {
 };
 
 export const TASKS = [
-  { id: 'sound', label: 'Fix the sound', hint: "Mitch's pedals, on the floor by his feet." },
-  { id: 'setlist', label: 'Find the setlist', hint: 'Somewhere in the pizza boxes.' },
-  { id: 'beat', label: 'Find the beat', hint: "Zac's drum kit, in the middle." },
+  {
+    id: 'sound',
+    label: 'Fix the sound',
+    hint: "Mitch's pedals, on the floor by his feet.",
+    nudge: 'Mitch could use a hand. Tap him on the left, or the pedals at his feet.',
+  },
+  {
+    id: 'setlist',
+    label: 'Find the setlist',
+    hint: 'Somewhere in the pizza boxes.',
+    nudge: "The setlist's gone missing. Have a dig through the pizza boxes on the floor.",
+  },
+  {
+    id: 'beat',
+    label: 'Find the beat',
+    hint: "Zac's drum kit, in the middle.",
+    nudge: "Zac's lost the beat. Tap the drum kit in the middle of the room.",
+  },
 ] as const;
+
+/** Where the welcome tour points: one of the HUD controls, or nothing. */
+export type TourTarget = 'tasks' | 'discoveries' | 'objects' | null;
+
+/** The welcome tour, shown the first time someone enters the room. */
+export const TOUR: { title: string; body: string; touchBody?: string; target: TourTarget }[] = [
+  {
+    title: 'Welcome to the room',
+    body: "This is the band's actual rehearsal room, scanned in 3D. That's Mitch on guitar, Jewel on vocals and Zac on drums.",
+    target: null,
+  },
+  {
+    title: 'Have a look around',
+    body: 'Drag to look around, scroll to zoom, and click anything that catches your eye.',
+    touchBody: 'Drag to look around, pinch to zoom, and tap anything that catches your eye.',
+    target: null,
+  },
+  {
+    title: 'Three jobs before rehearsal',
+    body: "Fix Mitch's sound, find the missing setlist and help Zac find the beat. Your progress lives in Tasks, up here.",
+    target: 'tasks',
+  },
+  {
+    title: `${Object.keys(SECRETS).length} secrets to find`,
+    body: "The room's full of little secrets, and none of them are required. Everything you find is saved in Discoveries.",
+    target: 'discoveries',
+  },
+  {
+    title: "Can't find something?",
+    body: 'The Object list has everything you can tap, no dragging needed. Rehearsal starts in five minutes. Good luck!',
+    target: 'objects',
+  },
+];
+
+const SECRET_TOTAL = Object.keys(SECRETS).length;
+
+/** The little pop-ups that guide you along as you play. */
+export const GUIDE = {
+  welcomeBack: (done: number, secrets: number) =>
+    done === 0 && secrets === 0
+      ? "Welcome back. Rehearsal's still in five minutes."
+      : `Welcome back! ${done} of 3 jobs done, ${secrets} of ${SECRET_TOTAL} secrets found.`,
+  taskDone: (done: number, next?: string) =>
+    done >= 3
+      ? "That's all three. Everything's ready: tap Start rehearsal."
+      : done === 2
+        ? `Two down, one to go. Last job: ${next}`
+        : `Nice, that's one sorted. Next up: ${next}`,
+  secretFound: (count: number) =>
+    count >= SECRET_TOTAL
+      ? `That's every secret in the room. All ${SECRET_TOTAL}. Respect.`
+      : count === 1
+        ? `You found a secret! ${SECRET_TOTAL - 1} more are hiding in the room.`
+        : `Secret found: ${count} of ${SECRET_TOTAL}.`,
+  reset: "Fresh start. The room's back how you found it.",
+};
 
 /** The recovered setlist: tonight's running order, not song titles. */
 export const SETLIST = {

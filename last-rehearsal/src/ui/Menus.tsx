@@ -90,10 +90,11 @@ interface SettingsProps {
   onMotion: (m: MotionPref) => void;
   onShowHotspots: (on: boolean) => void;
   onReset: () => void;
+  onReplayTour: () => void;
   onClose: () => void;
 }
 
-export function Settings({ state, showHotspots, onSound, onMotion, onShowHotspots, onReset, onClose }: SettingsProps) {
+export function Settings({ state, showHotspots, onSound, onMotion, onShowHotspots, onReset, onReplayTour, onClose }: SettingsProps) {
   const [confirming, setConfirming] = useState(false);
   return (
     <Panel title="Settings" eyebrow="The Last Rehearsal" onClose={onClose} closeLabel="Close">
@@ -117,6 +118,9 @@ export function Settings({ state, showHotspots, onSound, onMotion, onShowHotspot
             ))}
           </div>
         </fieldset>
+        <button type="button" className="btn-secondary w-full" onClick={onReplayTour}>
+          Replay the welcome tour
+        </button>
         <div className="border-t border-ink/10 pt-4">
           {!confirming ? (
             <button type="button" className="btn-secondary w-full" onClick={() => setConfirming(true)}>
