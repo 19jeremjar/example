@@ -1,0 +1,225 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-[#1b1412] font-body text-paper antialiased;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  :focus-visible {
+    outline: 3px solid #ffd27a;
+    outline-offset: 2px;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-xl bg-wall px-5 font-semibold text-paper shadow-sm transition-colors hover:bg-[#9b1f16] active:translate-y-px;
+  }
+  .btn-secondary {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-xl border border-ink/20 bg-white/60 px-4 text-center text-sm font-medium text-ink transition-colors hover:bg-white disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex min-h-[44px] items-center gap-1 rounded-lg px-3 text-sm font-medium text-ink/80 hover:bg-black/5;
+  }
+  .btn-start {
+    @apply inline-flex min-h-[52px] items-center justify-center rounded-full bg-amp px-8 font-display text-lg uppercase tracking-[0.14em] text-ink shadow-[0_6px_30px_rgba(232,163,58,0.45)] transition-transform hover:scale-[1.03] active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-full border border-paper/50 px-6 font-medium text-paper hover:bg-paper/10;
+  }
+  .chip {
+    @apply inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-ink/75 px-4 text-sm font-medium text-paper shadow backdrop-blur transition-colors hover:bg-ink/90;
+  }
+  .icon-btn {
+    @apply inline-flex h-11 w-11 items-center justify-center rounded-full bg-ink/75 text-paper shadow backdrop-blur hover:bg-ink/90;
+  }
+  .list-item {
+    @apply flex min-h-[48px] w-full items-center justify-between rounded-xl border border-ink/10 bg-white/50 px-4 text-left hover:bg-white;
+  }
+  .choice {
+    @apply flex min-h-[44px] cursor-pointer items-center justify-center rounded-lg border border-ink/20 px-2 text-center text-sm;
+  }
+  .choice.is-checked {
+    @apply border-wall bg-wall text-paper;
+  }
+  .choice:focus-within {
+    outline: 3px solid #ffd27a;
+    outline-offset: 2px;
+  }
+
+  .speech {
+    @apply relative rounded-2xl bg-white px-4 py-3 font-display text-lg leading-snug shadow-sm;
+  }
+
+  /* --- pedals --- */
+  .pedal {
+    @apply relative flex min-h-[150px] flex-col items-center justify-between rounded-xl px-2 pb-3 pt-3 text-paper shadow-md transition-transform active:scale-[0.97];
+    background: linear-gradient(160deg, color-mix(in srgb, var(--pedal) 88%, white), var(--pedal) 45%, color-mix(in srgb, var(--pedal) 65%, black));
+  }
+  .pedal-led {
+    @apply h-2.5 w-2.5 rounded-full bg-black/50 ring-1 ring-black/40;
+  }
+  .pedal.is-on .pedal-led {
+    background: #ff3b2f;
+    box-shadow: 0 0 10px 3px rgba(255, 59, 47, 0.75);
+  }
+  .pedal-display {
+    @apply relative flex h-12 w-full items-center justify-center overflow-hidden rounded-md bg-black/55;
+  }
+  .pedal-name {
+    @apply text-xs font-semibold uppercase tracking-[0.14em];
+  }
+  .pedal-switch {
+    @apply h-7 w-7 rounded-full border-2 border-black/30 bg-gradient-to-b from-zinc-200 to-zinc-500 shadow-inner;
+  }
+  .tuner-needle {
+    @apply absolute bottom-1 h-9 w-0.5 origin-bottom rounded bg-paper/80;
+    transform: rotate(-38deg);
+    transition: transform 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .pedal.is-on .tuner-needle {
+    transform: rotate(0deg);
+    background: #6dff8e;
+  }
+  .drive-flame {
+    @apply h-6 w-6 rounded-full opacity-0;
+    background: radial-gradient(circle, #ffd27a, #e7832b 55%, transparent 70%);
+  }
+  .pedal.is-on .drive-flame {
+    opacity: 1;
+    animation: flicker 0.18s infinite alternate;
+  }
+  .echo-ring {
+    @apply absolute h-4 w-4 rounded-full border-2 border-sky-300 opacity-0;
+  }
+  .pedal.is-on .echo-ring {
+    animation: ripple 1.4s infinite ease-out;
+  }
+  .pedal.is-on .echo-ring.delay {
+    animation-delay: 0.7s;
+  }
+  .sticky-note {
+    @apply mx-auto max-w-xs -rotate-2 rounded-sm bg-[#fde98b] p-4 text-ink shadow-md;
+  }
+
+  /* --- pizza --- */
+  .pizza-box {
+    @apply relative aspect-[5/4] overflow-hidden rounded-lg border border-[#b98b4e] bg-[#e7c48d] text-ink shadow-sm;
+  }
+  .pizza-lid {
+    @apply flex h-full w-full flex-col items-center justify-center gap-1 border-[6px] border-[#2a63b4]/80 bg-[#f0d6a6] hover:bg-[#f4dfb7];
+  }
+  .pizza-lid-label {
+    @apply font-display text-lg;
+  }
+  .pizza-box.is-open {
+    background: radial-gradient(circle at 40% 40%, #c99b5b 0 12%, transparent 13%), radial-gradient(circle at 70% 65%, #b9884a 0 9%, transparent 10%), #e2b878;
+  }
+  .pizza-item {
+    @apply flex flex-1 flex-col items-center justify-center gap-1 rounded-md bg-white/70 p-1 text-center text-xs font-medium leading-tight shadow hover:bg-white;
+  }
+  .pizza-item-icon {
+    @apply block h-6 w-8 rounded-sm;
+  }
+  .item-crust .pizza-item-icon { @apply rounded-full bg-[#c07a35]; height: 0.6rem; }
+  .item-napkin .pizza-item-icon { @apply bg-zinc-100 ring-1 ring-zinc-300; }
+  .item-receipt .pizza-item-icon { @apply w-5 bg-white ring-1 ring-zinc-300; }
+  .item-slice .pizza-item-icon { @apply bg-[#e0632f]; clip-path: polygon(50% 100%, 0 0, 100% 0); }
+  .item-setlist .pizza-item-icon { @apply bg-paper ring-1 ring-ink/40; transform: rotate(-6deg); }
+  .item-olive .pizza-item-icon { @apply h-3 w-3 rounded-full bg-[#2e3a1f]; }
+  .setlist-paper {
+    @apply rotate-1 rounded-sm bg-[#fbf6ea] p-5 text-ink shadow-md;
+    background-image: radial-gradient(circle at 85% 18%, rgba(196, 74, 30, 0.18) 0 18px, transparent 19px);
+  }
+
+  /* --- drums --- */
+  .drum-pad {
+    @apply flex min-h-[120px] flex-col items-center justify-center gap-1 rounded-2xl border-2 border-ink/15 bg-white/70 text-ink shadow-sm transition-[transform,background-color] active:scale-95 disabled:opacity-60;
+  }
+  .drum-pad-face {
+    @apply block h-12 w-12 rounded-full border-4 border-zinc-400 bg-white;
+  }
+  .drum-cymbal .drum-pad-face {
+    @apply h-8 w-14 rounded-[50%] border-2 border-amber-600 bg-gradient-to-b from-amber-200 to-amber-500;
+  }
+  .drum-kick .drum-pad-face {
+    @apply h-14 w-14 border-ink;
+  }
+  .drum-pad.is-lit {
+    @apply scale-105 border-amp bg-amp/90;
+    box-shadow: 0 0 24px rgba(232, 163, 58, 0.8);
+  }
+  .beat-dot {
+    @apply h-3 w-3 rounded-full border-2 border-ink/40;
+  }
+  .beat-dot.is-filled {
+    @apply border-wall bg-wall;
+  }
+
+  /* --- settings switch --- */
+  .switch {
+    @apply relative h-7 w-12 shrink-0 cursor-pointer appearance-none rounded-full bg-ink/25 transition-colors;
+  }
+  .switch::after {
+    content: '';
+    @apply absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform;
+  }
+  .switch:checked {
+    @apply bg-wall;
+  }
+  .switch:checked::after {
+    transform: translateX(20px);
+  }
+
+  .intro {
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(179, 39, 28, 0.35), transparent 60%),
+      linear-gradient(180deg, rgba(23, 18, 15, 0.82), rgba(23, 18, 15, 0.95));
+  }
+}
+
+@layer utilities {
+  .touch-only { display: none; }
+  .mouse-only { display: inline; }
+  @media (pointer: coarse) {
+    .touch-only { display: inline; }
+    .mouse-only { display: none; }
+  }
+}
+
+.panel-enter { animation: panel-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.final-line { animation: line-in 0.5s ease-out; }
+.final-card { animation: fade-in 0.6s ease-out; }
+.gesture-hint { animation: fade-in 0.6s ease-out 0.4s both; }
+
+@keyframes panel-in { from { transform: translateY(24px); opacity: 0; } }
+@keyframes line-in { from { transform: translateY(12px) scale(0.96); opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes flicker { from { transform: scale(0.85); opacity: 0.75; } to { transform: scale(1.1); opacity: 1; } }
+@keyframes ripple { from { transform: scale(0.6); opacity: 0.9; } to { transform: scale(3.2); opacity: 0; } }
+
+/* Reduced motion: from the OS, or the in-game setting (adds .reduce-motion to <html>). */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+.reduce-motion .pedal.is-on .echo-ring { opacity: 0.85; }
+.reduce-motion .pedal.is-on .echo-ring.delay { transform: scale(2.2); opacity: 0.4; }

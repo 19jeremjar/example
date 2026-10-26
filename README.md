@@ -4,6 +4,8 @@ A pocket-sized retro mixtape player. The whole site is one big early-2000s iPod 
 
 No build step: it's plain HTML, CSS and JavaScript.
 
+> This repo also contains **The Last Rehearsal**, a separate 3D rehearsal-room game in [`last-rehearsal/`](last-rehearsal/README.md). It has its own build and deploys as its own project.
+
 ```
 index.html       page + iPod markup
 styles.css       all styling
