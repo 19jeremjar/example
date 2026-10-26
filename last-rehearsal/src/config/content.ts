@@ -3,8 +3,7 @@
 //
 // Facts are limited to what's visible in the scan and the reference photos,
 // plus Jewel Owusu's announced album and tour (Ecosystem, dates at
-// jewelowusu.com). Don't add biographical details the band hasn't given us,
-// and don't name the drummer until the name is confirmed.
+// jewelowusu.com). Don't add biographical details the band hasn't given us.
 
 export interface Fact {
   name: string;
@@ -33,9 +32,8 @@ export const FACTS: Record<string, Fact> = {
     fact: "Jewel's album Ecosystem is on its way, and so is the Ecosystem tour. Dates are at jewelowusu.com.",
   },
   drummer: {
-    // The drummer's name is not confirmed. Don't invent one.
-    name: 'The drummer',
-    role: 'Drums',
+    name: 'Zac',
+    role: 'Drummer',
     line: "I've played it a hundred times and now it's gone. How does the beat go again?",
     fact: 'Keeps time from behind a sparkle-finish Pearl kit with Zildjian cymbals, right under the cowboy skeleton.',
     helpWith: 'beat',
@@ -133,7 +131,7 @@ export const STORY = {
   title: 'The Last Rehearsal',
   intro: "Rehearsal starts in five minutes. Nothing's ready.",
   brief:
-    "Mitch's pedals aren't working, the setlist has disappeared and the drummer can't remember the beat. Sort all three to start the last rehearsal.",
+    "Mitch's pedals aren't working, the setlist has disappeared and Zac can't remember the beat. Sort all three to start the last rehearsal.",
   finalLine: "Alright. Let's do this.",
   finalSpeaker: 'Jewel',
   complete: 'Rehearsal complete.',
@@ -143,7 +141,7 @@ export const STORY = {
 export const TASKS = [
   { id: 'sound', label: 'Fix the sound', hint: "Mitch's pedals, on the floor by his feet." },
   { id: 'setlist', label: 'Find the setlist', hint: 'Somewhere in the pizza boxes.' },
-  { id: 'beat', label: 'Find the beat', hint: 'The drum kit in the middle.' },
+  { id: 'beat', label: 'Find the beat', hint: "Zac's drum kit, in the middle." },
 ] as const;
 
 /** The recovered setlist: tonight's running order, not song titles. */

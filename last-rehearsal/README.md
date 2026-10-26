@@ -2,7 +2,7 @@
 
 > Rehearsal starts in five minutes. Nothing's ready.
 
-A mobile-first 3D point-and-click game set inside the band's real rehearsal room, using the Polycam scan as the environment. Fans fix Mitch's pedals, find the setlist in the pizza boxes and help the drummer remember the beat. Then the band starts the last rehearsal.
+A mobile-first 3D point-and-click game set inside the band's real rehearsal room, using the Polycam scan as the environment. Fans fix Mitch's pedals, find the setlist in the pizza boxes and help Zac, the drummer, remember the beat. Then the band starts the last rehearsal.
 
 React 18 + TypeScript, React Three Fiber / three.js, drei, Tailwind. No backend; progress is saved in `localStorage`.
 
@@ -52,7 +52,7 @@ Everything the game says is in `src/config/content.ts`. The facts stick to what'
 | Attributes | Position + UV only: **no normals**, so it's drawn unlit (`MeshBasicMaterial`). The lighting is baked into the photo textures. |
 | Textures | Two JPEGs: 4096×4096 (2.4 MB) and 4096×1152 (0.67 MB) |
 | Orientation and scale | Y-up, real metres. Room interior about 3.6 m wide × 2.7 m high × 5.6 m long. Floor at y ≈ −0.37. |
-| People | **Included as static geometry.** Mitch (left, with the butterscotch Telecaster), Jewel (right, handheld mic) and the drummer (centre) are all baked in and kept as scanned. |
+| People | **Included as static geometry.** Mitch (left, with the butterscotch Telecaster), Jewel (right, handheld mic) and Zac on drums (centre) are all baked in and kept as scanned. |
 | Selectable objects | None. Equipment, people and room are fused into the two meshes, so every interaction is an invisible box (`HOTSPOTS`). |
 | Missing geometry | Holes in the ceiling. A large black, unscanned patch beside the drummer, which is where the red stool stands in the photos. Rough edges on the speaker tops and on the far side of people. |
 | Camera start | Just inside the door, `[0, 1.3, 2.3]`, looking at the mural. That matches the reference photos. |
@@ -83,7 +83,6 @@ The renderer caps device pixel ratio at 1.75 and uses no dynamic lights or shado
 
 ## Worth double-checking
 
-- **The drummer's name.** It isn't confirmed, so the game says "The drummer" everywhere. Add it in `FACTS.drummer` when it's known.
 - **The descriptions of each person's gear and seat** come from the photos: Mitch's butterscotch Telecaster and Adidas, the Pearl kit with Zildjian cymbals, the milk crates.
 - **The setlist** is a running order ("Run the new Ecosystem songs"), not song titles. Swap in real titles in `SETLIST` if you'd like.
 - **Audio.** The game ships with synthesised sounds only. An approved clip for the final moment can be dropped into `public/` and named in `REVEAL_AUDIO_URL` (`src/config/game.ts`).

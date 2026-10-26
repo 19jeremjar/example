@@ -120,7 +120,7 @@ export const HOTSPOTS: Hotspot[] = [
   },
   {
     id: 'drummer',
-    label: 'The drummer',
+    label: 'Zac',
     kind: 'character',
     position: [0.14, 0.78, -1.8],
     size: [0.5, 0.65, 0.4],

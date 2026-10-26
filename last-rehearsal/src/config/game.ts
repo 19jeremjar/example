@@ -31,7 +31,7 @@ export const PEDAL_CLUE = 'Grass, then fire, then the sea.\nOtherwise it sounds 
 
 export type Drum = 'kick' | 'snare' | 'cymbal';
 
-/** The beat the drummer has forgotten. */
+/** The beat Zac has forgotten. */
 export const BEAT: Drum[] = ['kick', 'snare', 'kick', 'cymbal'];
 
 /** Milliseconds between hits when the game plays the beat. */

@@ -54,8 +54,8 @@ describe('hotspot config', () => {
     expect(new Set(used)).toEqual(new Set(Object.keys(SECRETS)));
   });
 
-  it("doesn't name the drummer", () => {
-    expect(FACTS.drummer.name).toBe('The drummer');
+  it('names the drummer', () => {
+    expect(FACTS.drummer.name).toBe('Zac');
   });
 });
 

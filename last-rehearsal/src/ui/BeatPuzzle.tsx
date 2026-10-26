@@ -74,7 +74,7 @@ export function BeatPuzzle({ solved, onSolved, onClose }: Props) {
       setAnnounce('Not quite.');
     } else if (next.status === 'solved') {
       onSolved();
-      // Victory lap: the drummer plays it back twice.
+      // Victory lap: Zac plays it back twice.
       timers.current.push(window.setTimeout(() => playPattern(2), 450));
     }
   };
@@ -93,7 +93,7 @@ export function BeatPuzzle({ solved, onSolved, onClose }: Props) {
 
   const status =
     seq.status === 'solved'
-      ? "That's the beat. The drummer's got it back."
+      ? "That's the beat. Zac's got it back."
       : seq.status === 'wrong'
         ? "That's not it. Listen again and start from the top."
         : playing
