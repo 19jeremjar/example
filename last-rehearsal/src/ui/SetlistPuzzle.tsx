@@ -2,7 +2,7 @@ import { useState } from 'react';
 import * as sfx from '../audio/sfx';
 import { SETLIST } from '../config/content';
 import { canCollectSetlist, closeBox, initialBoxes, moveTopItem, openBox, type PizzaBox } from '../game/puzzles';
-import { Panel, PlaceholderTag } from './Panel';
+import { Panel } from './Panel';
 
 interface Props {
   solved: boolean;
@@ -98,12 +98,10 @@ export function SetlistPuzzle({ solved, onSolved, onClose }: Props) {
 export function SetlistPaper() {
   return (
     <figure className="setlist-paper" aria-label="The setlist">
-      <p className="mb-2 font-display text-xl uppercase tracking-wider">Setlist</p>
+      <p className="mb-2 font-display text-xl uppercase tracking-wider">Setlist · {SETLIST.heading}</p>
       <ol className="list-decimal space-y-1 pl-6 font-display text-lg">
-        {SETLIST.map((s, i) => (
-          <li key={i}>
-            {s.title.text} <PlaceholderTag show={!s.title.approved} />
-          </li>
+        {SETLIST.items.map((item) => (
+          <li key={item}>{item}</li>
         ))}
       </ol>
     </figure>

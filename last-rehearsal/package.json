@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "optimize-model": "gltf-transform resize public/models/rehearsal-room.glb .rr-1.glb --width 2048 --height 2048 && gltf-transform webp .rr-1.glb .rr-2.glb --quality 82 && gltf-transform meshopt .rr-2.glb public/models/rehearsal-room.mobile.glb && rm .rr-1.glb .rr-2.glb"
+    "optimize-model": "gltf-transform webp public/models/rehearsal-room.glb .rr-0.glb --quality 88 && gltf-transform meshopt .rr-0.glb public/models/rehearsal-room.web.glb && gltf-transform resize public/models/rehearsal-room.glb .rr-1.glb --width 2048 --height 2048 && gltf-transform webp .rr-1.glb .rr-2.glb --quality 82 && gltf-transform meshopt .rr-2.glb public/models/rehearsal-room.mobile.glb && rm .rr-0.glb .rr-1.glb .rr-2.glb"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.0",

@@ -53,15 +53,3 @@ export function Panel({ title, eyebrow, onClose, closeLabel = 'Back', children, 
     </section>
   );
 }
-
-export function PlaceholderTag({ show }: { show: boolean }) {
-  if (!show) return null;
-  return (
-    <span
-      className="ml-1 inline-block rounded border border-dashed border-wall/60 px-1.5 py-px align-middle text-[10px] font-semibold uppercase tracking-wider text-wall"
-      title="Placeholder copy, waiting for approved text"
-    >
-      Placeholder
-    </span>
-  );
-}

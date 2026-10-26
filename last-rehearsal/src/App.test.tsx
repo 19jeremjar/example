@@ -51,7 +51,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: '3d:mitch' }));
     const card = screen.getByRole('dialog', { name: 'Mitch' });
     expect(within(card).getByText(/Something's wrong with my pedals/)).toBeInTheDocument();
-    expect(within(card).getByText('Placeholder')).toBeInTheDocument();
+    expect(within(card).getByText(/butterscotch Telecaster/)).toBeInTheDocument();
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog', { name: 'Mitch' })).not.toBeInTheDocument();
   });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { SECRETS } from '../config/content';
 import type { Hotspot } from '../config/hotspots';
 import type { GameState, MotionPref } from '../game/state';
-import { Panel, PlaceholderTag } from './Panel';
+import { Panel } from './Panel';
 import { SetlistPaper } from './SetlistPuzzle';
 
 interface ObjectListProps {
@@ -73,7 +73,7 @@ export function Discoveries({ state, onClose }: { state: GameState; onClose: () 
             <li key={id} className="rounded-lg bg-black/5 p-3 text-sm">
               <p className="font-semibold">{SECRETS[id].title}</p>
               <p>
-                {SECRETS[id].body.text} <PlaceholderTag show={!SECRETS[id].body.approved} />
+                {SECRETS[id].body}
               </p>
             </li>
           ))}

@@ -1,5 +1,5 @@
-import type { Copy, Fact } from '../config/content';
-import { Panel, PlaceholderTag } from './Panel';
+import type { Fact } from '../config/content';
+import { Panel } from './Panel';
 
 interface FactCardProps {
   fact: Fact;
@@ -16,9 +16,9 @@ export function FactCard({ fact, helpDone, onHelp, onClose }: FactCardProps) {
       </blockquote>
       <div className="rounded-lg bg-black/5 p-3 text-sm leading-relaxed">
         <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink/60">
-          Fact <PlaceholderTag show={!fact.fact.approved} />
+          Fact
         </p>
-        <p>{fact.fact.text}</p>
+        <p>{fact.fact}</p>
       </div>
       {fact.helpWith && onHelp && !helpDone && (
         <button type="button" className="btn-primary mt-4 w-full" onClick={onHelp}>
@@ -34,7 +34,7 @@ const doneLine = (p: 'pedals' | 'beat') => (p === 'pedals' ? "That's the sound. 
 interface InfoCardProps {
   title: string;
   eyebrow: string;
-  body: Copy;
+  body: string;
   onClose: () => void;
 }
 
@@ -42,7 +42,7 @@ export function InfoCard({ title, eyebrow, body, onClose }: InfoCardProps) {
   return (
     <Panel title={title} eyebrow={eyebrow} onClose={onClose}>
       <p className="leading-relaxed">
-        {body.text} <PlaceholderTag show={!body.approved} />
+        {body}
       </p>
     </Panel>
   );

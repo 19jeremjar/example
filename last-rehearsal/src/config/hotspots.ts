@@ -230,6 +230,97 @@ export const HOTSPOTS: Hotspot[] = [
     focus: { position: [-0.7, 0.85, 0.3], target: [-1.55, 0.3, -0.89] },
     action: { type: 'message', messageId: 'mixer' },
   },
+  // --- extra secrets, measured from the default view ---
+  {
+    id: 'mural-arrow',
+    label: 'Arrow through the hat',
+    kind: 'secret',
+    position: [-0.2, 2.0, -2.56],
+    size: [0.95, 0.32, 0.08],
+    focus: { position: [-0.15, 1.3, -0.45], target: [-0.2, 1.85, -2.65] },
+    action: { type: 'secret', secretId: 'mural-arrow' },
+  },
+  {
+    id: 'cactus',
+    label: 'Painted cacti',
+    kind: 'secret',
+    position: [-0.88, 0.86, -2.56],
+    size: [0.26, 0.3, 0.08],
+    focus: { position: [-0.55, 0.95, -0.6], target: [-0.88, 0.86, -2.65] },
+    action: { type: 'secret', secretId: 'cactus' },
+  },
+  {
+    id: 'laptop',
+    label: 'Laptop',
+    kind: 'secret',
+    position: [-1.22, 0.05, -0.5],
+    size: [0.26, 0.26, 0.26],
+    focus: { position: [-0.45, 0.7, 0.55], target: [-1.22, 0.05, -0.5] },
+    action: { type: 'secret', secretId: 'laptop' },
+  },
+  {
+    id: 'backpack',
+    label: 'Backpack',
+    kind: 'secret',
+    position: [-0.15, -0.15, -0.38],
+    size: [0.36, 0.45, 0.25],
+    focus: { position: [0.1, 0.55, 0.75], target: [-0.15, -0.1, -0.45] },
+    action: { type: 'secret', secretId: 'backpack' },
+  },
+  {
+    id: 'black-bag',
+    label: 'Bag in the corner',
+    kind: 'secret',
+    position: [-1.17, -0.2, -2.28],
+    size: [0.42, 0.32, 0.36],
+    focus: { position: [-0.55, 0.6, -0.75], target: [-1.17, -0.2, -2.28] },
+    action: { type: 'secret', secretId: 'black-bag' },
+  },
+  {
+    id: 'ceiling-light',
+    label: 'Ceiling light',
+    kind: 'secret',
+    position: [0, 2.25, -1.24],
+    size: [0.32, 0.1, 0.32],
+    focus: { position: [0, 1.35, 0.6], target: [0, 2.2, -1.24] },
+    action: { type: 'secret', secretId: 'ceiling-light' },
+  },
+  {
+    id: 'sockets',
+    label: 'Power points',
+    kind: 'secret',
+    position: [1.74, 0.69, -0.92],
+    size: [0.1, 0.16, 0.32],
+    focus: { position: [0.8, 0.85, 0.4], target: [1.74, 0.69, -0.92] },
+    action: { type: 'secret', secretId: 'sockets' },
+  },
+  {
+    id: 'crates',
+    label: 'Milk crates',
+    kind: 'secret',
+    position: [1.52, -0.25, -0.25],
+    size: [0.36, 0.24, 0.36],
+    focus: { position: [0.6, 0.45, 0.85], target: [1.52, -0.25, -0.25] },
+    action: { type: 'secret', secretId: 'crates' },
+  },
+  {
+    id: 'notebook',
+    label: "Jewel's notebook",
+    kind: 'secret',
+    position: [1.39, -0.34, 0.02],
+    size: [0.26, 0.08, 0.24],
+    focus: { position: [0.75, 0.4, 0.9], target: [1.39, -0.35, 0.02] },
+    action: { type: 'secret', secretId: 'notebook' },
+  },
+  {
+    id: 'checked-bag',
+    label: 'Checked bag',
+    kind: 'secret',
+    position: [1.6, -0.24, 0.2],
+    size: [0.28, 0.22, 0.26],
+    focus: { position: [0.85, 0.45, 1.05], target: [1.6, -0.24, 0.2] },
+    action: { type: 'secret', secretId: 'checked-bag' },
+  },
 ];
 
 /** Floor point under the centre of the red stool. */
@@ -237,6 +328,12 @@ export const RED_STOOL_BASE: Vec3 = [0.72, -0.37, -2.05];
 
 /** Where the "amp is on" light appears once the sound is fixed. */
 export const AMP_INDICATOR: Vec3 = [-1.52, 0.44, -0.8];
+
+/** The skull's eyes, which glow while their secret is open. */
+export const MURAL_EYES: Vec3[] = [
+  [-0.37, 1.1, -2.6],
+  [-0.07, 1.1, -2.6],
+];
 
 export const SPEAKER_POSITIONS: Vec3[] = [
   [-1.17, 1.74, -1.95],

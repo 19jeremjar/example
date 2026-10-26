@@ -137,7 +137,7 @@ export function FinalReveal({ phase, line, speaker, onKeepExploring, onPlayAgain
         <h2 id="final-title" className="mb-2 font-display text-4xl uppercase tracking-[0.12em]">
           {STORY.complete}
         </h2>
-        <p className="mb-6 text-paper/75">Mitch is plugged in, the setlist's taped down and the beat is back.</p>
+        <p className="mb-6 text-paper/75">{STORY.completeBody}</p>
         <div className="grid gap-3">
           {links.map((c, i) =>
             c.url ? (

@@ -1,7 +1,7 @@
 import { useProgress } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { Component, Suspense, useEffect, type ReactNode } from 'react';
-import { AMP_INDICATOR, HOME_VIEW, HOTSPOTS, SPEAKER_POSITIONS, type CameraView } from '../config/hotspots';
+import { AMP_INDICATOR, HOME_VIEW, HOTSPOTS, MURAL_EYES, SPEAKER_POSITIONS, type CameraView } from '../config/hotspots';
 import { CameraRig } from './CameraRig';
 import { Glow } from './Glows';
 import { Hotspots } from './Hotspots';
@@ -20,6 +20,7 @@ export interface SceneProps {
   darkness: number;
   ampOn: boolean;
   speakersLive: boolean;
+  eyesLit: boolean;
   onSelect: (id: string) => void;
   onUserMove: () => void;
   onLoaded: () => void;
@@ -74,6 +75,9 @@ export default function Scene(p: SceneProps) {
               onSelect={p.onSelect}
             />
             <Glow position={AMP_INDICATOR} colour="#ff3b2f" on={p.ampOn} scale={0.12} reducedMotion={p.reducedMotion} />
+            {MURAL_EYES.map((pos, i) => (
+              <Glow key={`eye${i}`} position={pos} colour="#ff2a1a" on={p.eyesLit} scale={0.32} pulse reducedMotion={p.reducedMotion} />
+            ))}
             {SPEAKER_POSITIONS.map((pos, i) => (
               <Glow key={i} position={pos} colour="#ffb45e" on={p.speakersLive} scale={0.9} pulse reducedMotion={p.reducedMotion} />
             ))}

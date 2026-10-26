@@ -1,6 +1,6 @@
 import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { FACTS, MESSAGES, SECRETS } from './content';
+import { FACTS, MESSAGES, SECRETS, SETLIST, STORY } from './content';
 import { CAMERA_BOUNDS, HOME_VIEW, HOTSPOTS, ORBIT_LIMITS, hotspotForPuzzle } from './hotspots';
 
 const inside = (p: number[]) => p.every((v, i) => v >= CAMERA_BOUNDS.min[i] && v <= CAMERA_BOUNDS.max[i]);
@@ -44,6 +44,16 @@ describe('hotspot config', () => {
     expect(polar).toBeLessThanOrEqual(ORBIT_LIMITS.maxPolar);
   });
 
+  it('ships finished copy, with no placeholder text left in', () => {
+    const all = JSON.stringify({ FACTS, SECRETS, MESSAGES, SETLIST, STORY });
+    expect(all).not.toMatch(/placeholder|to be confirmed|\bTBC\b|lorem|goes here/i);
+  });
+
+  it('has a secret behind every secret hotspot, and no orphan secrets', () => {
+    const used = HOTSPOTS.flatMap((h) => (h.action.type === 'secret' ? [h.action.secretId] : []));
+    expect(new Set(used)).toEqual(new Set(Object.keys(SECRETS)));
+  });
+
   it("doesn't name the drummer", () => {
     expect(FACTS.drummer.name).toBe('The drummer');
   });
@@ -52,7 +62,7 @@ describe('hotspot config', () => {
 describe('room scan assets', () => {
   const glb = (name: string) => readFileSync(resolve(__dirname, '../../public/models', name));
 
-  for (const name of ['rehearsal-room.glb', 'rehearsal-room.mobile.glb']) {
+  for (const name of ['rehearsal-room.glb', 'rehearsal-room.web.glb', 'rehearsal-room.mobile.glb']) {
     it(`${name} is a valid glTF binary with the two scan meshes`, () => {
       const buf = glb(name);
       expect(buf.readUInt32LE(0)).toBe(0x46546c67); // 'glTF'
@@ -65,8 +75,9 @@ describe('room scan assets', () => {
     });
   }
 
-  it('keeps the mobile copy small', () => {
-    const size = statSync(resolve(__dirname, '../../public/models/rehearsal-room.mobile.glb')).size;
-    expect(size).toBeLessThan(1.5 * 1024 * 1024);
+  it('keeps the web copies small', () => {
+    const size = (name: string) => statSync(resolve(__dirname, '../../public/models', name)).size;
+    expect(size('rehearsal-room.web.glb')).toBeLessThan(3 * 1024 * 1024);
+    expect(size('rehearsal-room.mobile.glb')).toBeLessThan(1.5 * 1024 * 1024);
   });
 });

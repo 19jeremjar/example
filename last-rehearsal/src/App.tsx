@@ -229,6 +229,7 @@ export default function App() {
             darkness={reveal === 'dark' || reveal === 'line' ? 1 : 0}
             ampOn={state.tasks.sound}
             speakersLive={revealActive || state.revealSeen}
+            eyesLit={selectedId === 'mural-eyes'}
             onSelect={onSelect}
             onUserMove={onUserMove}
             onLoaded={onLoaded}

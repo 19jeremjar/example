@@ -1,15 +1,16 @@
 // Gameplay tuning and links.
 
 export const CTA = {
-  // Set VITE_LISTEN_URL / VITE_LIVE_URL in the hosting environment (see .env.example).
-  // A button with no URL is hidden.
+  // Both default to Jewel's site, which has the music and the Ecosystem tour
+  // dates. Set VITE_LISTEN_URL / VITE_LIVE_URL in the hosting environment to
+  // point them somewhere else (see .env.example).
   listen: {
     label: 'Listen to the band',
-    url: (import.meta.env.VITE_LISTEN_URL as string | undefined) ?? '',
+    url: (import.meta.env.VITE_LISTEN_URL as string | undefined) || 'https://jewelowusu.com/',
   },
   live: {
     label: 'See us live',
-    url: (import.meta.env.VITE_LIVE_URL as string | undefined) ?? '',
+    url: (import.meta.env.VITE_LIVE_URL as string | undefined) || 'https://jewelowusu.com/',
   },
 };
 
