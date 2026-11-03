@@ -79,18 +79,12 @@ function CloudShape({ w, seed, palette }: { w: number; seed: number; palette: Pa
   }, [w, seed]);
   const base = { x: -w / 2, y: -w * 0.1, width: w, height: w * 0.14, rx: w * 0.07 };
   return (
-    <g>
-      <g stroke={palette.outline} strokeWidth={9} strokeOpacity={0.55} fill={palette.cloud}>
-        {puffs.map((p, i) => <circle key={i} {...p} />)}
-        <rect {...base} />
-      </g>
-      <g fill={palette.cloud}>
-        {puffs.map((p, i) => <circle key={i} {...p} />)}
-        <rect {...base} />
-      </g>
-      {/* soft underside shade + a little highlight */}
-      <path d={`M${-w * 0.36},${-w * 0.03} q${w * 0.36},${w * 0.07} ${w * 0.72},0`} fill="none" stroke={palette.cloudShade} strokeWidth={w * 0.05} strokeLinecap="round" />
-      <ellipse cx={puffs[1].cx - puffs[1].r * 0.3} cy={puffs[1].cy - puffs[1].r * 0.45} rx={puffs[1].r * 0.28} ry={puffs[1].r * 0.13} fill="#ffffff" opacity={0.7} />
+    // Flat, soft cloud: one silhouette, slightly translucent.
+    <g fill={palette.cloud} opacity={0.92}>
+      {puffs.map((p, i) => (
+        <circle key={i} {...p} />
+      ))}
+      <rect {...base} />
     </g>
   );
 }

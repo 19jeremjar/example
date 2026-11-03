@@ -70,7 +70,7 @@ export function LightBeams({ vp, night }: { vp: Viewport; night: number }) {
       <defs>
         {BEAMS.map((_, i) => (
           <linearGradient key={i} id={`lw-beam-${i}`} x1="0" y1="0" x2="0" y2="1">
-            <stop ref={(el) => (stopRefs.current[i] = el)} offset="0" stopColor={COLORS[i]} stopOpacity="0.55" />
+            <stop ref={(el) => (stopRefs.current[i] = el)} offset="0" stopColor={COLORS[i]} stopOpacity="0.38" />
             <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
           </linearGradient>
         ))}
@@ -119,7 +119,7 @@ type Dancer = { x: number; top: number };
 type Note = { on: boolean; x: number; y: number; t0: number; drift: number; big: boolean };
 
 /** Little music notes that pop out above the dancers on the beat. */
-export function MusicNotes({ dancers, outline }: { dancers: Dancer[]; outline: string }) {
+export function MusicNotes({ dancers }: { dancers: Dancer[] }) {
   const POOL = 14;
   const notes = useRef<Note[]>(Array.from({ length: POOL }, () => ({ on: false, x: 0, y: 0, t0: 0, drift: 0, big: false })));
   const refs = useRef<(SVGGElement | null)[]>([]);
@@ -134,15 +134,13 @@ export function MusicNotes({ dancers, outline }: { dancers: Dancer[]; outline: s
       const ds = dancersRef.current;
       if (f.drive > 0.3 && ds.length) {
         // One or two notes per beat, more when it's loud.
-        const count = f.drive > 0.65 ? 2 : 1;
+        const count = 1;
         for (let c = 0; c < count; c++) {
           const slot = notes.current.find((n) => !n.on);
           if (!slot) break;
           const d = ds[(f.beatIndex * 7 + c * 3) % ds.length];
           const r = Math.sin(f.beatIndex * 91.7 + c * 13.1);
           Object.assign(slot, { on: true, x: d.x + r * 50, y: d.top - 10, t0: f.t, drift: r > 0 ? 1 : -1, big: c === 0 && f.drive > 0.65 });
-          const el = refs.current[notes.current.indexOf(slot)];
-          el?.setAttribute('fill', COLORS[(f.beatIndex + c * 3) % COLORS.length]);
         }
       }
     }
@@ -160,7 +158,7 @@ export function MusicNotes({ dancers, outline }: { dancers: Dancer[]; outline: s
         return;
       }
       const pop = a < 0.12 ? a / 0.12 : 1;
-      const s = (n.big ? 1.35 : 1) * (0.6 + 0.5 * pop);
+      const s = (n.big ? 1.1 : 0.85) * (0.6 + 0.4 * pop);
       const x = n.x + n.drift * (a * 40 + 10 * Math.sin(a * 9));
       const y = n.y - a * 150;
       el.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(n.drift * 12 * Math.sin(a * 7)).toFixed(1)}) scale(${s.toFixed(3)})`);
@@ -169,9 +167,9 @@ export function MusicNotes({ dancers, outline }: { dancers: Dancer[]; outline: s
   });
 
   return (
-    <g aria-hidden style={{ pointerEvents: 'none' }} stroke={outline} strokeWidth={3} strokeLinejoin="round">
+    <g aria-hidden style={{ pointerEvents: 'none' }} fill="#ffffff" fillOpacity={0.85}>
       {Array.from({ length: POOL }, (_, i) => (
-        <g key={i} ref={(el) => (refs.current[i] = el)} opacity={0} fill={COLORS[i % COLORS.length]}>
+        <g key={i} ref={(el) => (refs.current[i] = el)} opacity={0}>
           {i % 2 === 0 ? (
             // ♪
             <>

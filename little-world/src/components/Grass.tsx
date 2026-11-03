@@ -14,7 +14,7 @@ function makeClusters(layer: 'back' | 'front'): Cluster[] {
   const out: Cluster[] = [];
   // Same density as the 16:9 design, spread across the full world width.
   const span = WORLD_MAX_X - WORLD_MIN_X;
-  const n = Math.round((layer === 'back' ? 30 : 22) * (span / 1720));
+  const n = Math.round((layer === 'back' ? 18 : 12) * (span / 1720));
   for (let i = 0; i < n; i++) {
     const x = WORLD_MIN_X + (i + r() * 0.8) * (span / n);
     const y = layer === 'back' ? hillYAt(MEADOW, x) + 18 + r() * 60 : DIRT_TOP + 4 + r() * 4;
@@ -68,7 +68,7 @@ export const Grass = memo(function Grass({ palette, layer }: { palette: Palette;
   });
 
   return (
-    <g aria-hidden stroke={palette.outline} strokeWidth={3.5} strokeLinejoin="round">
+    <g aria-hidden>
       {clusters.map((c, i) => (
         <g key={i} ref={(el) => (refs.current[i] = el)} transform={`translate(${c.x},${c.y}) scale(${c.scale})`}>
           {c.blades.map((b, j) => (

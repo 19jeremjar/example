@@ -52,7 +52,7 @@ export function SettingsPanel(p: Props) {
   return (
     <aside className="lw-settings lw-card" role="dialog" aria-modal="false" aria-labelledby="lw-settings-title">
       <header className="lw-settings-head">
-        <h2 id="lw-settings-title" className="lw-pixel">SETTINGS</h2>
+        <h2 id="lw-settings-title" className="lw-title">Settings</h2>
         <button ref={closeRef} className="lw-icon-btn" onClick={p.onClose} aria-label="Close settings">
           ✕
         </button>

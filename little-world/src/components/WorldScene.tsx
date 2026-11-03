@@ -130,12 +130,12 @@ export function WorldScene({ solar, palette, vp, placements, assets, editing, se
       </defs>
       <SkyBackdrop vp={vp} />
       <Stars night={palette.night} />
-      {moonPt && <Moon x={moonPt.x} y={moonPt.y} opacity={palette.night} outline={palette.outline} />}
-      {sunUp && <Sun x={sunPt.x} y={sunPt.y} altitude={solar.altitude} outline={palette.outline} />}
+      {moonPt && <Moon x={moonPt.x} y={moonPt.y} opacity={palette.night} />}
+      {sunUp && <Sun x={sunPt.x} y={sunPt.y} altitude={solar.altitude} />}
       <Clouds palette={palette} vp={vp} />
       <Landscape palette={palette} />
       <Grass palette={palette} layer="back" />
-      <Flowers palette={palette} light={palette.light} />
+      <Flowers light={palette.light} />
       <Critters night={palette.night} outline={palette.outline} vp={vp} />
       <g className="lw-characters">
         {ordered.map((p) => {
@@ -163,7 +163,7 @@ export function WorldScene({ solar, palette, vp, placements, assets, editing, se
         })}
       </g>
       <Grass palette={palette} layer="front" />
-      <MusicNotes dancers={dancers} outline={palette.outline} />
+      <MusicNotes dancers={dancers} />
     </svg>
     {/* Stage lights live on their own composited layers above the artwork. */}
     <svg className="lw-lights" viewBox={viewBox} preserveAspectRatio="xMidYMax slice" aria-hidden>

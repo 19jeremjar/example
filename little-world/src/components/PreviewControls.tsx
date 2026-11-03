@@ -39,10 +39,10 @@ export function PreviewControls({ solar, location, minutes, energy, onMinutes, o
   return (
     <section className="lw-preview lw-card" aria-label="Preview controls">
       <header className="lw-picker-head">
-        <h2 className="lw-pixel">PREVIEW</h2>
+        <h2 className="lw-title">Preview</h2>
         <span className="lw-count">Simulated only — your clock and mic are untouched</span>
         <button className="lw-btn lw-btn-primary" onClick={onLive}>
-          RETURN TO LIVE
+          Return to live
         </button>
       </header>
       <label className="lw-slider lw-wide">

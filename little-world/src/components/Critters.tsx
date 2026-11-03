@@ -4,10 +4,9 @@ import { useFrame } from '../hooks/useSoundEnergy';
 import type { Viewport } from '../lib/solar';
 
 const WINGS = [
-  ['#ffd23f', '#ff6b6b'],
-  ['#ff8fc8', '#b48cff'],
-  ['#7ee081', '#3fb0f2'],
-];
+  ['#ffe29a', '#ffc4a8'],
+  ['#ffc4d4', '#d4c6ff'],
+]
 
 /** Butterflies by day, fireflies by night. Both perk up with the music. */
 export const Critters = memo(function Critters({ night, outline, vp }: { night: number; outline: string; vp: Viewport }) {
@@ -53,13 +52,11 @@ export const Critters = memo(function Critters({ night, outline, vp }: { night: 
         <g opacity={day}>
           {WINGS.map(([a, b], i) => (
             <g key={i} ref={(el) => (bRefs.current[i] = el)}>
-              <g ref={(el) => (wingRefs.current[i] = el)} stroke={outline} strokeWidth={2.5} strokeLinejoin="round">
+              <g ref={(el) => (wingRefs.current[i] = el)}>
                 <path d="M0,0 C-6,-22 -26,-24 -24,-8 C-22,0 -8,2 0,0Z" fill={a} />
                 <path d="M0,0 C-4,12 -18,18 -18,8 C-18,2 -8,0 0,0Z" fill={b} />
                 <path d="M0,0 C6,-22 26,-24 24,-8 C22,0 8,2 0,0Z" fill={a} />
                 <path d="M0,0 C4,12 18,18 18,8 C18,2 8,0 0,0Z" fill={b} />
-                <circle cx={-14} cy={-11} r={3} fill="#fff" stroke="none" opacity={0.8} />
-                <circle cx={14} cy={-11} r={3} fill="#fff" stroke="none" opacity={0.8} />
               </g>
               <ellipse rx={3} ry={10} cy={2} fill={outline} />
               <path d="M-1,-7 q-4,-8 -8,-9 M1,-7 q4,-8 8,-9" stroke={outline} strokeWidth={2} fill="none" strokeLinecap="round" />

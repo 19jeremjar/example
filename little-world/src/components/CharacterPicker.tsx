@@ -39,7 +39,7 @@ export function CharacterPicker({ placements, assets, selectedUid, onAdd, onRemo
   return (
     <section className="lw-picker lw-card" aria-label="Edit world">
       <header className="lw-picker-head">
-        <h2 className="lw-pixel">EDIT WORLD</h2>
+        <h2 className="lw-title">Edit world</h2>
         <span className="lw-count">
           {placements.length}/{MAX_CHARACTERS} in your world
         </span>

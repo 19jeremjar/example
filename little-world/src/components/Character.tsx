@@ -77,10 +77,7 @@ export function Character({ def, asset, placement, sceneX, groundY, index, outli
             <path
               className="lw-select-arrow"
               d={`M-16,${-h - 44} L16,${-h - 44} L0,${-h - 22}Z`}
-              fill="#ffd23f"
-              stroke={outline}
-              strokeWidth={4}
-              strokeLinejoin="round"
+              fill="#ffffff"
             />
           )}
         </g>

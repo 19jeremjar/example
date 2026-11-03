@@ -228,7 +228,7 @@ export default function App() {
         />
 
         {/* The clock steps aside while the edit/preview panels use the top of the screen. */}
-        {settings.showTimestamp && panel !== 'edit' && (
+        {settings.showTimestamp && panel !== 'edit' && panel !== 'settings' && (
           <Timestamp solar={solar} location={location} showNextEvent={settings.showNextEvent} preview={!!preview} micStatus={mic.status} />
         )}
 
