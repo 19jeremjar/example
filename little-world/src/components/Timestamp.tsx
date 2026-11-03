@@ -3,7 +3,7 @@ import type { SolarState } from '../lib/solar';
 import type { MicStatus } from '../hooks/useMicrophone';
 
 export function formatTime(d: Date, timeZone: string): string {
-  return new Intl.DateTimeFormat('en-US', { timeZone, hour: '2-digit', minute: '2-digit', hour12: true }).format(d).toUpperCase();
+  return new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', minute: '2-digit', hour12: true }).format(d).toUpperCase();
 }
 
 function formatShort(d: Date, timeZone: string): string {
@@ -36,10 +36,11 @@ export function Timestamp({
   const micLabel = MIC_LABEL[micStatus];
   return (
     <div className="lw-timestamp" aria-live="off">
-      <div className="lw-timestamp-main">
+      <div className="lw-timestamp-place">
         {preview && <span className="lw-preview-tag">PREVIEW</span>}
-        {location.label} · {formatTime(solar.now, location.timeZone)}
+        {location.label}
       </div>
+      <div className="lw-timestamp-time">{formatTime(solar.now, location.timeZone)}</div>
       {showNextEvent && (
         <div className="lw-timestamp-sub">
           {ev

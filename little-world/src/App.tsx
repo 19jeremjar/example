@@ -213,7 +213,7 @@ export default function App() {
 
   return (
     <EngineContext.Provider value={engine}>
-      <div ref={rootRef} className={`lw-root${idle ? ' is-idle' : ''}${staticMode ? ' is-static' : ''}`} data-phase={solar.phase}>
+      <div ref={rootRef} className={`lw-root${idle ? ' is-idle' : ''}${staticMode ? ' is-static' : ''}${panel === 'preview' ? ' is-previewing' : ''}`} data-phase={solar.phase}>
         <WorldScene
           solar={solar}
           palette={palette}
@@ -227,7 +227,8 @@ export default function App() {
           onRemove={removePlacement}
         />
 
-        {settings.showTimestamp && (
+        {/* The clock steps aside while the edit/preview panels use the top of the screen. */}
+        {settings.showTimestamp && panel !== 'edit' && (
           <Timestamp solar={solar} location={location} showNextEvent={settings.showNextEvent} preview={!!preview} micStatus={mic.status} />
         )}
 
