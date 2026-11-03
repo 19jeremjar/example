@@ -71,3 +71,7 @@ Opening `index.html` straight from disk (`file://`) works, but YouTube embeds be
 ## Deploying
 
 It's a static site, so you can deploy the repo root to Vercel, Netlify or GitHub Pages as-is.
+
+## Also in this repo
+
+`little-world/`: **LITTLE WORLD**, a separate Vite + React app (a living cartoon meadow that follows the sun and dances to the microphone). See [`little-world/README.md`](little-world/README.md). It deploys as its own Vercel project with Root Directory `little-world`.
