@@ -1,4 +1,4 @@
-import { LEVEL_AMOUNT, LevelClassifier, SoundLevel, clamp01, smoothEnergy } from './audioAnalysis';
+import { BeatTracker, LEVEL_AMOUNT, LevelClassifier, SoundLevel, clamp01, smoothEnergy } from './audioAnalysis';
 
 /** Everything an animated element needs for one frame. */
 export type Frame = {
@@ -14,6 +14,13 @@ export type Frame = {
   wind: number;
   /** 0 = static artwork, 1 = full motion. */
   motion: number;
+  /** 0 → 1 through the current beat. */
+  beatPhase: number;
+  /** Increments once per beat. */
+  beatIndex: number;
+  /** 1 on the beat, decaying fast. Multiply by drive for sound-dependent kicks. */
+  beat: number;
+  bpm: number;
 };
 
 export type FrameCallback = (f: Frame) => void;
@@ -33,12 +40,13 @@ export class AnimationEngine {
   private wind = 0;
   private windVel = 0;
   private classifier = new LevelClassifier();
+  private beats = new BeatTracker();
   private source: EnergySource = () => 0;
   private slowFrames = 0;
   motion = 1;
   /** Set when frames are consistently slow; heavy elements may skip work. */
   lowDetail = false;
-  latest: Frame = { t: 0, dt: 0, energy: 0, level: 'quiet', drive: 0, wind: 0, motion: 1 };
+  latest: Frame = { t: 0, dt: 0, energy: 0, level: 'quiet', drive: 0, wind: 0, motion: 1, beatPhase: 0, beatIndex: 0, beat: 0, bpm: 112 };
 
   setSource(src: EnergySource) {
     this.source = src;
@@ -81,14 +89,15 @@ export class AnimationEngine {
     this.lowDetail = this.slowFrames > 90;
 
     const raw = clamp01(this.source());
-    this.energy = smoothEnergy(this.energy, raw, dt);
+    const beat = this.beats.update(raw, dt);
+    this.energy = smoothEnergy(this.energy, raw, dt, 0.06, 0.8);
     const level = this.classifier.update(this.energy, dt);
-    // Ease the discrete level so state changes blend over ~0.8s.
-    this.levelAmount = smoothEnergy(this.levelAmount, LEVEL_AMOUNT[level], dt, 0.5, 0.9);
-    const drive = clamp01(0.6 * this.levelAmount + 0.4 * this.energy) * this.motion;
+    // Ease the discrete level so state changes blend over ~0.5s.
+    this.levelAmount = smoothEnergy(this.levelAmount, LEVEL_AMOUNT[level], dt, 0.3, 0.8);
+    const drive = clamp01(0.55 * this.levelAmount + 0.45 * this.energy) * this.motion;
 
-    // Damped spring toward the target wind strength.
-    const target = 0.12 + drive * 0.95;
+    // Damped spring toward the target wind strength, with a gust on each beat.
+    const target = 0.12 + drive * 0.95 + beat.pulse * drive * 0.35;
     const stiffness = 14;
     const damping = 5.2;
     this.windVel += (target - this.wind) * stiffness * dt - this.windVel * damping * dt;
@@ -102,14 +111,100 @@ export class AnimationEngine {
       drive,
       wind: this.wind * this.motion,
       motion: this.motion,
+      beatPhase: beat.phase,
+      beatIndex: beat.index,
+      beat: beat.pulse * this.motion,
+      bpm: beat.bpm,
     };
     for (const cb of this.subs) cb(this.latest);
   }
 }
 
 // ---------------------------------------------------------------------------
-// Character movement
+// Dancing
 // ---------------------------------------------------------------------------
+
+/**
+ * Dance moves, each a pose as a function of where we are in the beat.
+ * All are continuous across beat boundaries and return to neutral (or to a
+ * matching side) so moves can be swapped on any beat.
+ */
+export type MoveId =
+  | 'bounce'
+  | 'sidestep'
+  | 'sway'
+  | 'squat'
+  | 'twist'
+  | 'spin'
+  | 'jump'
+  | 'shimmy'
+  | 'robot'
+  | 'lean'
+  | 'stomp';
+
+export type Pose = { x: number; y: number; rot: number; sx: number; sy: number };
+
+const hop = (q: number) => Math.sin(Math.PI * q);
+/** 1 right on the beat (landing), 0 in the air. */
+const land = (q: number) => Math.pow(1 - Math.sin(Math.PI * q), 4);
+
+/**
+ * @param b beats since this move started
+ * @param q phase within the current beat (0..1)
+ * @param A amplitude (0..~1.3)
+ */
+export function movePose(move: MoveId, b: number, q: number, A: number): Pose {
+  const s = b + q; // continuous beat position
+  const two = ((b % 2) + q) / 2; // 0..1 over a two-beat move
+  switch (move) {
+    case 'bounce': {
+      const l = land(q);
+      return { x: 0, y: -40 * A * hop(q), rot: 0, sx: 1 + 0.09 * A * l - 0.03 * A * hop(q), sy: 1 - 0.12 * A * l + 0.06 * A * hop(q) };
+    }
+    case 'sidestep': {
+      const side = Math.cos(Math.PI * s);
+      return { x: 36 * A * side, y: -12 * A * hop(q), rot: -5 * A * Math.sin(Math.PI * s), sx: 1, sy: 1 - 0.05 * A * land(q) };
+    }
+    case 'sway':
+      return { x: 10 * A * Math.sin(Math.PI * s), y: -6 * A * hop(q), rot: 7 * A * Math.sin(Math.PI * s), sx: 1, sy: 1 - 0.04 * A * land(q) };
+    case 'squat': {
+      const d = (1 + Math.cos(2 * Math.PI * q)) / 2; // down on the beat
+      return { x: 0, y: 0, rot: 0, sx: 1 + 0.08 * A * d, sy: 1 - 0.15 * A * d };
+    }
+    case 'twist': {
+      const c = Math.cos(Math.PI * s);
+      return { x: 6 * A * c, y: -10 * A * hop(q), rot: 9 * A * c, sx: 1 - 0.22 * A * Math.abs(Math.sin(Math.PI * s)), sy: 1 };
+    }
+    case 'spin':
+      // A full cartoon turn over two beats: the sprite narrows, flips, and comes back.
+      return { x: 0, y: -34 * A * Math.sin(Math.PI * two), rot: 0, sx: Math.cos(2 * Math.PI * two), sy: 1 + 0.04 * A * Math.sin(Math.PI * two) };
+    case 'jump': {
+      const air = Math.pow(Math.sin(Math.PI * two), 0.8);
+      const crouch = Math.pow(1 - Math.sin(Math.PI * two), 6);
+      return { x: 0, y: -90 * A * air, rot: 10 * A * Math.sin(2 * Math.PI * two), sx: 1 + 0.12 * A * crouch, sy: 1 - 0.16 * A * crouch + 0.08 * A * air };
+    }
+    case 'shimmy': {
+      const w = Math.sin(2 * Math.PI * 4 * q);
+      return { x: 8 * A * w, y: -8 * A * hop(q), rot: 4 * A * Math.sin(2 * Math.PI * 4 * q + 1), sx: 1 + 0.03 * A * w, sy: 1 };
+    }
+    case 'robot': {
+      const dir = b % 2 === 0 ? 1 : -1;
+      const snap = q < 0.12 ? q / 0.12 : 1; // hit the pose fast, then hold
+      return { x: 6 * A * dir * snap, y: q < 0.5 ? -16 * A : 0, rot: 8 * A * dir * snap, sx: 1, sy: 1 };
+    }
+    case 'lean': {
+      // Ease over to one side during the first beat, hold for the second, then cross over.
+      const side = Math.floor(b / 2) % 2 === 0 ? 1 : -1;
+      const ease = Math.sin((Math.PI / 2) * Math.min(1, q * 1.5));
+      const into = b % 2 === 0 ? 2 * ease - 1 : 1; // -1 (other side) → +1
+      return { x: 12 * A * side * into, y: -9 * A * hop(q), rot: 11 * A * side * into, sx: 1, sy: 1 - 0.05 * A * land(q) };
+    }
+    case 'stomp': {
+      const l = land(q);
+      return { x: 8 * A * Math.cos(Math.PI * s), y: -24 * A * hop(q), rot: 3 * A * Math.cos(Math.PI * s), sx: 1 + 0.14 * A * l, sy: 1 - 0.2 * A * l };
+    }
+  }
+}
 
 export type AnimationProfileId =
   | 'gentle'
@@ -123,99 +218,109 @@ export type AnimationProfileId =
   | 'lazy';
 
 export type MotionProfile = {
-  /** Beats per second at groove level. */
-  tempo: number;
-  /** Extra tempo at full drive. */
-  tempoBoost: number;
-  swayDeg: number;
-  bounce: number;
-  stepX: number;
-  squash: number;
-  /** Extra rotation that only appears near dance level. */
-  spinDeg: number;
-  chaos: number;
-  /** Snap rotation/height into steps for a mechanical feel. */
-  robotic: boolean;
+  /** Overall size of this character's moves. */
+  scale: number;
+  /** Moves used when there's some sound. */
+  groove: MoveId[];
+  /** Moves unlocked when it's loud. */
+  dance: MoveId[];
+  /** Beats before switching to the next move. */
+  changeEvery: number;
   /** Maps drive to effort: <1 eager, >1 reluctant. */
   effort: number;
-  /** How quickly this character reacts (seconds). Gives each one its own lag. */
+  /** How quickly this character reacts (seconds). */
   lag: number;
+  /** Snap poses into steps for a mechanical feel. */
+  robotic: boolean;
 };
 
 export const PROFILES: Record<AnimationProfileId, MotionProfile> = {
-  gentle: { tempo: 0.8, tempoBoost: 0.4, swayDeg: 5, bounce: 10, stepX: 4, squash: 0.03, spinDeg: 4, chaos: 0, robotic: false, effort: 1.1, lag: 0.5 },
-  bouncy: { tempo: 1.15, tempoBoost: 0.9, swayDeg: 7, bounce: 34, stepX: 6, squash: 0.09, spinDeg: 10, chaos: 0, robotic: false, effort: 0.8, lag: 0.25 },
-  energetic: { tempo: 1.3, tempoBoost: 1.1, swayDeg: 9, bounce: 30, stepX: 10, squash: 0.08, spinDeg: 14, chaos: 0.2, robotic: false, effort: 0.75, lag: 0.2 },
-  sidestep: { tempo: 0.9, tempoBoost: 0.6, swayDeg: 4, bounce: 12, stepX: 26, squash: 0.03, spinDeg: 6, chaos: 0, robotic: false, effort: 1, lag: 0.4 },
-  relaxed: { tempo: 0.75, tempoBoost: 0.7, swayDeg: 6, bounce: 22, stepX: 3, squash: 0.06, spinDeg: 6, chaos: 0, robotic: false, effort: 1.3, lag: 0.55 },
-  robotic: { tempo: 1, tempoBoost: 0.5, swayDeg: 6, bounce: 18, stepX: 0, squash: 0, spinDeg: 0, chaos: 0, robotic: true, effort: 1, lag: 0.3 },
-  rocking: { tempo: 0.55, tempoBoost: 0.4, swayDeg: 8, bounce: 9, stepX: 2, squash: 0.05, spinDeg: 3, chaos: 0, robotic: false, effort: 1.2, lag: 0.7 },
-  chaotic: { tempo: 1.5, tempoBoost: 1.3, swayDeg: 10, bounce: 26, stepX: 12, squash: 0.07, spinDeg: 18, chaos: 1, robotic: false, effort: 0.7, lag: 0.15 },
-  lazy: { tempo: 0.7, tempoBoost: 1.1, swayDeg: 7, bounce: 40, stepX: 4, squash: 0.12, spinDeg: 12, chaos: 0, robotic: false, effort: 2.6, lag: 0.9 },
+  gentle: { scale: 0.8, groove: ['sway', 'squat'], dance: ['bounce', 'sidestep', 'sway'], changeEvery: 4, effort: 1.1, lag: 0.4, robotic: false },
+  bouncy: { scale: 1.1, groove: ['bounce', 'sidestep', 'squat'], dance: ['jump', 'bounce', 'spin', 'shimmy', 'sidestep'], changeEvery: 4, effort: 0.8, lag: 0.2, robotic: false },
+  energetic: { scale: 1.1, groove: ['bounce', 'twist'], dance: ['jump', 'spin', 'shimmy', 'twist'], changeEvery: 4, effort: 0.75, lag: 0.2, robotic: false },
+  sidestep: { scale: 1, groove: ['sidestep', 'lean', 'sway'], dance: ['sidestep', 'stomp', 'twist', 'spin', 'lean'], changeEvery: 4, effort: 0.95, lag: 0.3, robotic: false },
+  relaxed: { scale: 1, groove: ['sway', 'bounce'], dance: ['bounce', 'spin', 'sidestep', 'jump'], changeEvery: 4, effort: 1.05, lag: 0.35, robotic: false },
+  robotic: { scale: 1, groove: ['robot', 'squat'], dance: ['robot', 'stomp', 'spin'], changeEvery: 4, effort: 1, lag: 0.25, robotic: true },
+  rocking: { scale: 0.9, groove: ['sway', 'squat'], dance: ['bounce', 'sway', 'spin', 'sidestep'], changeEvery: 4, effort: 1.1, lag: 0.45, robotic: false },
+  chaotic: { scale: 1.2, groove: ['shimmy', 'bounce', 'twist'], dance: ['spin', 'jump', 'shimmy', 'twist', 'stomp'], changeEvery: 2, effort: 0.7, lag: 0.12, robotic: false },
+  lazy: { scale: 1.25, groove: ['sway'], dance: ['jump', 'spin', 'stomp'], changeEvery: 4, effort: 2.4, lag: 0.8, robotic: false },
 };
 
-export type Pose = { x: number; y: number; rot: number; sx: number; sy: number };
-
-export type MoverState = { phase: number; drive: number; seed: number };
+export type MoverState = {
+  seed: number;
+  drive: number;
+  move: MoveId | null;
+  moveStart: number;
+  lastBeat: number;
+  tier: 0 | 1 | 2;
+  pose: Pose;
+};
 
 export function createMover(seed: number): MoverState {
-  return { phase: seed * 6.28, drive: 0, seed };
+  return { seed, drive: 0, move: null, moveStart: 0, lastBeat: -1, tier: 0, pose: { x: 0, y: 0, rot: 0, sx: 1, sy: 1 } };
+}
+
+function pick<T>(list: T[], key: number): T {
+  const h = Math.abs(Math.sin(key * 12.9898) * 43758.5453);
+  return list[Math.floor((h - Math.floor(h)) * list.length) % list.length];
 }
 
 /**
- * Pure pose function: advances the mover's beat phase and returns an offset
- * transform around the character's feet. Idle → groove → dance is a smooth
- * function of drive, not a hard switch.
+ * Advances a character one frame: chooses dance moves on the beat and
+ * returns a transform around its feet. Quiet → gentle breathing only;
+ * some sound → groove moves; loud → the big moves.
  */
 export function stepPose(m: MoverState, p: MotionProfile, f: Frame): Pose {
   m.drive += (f.drive - m.drive) * (1 - Math.exp(-f.dt / p.lag));
   const e = Math.pow(clamp01(m.drive), p.effort);
-  const motion = f.motion;
+  const tier: 0 | 1 | 2 = e < 0.08 ? 0 : e < 0.5 ? 1 : 2;
 
-  const freq = p.tempo + p.tempoBoost * e;
-  m.phase += f.dt * freq * Math.PI * 2 * (e > 0.02 ? 1 : 0.25);
-  const ph = m.phase;
-  const t = f.t + m.seed * 10;
+  if (f.beatIndex !== m.lastBeat) {
+    m.lastBeat = f.beatIndex;
+    const beatsIn = f.beatIndex - m.moveStart;
+    // Two-beat moves (spin, jump) only change on even beats so they finish cleanly.
+    const evenBeat = beatsIn % 2 === 0;
+    if (tier !== m.tier || m.move === null || (beatsIn >= p.changeEvery && evenBeat)) {
+      const list = tier === 2 ? p.dance : p.groove;
+      let next = pick(list, f.beatIndex + m.seed * 97);
+      if (next === m.move && list.length > 1) next = list[(list.indexOf(next) + 1) % list.length];
+      m.move = next;
+      m.moveStart = f.beatIndex;
+      m.tier = tier;
+    }
+  }
 
-  // IDLE: breathing and a whisper of sway.
-  const breath = Math.sin(t * 1.9);
-  let sy = 1 + 0.014 * breath;
-  let sx = 1 - 0.007 * breath;
-  let rot = 1.2 * Math.sin(t * 0.6);
-  let y = 0;
-  let x = 0;
+  // Idle: just breathing, no wobbling.
+  const breath = Math.sin((f.t + m.seed * 10) * 1.9);
+  let target: Pose = { x: 0, y: 0, rot: 0.4 * Math.sin((f.t + m.seed * 10) * 0.5), sx: 1 - 0.006 * breath, sy: 1 + 0.013 * breath };
 
-  // GROOVE → DANCE.
-  const sway = Math.sin(ph);
-  const hop = Math.abs(Math.sin(ph));
-  rot += p.swayDeg * e * sway;
-  y -= p.bounce * Math.pow(e, 1.3) * hop;
-  x += p.stepX * e * sway;
-  const land = 1 - hop; // 1 at the bottom of the bounce
-  sy += p.squash * e * (land - 0.5) * -1.2;
-  sx += p.squash * e * (land - 0.5) * 0.9;
-
-  const dance = clamp01((e - 0.62) / 0.38);
-  rot += p.spinDeg * dance * Math.sin(ph * 0.5 + 0.8);
-
-  if (p.chaos > 0) {
-    rot += p.chaos * e * (3 * Math.sin(ph * 1.7 + 1.3) + 2 * Math.sin(ph * 2.9));
-    x += p.chaos * e * 5 * Math.sin(ph * 2.3);
+  if (tier > 0 && m.move) {
+    const A = p.scale * Math.min(1.3, 0.35 + e);
+    const mv = movePose(m.move, f.beatIndex - m.moveStart, f.beatPhase, A);
+    target = { x: mv.x, y: mv.y, rot: mv.rot + target.rot, sx: mv.sx * target.sx, sy: mv.sy * target.sy };
   }
 
   if (p.robotic) {
-    rot = Math.round(rot / 3) * 3;
-    y = Math.round(y / 6) * 6;
-    sx = 1;
-    sy = 1;
+    target.rot = Math.round(target.rot / 3) * 3;
+    target.y = Math.round(target.y / 6) * 6;
   }
 
+  // Short smoothing hides any seam when a move changes.
+  const k = 1 - Math.exp(-f.dt / 0.045);
+  const cur = m.pose;
+  cur.x += (target.x - cur.x) * k;
+  cur.y += (target.y - cur.y) * k;
+  cur.rot += (target.rot - cur.rot) * k;
+  cur.sx += (target.sx - cur.sx) * k;
+  cur.sy += (target.sy - cur.sy) * k;
+
+  const motion = f.motion;
   return {
-    x: x * motion,
-    y: y * motion,
-    rot: rot * motion,
-    sx: 1 + (sx - 1) * motion,
-    sy: 1 + (sy - 1) * motion,
+    x: cur.x * motion,
+    y: cur.y * motion,
+    rot: p.robotic ? Math.round((cur.rot * motion) / 3) * 3 : cur.rot * motion,
+    sx: 1 + (cur.sx - 1) * motion,
+    sy: 1 + (cur.sy - 1) * motion,
   };
 }
 

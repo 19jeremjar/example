@@ -62,7 +62,7 @@ export const Grass = memo(function Grass({ palette, layer }: { palette: Palette;
       // Wind gust travels left → right across the field.
       const travel = Math.sin(f.t * (1.2 + f.wind * 1.6) - c.x * 0.004 + c.phase);
       const idle = Math.sin(f.t * 1.1 + c.phase) * 3.2 * f.motion;
-      const bend = f.wind * c.flex * (16 + 12 * travel) + idle;
+      const bend = f.wind * c.flex * (16 + 12 * travel) + idle + f.drive * f.beat * 9 * c.flex;
       el.setAttribute('transform', `translate(${c.x.toFixed(1)},${c.y.toFixed(1)}) scale(${c.scale.toFixed(2)}) rotate(${bend.toFixed(2)})`);
     }
   });

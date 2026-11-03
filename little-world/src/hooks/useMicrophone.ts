@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { computeRms, estimateNoiseFloor, normalizeEnergy } from '../lib/audioAnalysis';
+import { AutoGain, computeRms, estimateNoiseFloor } from '../lib/audioAnalysis';
 
 export type MicStatus = 'off' | 'requesting' | 'calibrating' | 'listening' | 'denied' | 'unavailable' | 'paused' | 'error';
 
@@ -26,6 +26,8 @@ export function useMicrophone(sensitivity: number) {
   const sensRef = useRef(sensitivity);
   const calibTimer = useRef<number | null>(null);
   const startToken = useRef(0);
+  const gainRef = useRef(new AutoGain());
+  const lastReadRef = useRef(0);
   sensRef.current = sensitivity;
 
   const setStatus = (s: MicStatus) => {
@@ -69,6 +71,7 @@ export function useMicrophone(sensitivity: number) {
         clearInterval(calibTimer.current!);
         calibTimer.current = null;
         floorRef.current = estimateNoiseFloor(samples);
+        gainRef.current.reset();
         if (statusRef.current === 'calibrating') setStatus('listening');
       }
     }, 50);
@@ -175,7 +178,10 @@ export function useMicrophone(sensitivity: number) {
     if (statusRef.current !== 'listening') return 0;
     const rms = sampleRms();
     if (rms == null) return 0;
-    return normalizeEnergy(rms, floorRef.current, sensRef.current);
+    const now = performance.now();
+    const dt = Math.min(0.1, Math.max(0.001, (now - lastReadRef.current) / 1000));
+    lastReadRef.current = now;
+    return gainRef.current.energy(rms, floorRef.current, sensRef.current, dt);
   }, [sampleRms]);
 
   // Suspend analysis while the tab is hidden; resume when it returns.

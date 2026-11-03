@@ -54,7 +54,7 @@ function load(): WorldSettings {
       deviceLocation,
       showTimestamp: s.showTimestamp ?? true,
       showNextEvent: s.showNextEvent ?? true,
-      sensitivity: typeof s.sensitivity === 'number' ? Math.min(3, Math.max(0.3, s.sensitivity)) : 1,
+      sensitivity: typeof s.sensitivity === 'number' ? Math.min(4, Math.max(0.3, s.sensitivity)) : 1,
       micWanted: !!s.micWanted,
       inviteDismissed: !!s.inviteDismissed,
       staticMode: typeof s.staticMode === 'boolean' ? s.staticMode : null,

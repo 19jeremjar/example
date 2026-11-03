@@ -79,9 +79,11 @@ export const Flowers = memo(function Flowers({ palette, light }: { palette: Pale
       root.setAttribute('transform', `translate(${fl.x.toFixed(1)},${fl.y.toFixed(1)}) rotate(${sway.toFixed(2)})`);
       const head = headRefs.current[i];
       if (head) {
-        const bloom = 1 + f.drive * 0.14 * Math.abs(Math.sin(f.t * 3.4 + fl.phase));
+        // Flowers pop open on every beat.
+        const bloom = 1 + f.drive * (0.06 + 0.24 * f.beat);
         const spin = f.drive * 18 * Math.sin(f.t * 1.7 + fl.phase);
-        head.setAttribute('transform', `translate(0,${-fl.stem}) rotate(${spin.toFixed(2)}) scale(${bloom.toFixed(3)})`);
+        const nod = f.drive * f.beat * 5;
+        head.setAttribute('transform', `translate(0,${(-fl.stem - nod).toFixed(2)}) rotate(${spin.toFixed(2)}) scale(${bloom.toFixed(3)})`);
       }
     }
   });

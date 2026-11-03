@@ -27,13 +27,13 @@ export function Sun({ x, y, altitude, outline }: Props) {
 
   useFrame((f) => {
     const d = f.drive;
-    const beat = Math.abs(Math.sin(f.t * Math.PI * 1.15));
-    const pulse = 1 + 0.012 * Math.sin(f.t * 1.4) * f.motion + 0.055 * d * beat;
+    const beat = f.beat;
+    const pulse = 1 + 0.012 * Math.sin(f.t * 1.4) * f.motion + 0.1 * d * beat;
     bodyRef.current?.setAttribute('transform', `scale(${pulse.toFixed(4)})`);
     const spin = (f.t * (3 + d * 10) * f.motion) % 360;
-    const rayScale = 1 + 0.16 * d * beat;
+    const rayScale = 1 + 0.12 * d + 0.22 * d * beat;
     raysRef.current?.setAttribute('transform', `rotate(${spin.toFixed(2)}) scale(${rayScale.toFixed(3)})`);
-    glowRef.current?.setAttribute('opacity', (0.38 + 0.35 * d * (0.6 + 0.4 * beat)).toFixed(3));
+    glowRef.current?.setAttribute('opacity', (0.38 + 0.5 * d * (0.4 + 0.6 * beat)).toFixed(3));
     // Expression crossfade: content → happy → joyful.
     const calm = Math.max(0, 1 - d / 0.4);
     const joy = Math.max(0, (d - 0.55) / 0.35);

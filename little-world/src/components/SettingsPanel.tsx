@@ -113,7 +113,7 @@ export function SettingsPanel(p: Props) {
             <input
               type="range"
               min={0.3}
-              max={3}
+              max={4}
               step={0.1}
               value={settings.sensitivity}
               onChange={(e) => p.onUpdate({ sensitivity: Number(e.target.value) })}

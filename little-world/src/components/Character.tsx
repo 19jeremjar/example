@@ -46,7 +46,7 @@ export function Character({ def, asset, placement, sceneX, groundY, index, outli
       `translate(${p.x.toFixed(2)},${p.y.toFixed(2)}) rotate(${p.rot.toFixed(2)}) scale(${p.sx.toFixed(4)},${p.sy.toFixed(4)})`,
     );
     const lift = Math.min(1, -p.y / 60);
-    shadowRef.current?.setAttribute('transform', `scale(${(1 - lift * 0.35).toFixed(3)},1)`);
+    shadowRef.current?.setAttribute('transform', `scale(${((1 - lift * 0.35) * (0.6 + 0.4 * Math.abs(p.sx))).toFixed(3)},1)`);
     shadowRef.current?.setAttribute('opacity', (0.28 - lift * 0.12).toFixed(3));
     if (eyesRef.current) {
       const blinkCycle = (f.t + mover.seed * 7) % 4.6;

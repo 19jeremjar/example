@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { LevelClassifier, computeRms, estimateNoiseFloor, normalizeEnergy, smoothEnergy } from '../lib/audioAnalysis';
-import { AnimationEngine, PROFILES, createMover, stepPose, Frame } from '../lib/animation';
+import { AutoGain, BeatTracker, LevelClassifier, computeRms, estimateNoiseFloor, normalizeEnergy, smoothEnergy } from '../lib/audioAnalysis';
+import { AnimationEngine, Frame, MoveId, PROFILES, createMover, movePose, stepPose } from '../lib/animation';
 
 describe('audio analysis', () => {
   it('computes RMS', () => {
@@ -20,18 +20,29 @@ describe('audio analysis', () => {
   it('energy is 0 near the floor, rises with loudness, and respects sensitivity', () => {
     const floor = 0.002;
     expect(normalizeEnergy(0.002, floor, 1)).toBe(0);
-    expect(normalizeEnergy(0.003, floor, 1)).toBe(0); // ordinary wobble stays calm
-    const music = normalizeEnergy(0.05, floor, 1);
-    expect(music).toBeGreaterThan(0.5);
+    expect(normalizeEnergy(0.0026, floor, 1)).toBe(0); // ordinary wobble stays calm
+    expect(normalizeEnergy(0.02, floor, 1)).toBeGreaterThan(0.6); // ~20 dB above the room
     expect(normalizeEnergy(1, floor, 1)).toBe(1);
-    expect(normalizeEnergy(0.02, floor, 2)).toBeGreaterThan(normalizeEnergy(0.02, floor, 1));
+    expect(normalizeEnergy(0.01, floor, 2)).toBeGreaterThan(normalizeEnergy(0.01, floor, 1));
+  });
+
+  it('auto gain lets steady quiet music reach high energy but keeps the room calm', () => {
+    const g = new AutoGain();
+    const floor = 0.002;
+    // quiet music ~12 dB above the room, held for a few seconds
+    let e = 0;
+    for (let i = 0; i < 300; i++) e = g.energy(0.008, floor, 1, 1 / 60);
+    expect(e).toBeGreaterThan(0.85);
+    expect(e).toBeGreaterThan(normalizeEnergy(0.008, floor, 1));
+    const calm = new AutoGain();
+    let room = 0;
+    for (let i = 0; i < 300; i++) room = calm.energy(0.0024, floor, 1, 1 / 60);
+    expect(room).toBe(0);
   });
 
   it('smoothing attacks fast and releases slowly', () => {
-    const up = smoothEnergy(0, 1, 0.1);
-    const down = smoothEnergy(1, 0, 0.1);
-    expect(up).toBeGreaterThan(0.6);
-    expect(down).toBeGreaterThan(0.85);
+    expect(smoothEnergy(0, 1, 0.1)).toBeGreaterThan(0.6);
+    expect(smoothEnergy(1, 0, 0.1)).toBeGreaterThan(0.85);
   });
 
   it('level classifier uses hysteresis and a hold time', () => {
@@ -40,68 +51,133 @@ describe('audio analysis', () => {
       for (let t = 0; t < secs; t += 0.05) c.update(e, 0.05);
       return c.level;
     };
-    expect(run(0.3, 0.5)).toBe('quiet'); // hold time not elapsed
-    expect(run(0.3, 1)).toBe('moderate');
-    expect(run(0.2, 2)).toBe('moderate'); // between off/on thresholds: stays
-    expect(run(0.7, 2)).toBe('loud');
-    expect(run(0.5, 2)).toBe('loud');
-    expect(run(0.05, 3)).toBe('quiet');
+    expect(run(0.2, 0.3)).toBe('quiet'); // hold time not elapsed
+    expect(run(0.2, 1)).toBe('moderate');
+    expect(run(0.12, 2)).toBe('moderate'); // between off/on: stays
+    expect(run(0.6, 2)).toBe('loud');
+    expect(run(0.4, 2)).toBe('loud');
+    expect(run(0.03, 3)).toBe('quiet');
+  });
+
+  it('beat tracker locks onto a 128 BPM kick', () => {
+    const bt = new BeatTracker();
+    const dt = 1 / 60;
+    const period = 60 / 128;
+    let state = bt.update(0, dt);
+    const beatTimes: number[] = [];
+    let lastIndex = state.index;
+    for (let i = 0; i < 60 * 12; i++) {
+      const t = i * dt;
+      const sincekick = t % period;
+      const raw = sincekick < 0.06 ? 0.9 : 0.25; // kick + steady music bed
+      state = bt.update(raw, dt);
+      if (state.index !== lastIndex) {
+        lastIndex = state.index;
+        if (t > 6) beatTimes.push(t);
+      }
+    }
+    expect(state.locked).toBe(true);
+    expect(state.bpm).toBeGreaterThan(120);
+    expect(state.bpm).toBeLessThan(136);
+    // Beats land close to kicks.
+    const errs = beatTimes.map((t) => {
+      const ph = (t % period) / period;
+      return Math.min(ph, 1 - ph) * period;
+    });
+    const avgErr = errs.reduce((a, b) => a + b, 0) / errs.length;
+    expect(avgErr).toBeLessThan(0.09);
+  });
+
+  it('beat tracker keeps a steady fallback groove without onsets', () => {
+    const bt = new BeatTracker();
+    let s = bt.update(0.5, 1 / 60);
+    for (let i = 0; i < 600; i++) s = bt.update(0.5, 1 / 60);
+    expect(s.locked).toBe(false);
+    expect(s.index).toBeGreaterThan(15); // ~112 BPM for 10 s
+    expect(s.bpm).toBeGreaterThan(105);
+    expect(s.bpm).toBeLessThan(120);
   });
 });
 
-describe('animation', () => {
-  const frame = (t: number, drive: number, motion = 1): Frame => ({ t, dt: 1 / 60, energy: drive, level: 'quiet', drive, wind: drive, motion });
+describe('dancing', () => {
+  // Simulate 10 s at 120 BPM with a given drive.
+  const simulate = (profile: keyof typeof PROFILES, drive: number, motion = 1) => {
+    const m = createMover(0.3);
+    const poses = [];
+    const moves = new Set<string>();
+    for (let i = 0; i < 600; i++) {
+      const t = i / 60;
+      const f: Frame = { t, dt: 1 / 60, energy: drive, level: 'quiet', drive, wind: drive, motion, beatPhase: (t * 2) % 1, beatIndex: Math.floor(t * 2), beat: 0, bpm: 120 };
+      poses.push(stepPose(m, PROFILES[profile], f));
+      if (m.move) moves.add(m.move);
+    }
+    return { poses, moves };
+  };
+  const maxOf = (ps: { y: number; rot: number; x: number; sx: number }[]) => ({
+    up: Math.max(...ps.map((p) => -p.y)),
+    rot: Math.max(...ps.map((p) => Math.abs(p.rot))),
+    x: Math.max(...ps.map((p) => Math.abs(p.x))),
+    flip: Math.min(...ps.map((p) => p.sx)),
+  });
 
-  it('idle characters barely move; dancing ones move a lot', () => {
-    const amp = (drive: number) => {
-      const m = createMover(0.3);
-      let maxY = 0;
-      let maxRot = 0;
-      for (let i = 0; i < 600; i++) {
-        const p = stepPose(m, PROFILES.bouncy, frame(i / 60, drive));
-        maxY = Math.max(maxY, -p.y);
-        maxRot = Math.max(maxRot, Math.abs(p.rot));
+  it('quiet characters just breathe — no wobbling', () => {
+    const q = maxOf(simulate('bouncy', 0).poses);
+    expect(q.up).toBeLessThan(0.5);
+    expect(q.rot).toBeLessThan(0.6);
+    expect(q.x).toBeLessThan(0.5);
+  });
+
+  it('loud music makes real dance moves: big jumps, travel and spins', () => {
+    const { poses, moves } = simulate('bouncy', 1);
+    const d = maxOf(poses);
+    expect(d.up).toBeGreaterThan(60); // jumps
+    expect(moves.size).toBeGreaterThanOrEqual(2); // switches moves
+    const all = new Set<string>();
+    for (const id of ['bouncy', 'sidestep', 'chaotic', 'relaxed'] as const) simulate(id, 1).moves.forEach((mv) => all.add(mv));
+    expect(all.has('spin') || all.has('jump')).toBe(true);
+  });
+
+  it('moderate sound grooves on the beat (bounces land on beats)', () => {
+    const p = movePose('bounce', 0, 0, 1);
+    const mid = movePose('bounce', 0, 0.5, 1);
+    expect(p.y).toBeCloseTo(0);
+    expect(mid.y).toBeLessThan(-30);
+    expect(p.sy).toBeLessThan(1); // squash on landing
+  });
+
+  it('every move is continuous across beats and safe at zero amplitude', () => {
+    const moves: MoveId[] = ['bounce', 'sidestep', 'sway', 'squat', 'twist', 'spin', 'jump', 'shimmy', 'lean', 'stomp'];
+    for (const mv of moves) {
+      for (let b = 0; b < 4; b++) {
+        const end = movePose(mv, b, 0.9999, 1);
+        const next = movePose(mv, b + 1, 0, 1);
+        if (mv === 'spin' || mv === 'jump') {
+          if (b % 2 === 1) expect(Math.abs(end.y - next.y)).toBeLessThan(1);
+        } else {
+          expect(Math.abs(end.x - next.x)).toBeLessThan(1.5);
+          expect(Math.abs(end.y - next.y)).toBeLessThan(1);
+        }
       }
-      return { maxY, maxRot };
-    };
-    const idle = amp(0);
-    const dance = amp(1);
-    expect(idle.maxY).toBeLessThan(1);
-    expect(idle.maxRot).toBeLessThan(2);
-    expect(dance.maxY).toBeGreaterThan(20);
-    expect(dance.maxRot).toBeGreaterThan(5);
+      const zero = movePose(mv, 1, 0.3, 0);
+      expect(Math.abs(zero.y)).toBeLessThan(1e-9);
+    }
   });
 
   it('static mode freezes poses', () => {
-    const m = createMover(0.1);
-    for (let i = 0; i < 120; i++) {
-      const p = stepPose(m, PROFILES.chaotic, frame(i / 60, 1, 0));
+    for (const p of simulate('chaotic', 1, 0).poses) {
       expect({ x: p.x + 0, y: p.y + 0, rot: p.rot + 0, sx: p.sx, sy: p.sy }).toEqual({ x: 0, y: 0, rot: 0, sx: 1, sy: 1 });
     }
   });
 
   it('robotic profile moves in steps; lazy profile ignores moderate sound', () => {
-    const m = createMover(0.2);
-    for (let i = 0; i < 200; i++) {
-      const p = stepPose(m, PROFILES.robotic, frame(i / 60, 0.8));
-      expect(Math.abs(p.rot % 3)).toBeLessThan(1e-9);
-    }
-    const lazy = createMover(0.2);
-    const bouncy = createMover(0.2);
-    let lazyY = 0;
-    let bouncyY = 0;
-    for (let i = 0; i < 600; i++) {
-      lazyY = Math.max(lazyY, -stepPose(lazy, PROFILES.lazy, frame(i / 60, 0.4)).y);
-      bouncyY = Math.max(bouncyY, -stepPose(bouncy, PROFILES.bouncy, frame(i / 60, 0.4)).y);
-    }
-    expect(lazyY).toBeLessThan(bouncyY / 3);
+    for (const p of simulate('robotic', 0.8).poses) expect(Math.abs(p.rot % 3)).toBeLessThan(1e-9);
+    const lazy = maxOf(simulate('lazy', 0.3).poses);
+    const bouncy = maxOf(simulate('bouncy', 0.3).poses);
+    expect(lazy.up).toBeLessThan(bouncy.up / 3);
+    expect(maxOf(simulate('lazy', 1).poses).up).toBeGreaterThan(60); // …until it's loud
   });
 
-  it('every profile is defined', () => {
-    for (const p of Object.values(PROFILES)) expect(p.tempo).toBeGreaterThan(0);
-  });
-
-  it('engine notifies subscribers with smoothed energy (no React needed)', () => {
+  it('engine notifies subscribers immediately', () => {
     const e = new AnimationEngine();
     let last: Frame | null = null;
     e.subscribe((f) => (last = f));

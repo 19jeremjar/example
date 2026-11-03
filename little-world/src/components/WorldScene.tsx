@@ -1,5 +1,5 @@
 import { KeyboardEvent, PointerEvent, useCallback, useRef } from 'react';
-import { findCharacter } from '../data/characters';
+import { BASE_HEIGHT, findCharacter } from '../data/characters';
 import type { Palette } from '../data/palettes';
 import type { AssetState } from '../hooks/useCharacterAssets';
 import { CharacterPlacement, clampScale, clampX } from '../lib/placement';
@@ -9,6 +9,7 @@ import { Critters } from './Critters';
 import { Flowers } from './Flower';
 import { Grass } from './Grass';
 import { GROUND_Y, Landscape } from './Landscape';
+import { LightBeams, LightWash, MusicNotes } from './LightShow';
 import { Moon } from './Moon';
 import { Clouds, SkyBackdrop, SkyDefs, Stars } from './Sky';
 import { Sun } from './Sun';
@@ -87,14 +88,23 @@ export function WorldScene({ solar, palette, vp, placements, assets, editing, se
   // Night light: darken and cool characters/flowers a little, but keep them readable.
   const matrix = `${l} 0 0 0 0  0 ${l} 0 0 0  0 0 ${Math.min(1, l + 0.08)} 0 ${((1 - l) * 0.08).toFixed(3)}  0 0 0 1 0`;
 
+  // Where the dancers' heads are, for the music notes.
+  const dancers = placements.map((p) => {
+    const def = findCharacter(p.characterId);
+    return { x: toSceneX(p.x), top: GROUND_Y - BASE_HEIGHT * (def?.defaultScale ?? 1) * p.scale };
+  });
+
   // Larger characters stand slightly in front.
   const ordered = [...placements].sort((a, b) => a.scale - b.scale || a.x - b.x);
 
+  const viewBox = `${vp.x0.toFixed(2)} ${vp.y0.toFixed(2)} ${vw.toFixed(2)} ${(vp.y1 - vp.y0).toFixed(2)}`;
+
   return (
+    <>
     <svg
       ref={svgRef}
       className="lw-scene"
-      viewBox={`${vp.x0.toFixed(2)} ${vp.y0.toFixed(2)} ${vw.toFixed(2)} ${(vp.y1 - vp.y0).toFixed(2)}`}
+      viewBox={viewBox}
       preserveAspectRatio="xMidYMax slice"
       role="img"
       aria-label={`A cartoon meadow at ${solar.phase === 'day' ? 'midday' : solar.phase}, with ${placements.length} character${placements.length === 1 ? '' : 's'}.`}
@@ -153,6 +163,13 @@ export function WorldScene({ solar, palette, vp, placements, assets, editing, se
         })}
       </g>
       <Grass palette={palette} layer="front" />
+      <MusicNotes dancers={dancers} outline={palette.outline} />
     </svg>
+    {/* Stage lights live on their own composited layers above the artwork. */}
+    <svg className="lw-lights" viewBox={viewBox} preserveAspectRatio="xMidYMax slice" aria-hidden>
+      <LightBeams vp={vp} night={palette.night} />
+    </svg>
+    <LightWash />
+    </>
   );
 }

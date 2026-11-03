@@ -51,6 +51,23 @@ body,
 
 /* ---------- scene bits ---------- */
 
+/* Light show layers: separate compositor layers so they don't force the artwork to redraw. */
+.lw-lights,
+.lw-wash {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+/* Plain alpha (no blend modes): blend modes made software-rendered screens drop frames. */
+.lw-wash {
+  opacity: 0;
+  visibility: hidden;
+}
+
 .lw-twinkle {
   animation: lw-twinkle 3s ease-in-out infinite;
 }

@@ -110,19 +110,27 @@ export function Clouds({ palette, vp }: { palette: Palette; vp: Viewport }) {
   const vpRef = useRef(vp);
   vpRef.current = vp;
 
+  const drift = useRef(specs.map(() => 0));
+
   useFrame((f) => {
     const v = vpRef.current;
     const span = v.x1 - v.x0 + 600;
+    const d = f.drive;
     specs.forEach((c, i) => {
       const el = refs.current[i];
       if (!el) return;
-      // Clouds drift slowly no matter what; a hint of extra bob when it's loud.
-      const travel = (c.x * span + f.t * c.speed * (f.motion ? 1 : 0)) % span;
+      // Clouds always drift; music speeds them up (up to 4×).
+      drift.current[i] += f.dt * c.speed * (1 + 3 * d) * f.motion;
+      const travel = (c.x * span + drift.current[i]) % span;
       const x = v.x0 - 300 + travel;
-      const bob = Math.sin(f.t * 0.5 + i * 2) * 3 * f.motion + f.drive * Math.sin(f.t * 3 + i) * 3;
+      // Gentle float, plus a hop and a puff on every beat.
+      const kick = f.beat * d;
+      const bob = Math.sin(f.t * 0.5 + i * 2) * 3 * f.motion - kick * (10 + 4 * (i % 3)) - d * 5 * Math.sin(Math.PI * f.beatPhase) * (i % 2 ? 1 : -1);
+      const puff = 1 + kick * 0.08 + d * 0.02 * Math.sin(2 * Math.PI * f.beatPhase + i);
+      const tilt = d * 3 * Math.sin(Math.PI * (f.beatIndex + f.beatPhase) + i);
       // Spread clouds through whatever sky is visible (taller on portrait screens).
       const y = v.y0 + c.y * ((v.y1 - v.y0) / 900) * (v.y0 < 0 ? 0.75 : 1) + Math.max(0, v.y0 * 0.6);
-      el.setAttribute('transform', `translate(${x.toFixed(1)},${(y + bob).toFixed(1)})`);
+      el.setAttribute('transform', `translate(${x.toFixed(1)},${(y + bob).toFixed(1)}) rotate(${tilt.toFixed(2)}) scale(${puff.toFixed(3)})`);
     });
   });
 
