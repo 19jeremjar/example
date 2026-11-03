@@ -4,6 +4,7 @@ import { mulberry32 } from '../lib/animation';
 import { useFrame } from '../hooks/useSoundEnergy';
 import { DIRT_TOP, MEADOW } from './Landscape';
 import { hillYAt } from '../lib/shapes';
+import { WORLD_MAX_X, WORLD_MIN_X } from '../hooks/useViewport';
 
 type Blade = { dx: number; h: number; w: number; lean: number; dark: boolean };
 type Cluster = { x: number; y: number; blades: Blade[]; phase: number; flex: number; scale: number };
@@ -11,9 +12,11 @@ type Cluster = { x: number; y: number; blades: Blade[]; phase: number; flex: num
 function makeClusters(layer: 'back' | 'front'): Cluster[] {
   const r = mulberry32(layer === 'back' ? 101 : 202);
   const out: Cluster[] = [];
-  const n = layer === 'back' ? 30 : 22;
+  // Same density as the 16:9 design, spread across the full world width.
+  const span = WORLD_MAX_X - WORLD_MIN_X;
+  const n = Math.round((layer === 'back' ? 30 : 22) * (span / 1720));
   for (let i = 0; i < n; i++) {
-    const x = -60 + (i + r() * 0.8) * (1720 / n);
+    const x = WORLD_MIN_X + (i + r() * 0.8) * (span / n);
     const y = layer === 'back' ? hillYAt(MEADOW, x) + 18 + r() * 60 : DIRT_TOP + 4 + r() * 4;
     const count = 3 + Math.floor(r() * 3);
     const blades: Blade[] = [];

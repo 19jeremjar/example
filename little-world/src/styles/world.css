@@ -666,3 +666,41 @@ select {
     animation: none;
   }
 }
+
+/* ---------- big landscape screens (TVs, 1440p/4K monitors) ---------- */
+/* Scale the UI with the screen so it stays readable from the sofa. */
+@media (min-width: 2200px) {
+  .lw-controls,
+  .lw-invite,
+  .lw-settings,
+  .lw-picker,
+  .lw-preview,
+  .lw-toast,
+  .lw-timestamp {
+    zoom: 1.5;
+  }
+}
+
+@media (min-width: 3200px) {
+  .lw-controls,
+  .lw-invite,
+  .lw-settings,
+  .lw-picker,
+  .lw-preview,
+  .lw-toast,
+  .lw-timestamp {
+    zoom: 2;
+  }
+}
+
+/* Short landscape screens (phones on their side, small laptops). */
+@media (max-height: 560px) {
+  .lw-picker,
+  .lw-preview {
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+  }
+  .lw-thumb-vibe {
+    display: none;
+  }
+}

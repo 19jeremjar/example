@@ -3,6 +3,7 @@ import type { Palette } from '../data/palettes';
 import { mulberry32 } from '../lib/animation';
 import { useFrame } from '../hooks/useSoundEnergy';
 import { hillYAt } from '../lib/shapes';
+import { WORLD_MAX_X, WORLD_MIN_X } from '../hooks/useViewport';
 import { DIRT_TOP, MEADOW } from './Landscape';
 
 const PETALS = ['#ff7eb6', '#6ec6ff', '#ffd23f', '#b48cff', '#ff9a3c', '#ff5d6c', '#ffffff'];
@@ -42,8 +43,10 @@ export function FlowerShape({ spec, outline, headRef }: { spec: FlowerSpec; outl
 function makeFlowers(): FlowerSpec[] {
   const r = mulberry32(77);
   const out: FlowerSpec[] = [];
-  for (let i = 0; i < 26; i++) {
-    const x = -40 + (i + r() * 0.9) * (1680 / 26);
+  const span = WORLD_MAX_X - WORLD_MIN_X;
+  const n = Math.round(26 * (span / 1680));
+  for (let i = 0; i < n; i++) {
+    const x = WORLD_MIN_X + (i + r() * 0.9) * (span / n);
     const front = i % 3 === 0;
     const y = front ? DIRT_TOP + 2 : hillYAt(MEADOW, x) + 30 + r() * 64;
     const depth = front ? 1.25 : 0.65 + ((y - 740) / 90) * 0.5;

@@ -25,9 +25,9 @@ export const Stars = memo(function Stars({ night }: { night: number }) {
   const stars = useMemo(() => {
     const r = mulberry32(7);
     // 64 stars in the standard sky, plus more above it for tall portrait screens.
-    return Array.from({ length: 120 }, (_, i) => ({
-      x: r() * 1600,
-      y: i < 64 ? r() * 470 + 10 : -r() * 1500,
+    return Array.from({ length: 220 }, (_, i) => ({
+      x: -1100 + r() * 3800,
+      y: i < 150 ? r() * 470 + 10 : -r() * 1500,
       s: r() < 0.18 ? 9 + r() * 6 : 1.6 + r() * 2.4,
       d: (r() * 4).toFixed(2),
       dur: (2.4 + r() * 3).toFixed(2),
@@ -101,6 +101,8 @@ export function Clouds({ palette, vp }: { palette: Palette; vp: Viewport }) {
       { x: 0.12, y: 150, w: 230, speed: 5, seed: 3 },
       { x: 0.52, y: 105, w: 280, speed: 3.6, seed: 11 },
       { x: 0.82, y: 225, w: 190, speed: 6.4, seed: 21 },
+      { x: 0.33, y: 260, w: 160, speed: 4.4, seed: 29 },
+      { x: 0.68, y: 60, w: 210, speed: 5.4, seed: 35 },
     ],
     [],
   );

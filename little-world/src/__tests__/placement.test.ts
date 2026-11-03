@@ -46,11 +46,19 @@ describe('viewport', () => {
   it('16:9 shows the whole scene', () => {
     expect(computeViewport(1920, 1080)).toMatchObject({ x0: 0, x1: 1600, y0: 0, y1: 900 });
   });
-  it('ultra-wide crops the top of the sky, keeping the ground', () => {
+  it('ultra-wide keeps the full sky and reveals more meadow', () => {
     const v = computeViewport(3440, 1440);
+    expect(v.y0).toBeCloseTo(0);
     expect(v.y1).toBe(900);
-    expect(v.y0).toBeGreaterThan(0);
-    expect(v.x1 - v.x0).toBe(1600);
+    expect(v.x1 - v.x0).toBeGreaterThan(2000);
+    expect((v.x0 + v.x1) / 2).toBeCloseTo(800);
+  });
+  it('16:10 and 4:3 crop a little from the sides and add sky', () => {
+    const a = computeViewport(1440, 900);
+    expect(a.x1 - a.x0).toBeCloseTo(1440);
+    const b = computeViewport(1024, 768);
+    expect(b.x1 - b.x0).toBeCloseTo(1200);
+    expect(b.y0).toBeCloseTo(0);
   });
   it('portrait keeps a wide slice of meadow and extends the sky upward', () => {
     const v = computeViewport(390, 844);

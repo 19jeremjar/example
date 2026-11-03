@@ -3,9 +3,10 @@ import type { Palette } from '../data/palettes';
 import { mulberry32 } from '../lib/animation';
 import { Pt, hillPath, hillYAt } from '../lib/shapes';
 
-export const FAR_HILLS: Pt[] = [[-120, 600], [140, 548], [420, 588], [700, 532], [990, 578], [1250, 524], [1500, 566], [1720, 590]];
-export const MID_HILLS: Pt[] = [[-120, 668], [180, 626], [520, 662], [820, 622], [1120, 656], [1400, 616], [1720, 650]];
-export const MEADOW: Pt[] = [[-120, 738], [260, 712], [640, 736], [1040, 708], [1420, 730], [1720, 714]];
+// Hill lines extend well past the 16:9 frame so ultra-wide screens see more land.
+export const FAR_HILLS: Pt[] = [[-1200, 580], [-900, 540], [-600, 584], [-340, 536], [-120, 600], [140, 548], [420, 588], [700, 532], [990, 578], [1250, 524], [1500, 566], [1760, 538], [2020, 582], [2300, 530], [2560, 572], [2800, 552]];
+export const MID_HILLS: Pt[] = [[-1200, 640], [-860, 612], [-520, 652], [-200, 618], [180, 626], [520, 662], [820, 622], [1120, 656], [1400, 616], [1720, 650], [2050, 614], [2380, 648], [2800, 628]];
+export const MEADOW: Pt[] = [[-1200, 716], [-820, 734], [-430, 708], [-120, 738], [260, 712], [640, 736], [1040, 708], [1420, 730], [1720, 714], [2080, 736], [2440, 710], [2800, 728]];
 export const DIRT_TOP = 826;
 export const GROUND_Y = 818;
 
@@ -134,12 +135,12 @@ function shade(hex: string, k: number): string {
 function pixelLip(seed: number): string {
   const r = mulberry32(seed);
   const step = 8;
-  let d = `M-200,${DIRT_TOP + 20}`;
-  for (let x = -200; x <= 1800; x += step) {
+  let d = `M-1200,${DIRT_TOP + 20}`;
+  for (let x = -1200; x <= 2800; x += step) {
     const h = r() < 0.35 ? (r() < 0.5 ? 2 : 1) : 0;
     d += ` L${x},${DIRT_TOP + 8 + h * 6} L${x + step},${DIRT_TOP + 8 + h * 6}`;
   }
-  return `${d} L1800,${DIRT_TOP - 4} L-200,${DIRT_TOP - 4}Z`;
+  return `${d} L2800,${DIRT_TOP - 4} L-1200,${DIRT_TOP - 4}Z`;
 }
 
 export const Landscape = memo(function Landscape({ palette }: { palette: Palette }) {
@@ -162,17 +163,26 @@ export const Landscape = memo(function Landscape({ palette }: { palette: Palette
       <Tree x={1420} y={hillYAt(MID_HILLS, 1420) + 8} size={86} palette={palette} seed={4} />
       <Tree x={1530} y={hillYAt(MID_HILLS, 1530) + 12} size={64} palette={palette} seed={8} />
       <Tree x={120} y={hillYAt(MID_HILLS, 120) + 10} size={72} palette={palette} seed={15} />
+      {/* only visible on screens wider than 16:9 */}
+      <Tree x={-430} y={hillYAt(MID_HILLS, -430) + 10} size={80} palette={palette} seed={23} />
+      <Tree x={-330} y={hillYAt(MID_HILLS, -330) + 12} size={56} palette={palette} seed={31} />
+      <Tree x={-900} y={hillYAt(MID_HILLS, -900) + 10} size={70} palette={palette} seed={37} />
+      <Tree x={2080} y={hillYAt(MID_HILLS, 2080) + 10} size={78} palette={palette} seed={41} />
+      <Tree x={2480} y={hillYAt(MID_HILLS, 2480) + 10} size={66} palette={palette} seed={47} />
       <path d={hillPath(MID_HILLS, 950)} fill={palette.hillMid} {...line(o, 5)} />
       <Bush x={560} y={hillYAt(MID_HILLS, 560) + 14} w={110} palette={{ ...palette, meadow: palette.hillMid }} />
       <Fence x={1180} y={hillYAt(MEADOW, 1230) + 4} palette={palette} />
+      <Fence x={-260} y={hillYAt(MEADOW, -210) + 4} palette={palette} />
       <path d={hillPath(MEADOW, 950)} fill={palette.meadow} {...line(o, 5)} />
       {/* meadow shading bands */}
       <path d="M-100,790 C200,770 420,800 700,784 C980,768 1250,800 1700,778 L1700,830 L-100,830Z" fill={palette.meadowShade} opacity={0.55} />
       <Bush x={60} y={hillYAt(MEADOW, 60) + 10} w={120} palette={palette} />
       <Bush x={1560} y={hillYAt(MEADOW, 1560) + 10} w={140} palette={palette} />
+      <Bush x={-620} y={hillYAt(MEADOW, -620) + 10} w={130} palette={palette} />
+      <Bush x={2240} y={hillYAt(MEADOW, 2240) + 10} w={120} palette={palette} />
       {/* pixel dirt band */}
-      <rect x={-200} y={DIRT_TOP} width={2000} height={200} fill={tile ? 'url(#lw-dirt)' : palette.dirt} />
-      <rect x={-200} y={DIRT_TOP} width={2000} height={200} fill={palette.outline} opacity={palette.night * 0.25} />
+      <rect x={-1200} y={DIRT_TOP} width={4000} height={200} fill={tile ? 'url(#lw-dirt)' : palette.dirt} />
+      <rect x={-1200} y={DIRT_TOP} width={4000} height={200} fill={palette.outline} opacity={palette.night * 0.25} />
       <path d={lip} fill={palette.grass} shapeRendering="crispEdges" />
       <path d={lip} fill="none" stroke={o} strokeWidth={4} shapeRendering="crispEdges" />
       <Mushrooms palette={palette} />
@@ -185,6 +195,8 @@ function Mushrooms({ palette }: { palette: Palette }) {
     { x: 940, y: DIRT_TOP + 6, s: 1 },
     { x: 965, y: DIRT_TOP + 8, s: 0.7 },
     { x: 300, y: DIRT_TOP + 6, s: 0.85 },
+    { x: -480, y: DIRT_TOP + 6, s: 0.9 },
+    { x: 2060, y: DIRT_TOP + 6, s: 1 },
   ];
   return (
     <g shapeRendering="crispEdges" filter={nightFilter(palette)}>
